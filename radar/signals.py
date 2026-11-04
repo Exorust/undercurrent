@@ -15,12 +15,19 @@ from .harvest import DB
 SCHEMA = """
 create table if not exists signals (
   run_date date, signal text, key text, recent int, prior int, growth double,
-  first_seen date, breadth int, accel double, score double);
+  first_seen date, breadth int, accel double, score double, run_tag text default 'live');
 """
 
 
+CUTOFF = None  # set by --cutoff for backtests: ignore papers submitted on/after this date
+
+
+def papers_sql(cols):
+    return f"select {cols} from papers" + (f" where submitted < '{CUTOFF}'" if CUTOFF else "")
+
+
 def windows(con, months):
-    last = con.execute("select max(submitted) from papers").fetchone()[0]
+    last = con.execute(papers_sql("max(submitted)")).fetchone()[0]
     # ponytail: the current month is partial, drop it so growth isn't biased low
     end = pd.Timestamp(last).to_period("M") - 1
     recent = [str(end - i) for i in range(months)]
@@ -30,7 +37,7 @@ def windows(con, months):
 
 def convergence(con, months, min_recent=15):
     """S2: category pairs whose co-occurrence is growing."""
-    df = con.execute("select strftime(submitted, '%Y-%m') ym, categories from papers").df()
+    df = con.execute(papers_sql("strftime(submitted, '%Y-%m') ym, categories")).df()
     recent, prior = windows(con, months)
     cnt = {"recent": collections.Counter(), "prior": collections.Counter()}
     for ym, cats in zip(df.ym, df.categories):
@@ -51,7 +58,7 @@ def convergence(con, months, min_recent=15):
 
 def terms(con, months, min_df=25):
     """S3: 2–4 word phrases from titles+abstracts that are young, growing, and used by many author groups."""
-    df = con.execute("select id, strftime(submitted, '%Y-%m') ym, title || '. ' || abstract txt, authors[1] a1 from papers").df()
+    df = con.execute(papers_sql("id, strftime(submitted, '%Y-%m') ym, title || '. ' || abstract txt, authors[1] a1")).df()
     recent, prior = windows(con, months)
     vec = CountVectorizer(ngram_range=(2, 4), min_df=min_df, stop_words="english", binary=True,
                           token_pattern=r"(?u)\b[a-zA-Z][a-zA-Z0-9\-]+\b", lowercase=True)
@@ -89,8 +96,11 @@ def terms(con, months, min_df=25):
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--months", type=int, default=6); ap.add_argument("--top", type=int, default=30)
+    ap.add_argument("--cutoff", default=None, help="backtest: only use papers submitted before this date (YYYY-MM-DD)")
     a = ap.parse_args()
+    global CUTOFF; CUTOFF = a.cutoff
     con = duckdb.connect(str(DB)); con.execute(SCHEMA)
+    run_tag = a.cutoff or "live"
     out = []
     for name, fn in (("S2", convergence), ("S3", terms)):
         rows = fn(con, a.months)
@@ -99,8 +109,9 @@ def main():
         print(f"\n== {name}: top {a.top} (recent/prior, growth, first_seen, breadth)")
         for r in rows[:a.top]:
             print(f"{r[1]:45s} {r[2]:5d}/{r[3]:<5d} x{r[4]:.1f}  {r[5] or '':10s} {r[6] or ''}")
-    con.execute("delete from signals where run_date = current_date")
-    con.executemany("insert into signals values (current_date,?,?,?,?,?,?,?,?,?)", out)
+    con.execute("alter table signals add column if not exists run_tag text default 'live'")
+    con.execute("delete from signals where run_date = current_date and run_tag = ?", [run_tag])
+    con.executemany("insert into signals values (current_date,?,?,?,?,?,?,?,?,?,?)", [r + (run_tag,) for r in out])
     print(f"\n{len(out)} signal rows written", file=sys.stderr)
 
 

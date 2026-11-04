@@ -30,10 +30,32 @@ def tfidf_labels(texts, labels, k=4):
     return out
 
 
+def llm_names(texts, labels, tfidf, model="sonnet", per_call=25):
+    """Ask the LLM for a 2–5 word name per cluster from its top terms and 5 sample titles. Batched."""
+    from .llm import ask
+    import random, json
+    rng = random.Random(0); out = dict(tfidf); ids = sorted(tfidf)
+    for i in range(0, len(ids), per_call):
+        chunk = ids[i:i + per_call]
+        blocks = []
+        for c in chunk:
+            idx = np.where(labels == c)[0]; samp = rng.sample(list(idx), min(5, len(idx)))
+            blocks.append(f"cluster {c}\nterms: {tfidf[c]}\ntitles:\n" + "\n".join(f"- {texts[j][:120]}" for j in samp))
+        prompt = ("Name each cluster of CS papers in 2-5 words, specific not generic (no 'machine learning' alone). "
+                  "Reply ONLY with a JSON object mapping cluster id (string) to name.\n\n" + "\n\n".join(blocks))
+        try:
+            txt = ask(prompt, model=model); txt = txt[txt.find("{"):txt.rfind("}") + 1]
+            out.update({int(k): v for k, v in json.loads(txt).items() if int(k) in tfidf})
+        except Exception as e:  # ponytail: keep tf-idf names on any failure
+            print(f"llm naming failed for a batch: {e}", file=sys.stderr)
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--sample", type=int, default=None, help="random subset of papers (speed / datamapplot size risk)")
     ap.add_argument("--out", default=str(ROOT / "report" / "map.html"))
+    ap.add_argument("--llm-labels", action="store_true", help="LLM-written names for levels 1 and 2 (tf-idf terms otherwise)")
     a = ap.parse_args()
     import umap, hdbscan, datamapplot
     con = duckdb.connect(str(DB)); con.execute(SCHEMA)
@@ -49,6 +71,8 @@ def main():
         cl = hdbscan.HDBSCAN(min_cluster_size=mcs, min_samples=10, cluster_selection_method="eom").fit_predict(xy)
         names = tfidf_labels(texts, cl)
         print(f"level {lvl}: {len(names)} clusters, {100 * (cl < 0).mean():.0f}% noise", file=sys.stderr)
+        if a.llm_labels and lvl >= 1:
+            names = llm_names(texts, cl, names)
         label_layers.append(np.array([names.get(c, "Unlabelled") for c in cl]))
         con.executemany("insert into topics values (?,?,?,?,?,?)",
                         [(lvl, int(c), names[c], int((cl == c).sum()), float(xy[cl == c, 0].mean()), float(xy[cl == c, 1].mean())) for c in names])

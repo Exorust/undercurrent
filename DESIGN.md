@@ -34,7 +34,11 @@ The pipeline is general (documents → embeddings → map → labels → change 
 | HN Algolia API | mention counts per term per month | Free; checked only for flagged terms |
 | Hugging Face Daily Papers | upvotes per arXiv id | Free; v2 |
 
-Note: OAI-PMH `from`/`until` filter on the record datestamp (last update), not on submission. Harvest from the window start and keep only `created >= window start`.
+Notes from the first harvest (2026-11-04):
+- OAI-PMH `from`/`until` filter on the record datestamp (last update), not on submission, so updated old papers appear too.
+- The `created` field is not the first-submission date (a 2022 paper showed `created=2026-11-02`). Submission month is derived from the id (`YYMM.NNNNN`) into `papers.submitted`; only ids at or after the window's first month are kept. Old-style ids (`math/0501001`) have no month and are dropped; none exist in a 2023+ window.
+- A single 3-year request never returned its first page in 6 minutes; one calendar month answers in under 1 s. The harvester loops month by month and marks each finished month with a `data/raw/cs_<month>_done` file, so it is resumable.
+- November 2023 alone: 8,635 records seen, 5,117 kept, 7 pages, ~45 s.
 
 Storage: one DuckDB file `data/radar.duckdb`. Tables: `papers`, `paper_categories`, `embeddings`, `s2_meta`, `hn_counts`, `topics`, `topic_members`, `signals`, `notes`. Raw OAI pages are kept as gzipped XML in `data/raw/` so the database can be rebuilt.
 
