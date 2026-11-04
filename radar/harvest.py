@@ -73,25 +73,39 @@ def main():
     RAW.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect(str(DB)); con.execute(SCHEMA)
 
-    q = {"verb": "ListRecords", "metadataPrefix": "arXiv", "set": a.set, "from": a.frm}
-    if a.until: q["until"] = a.until
-    url = f"{OAI}?{urllib.parse.urlencode(q)}"
-    page, kept, seen = 0, 0, 0
-    while url:
-        xml = fetch(url)
-        (RAW / f"{a.set}_{a.frm}_{page:05d}.xml.gz").write_bytes(gzip.compress(xml))
-        rows, tok, size = parse(xml)
-        seen += len(rows)
-        rows = [r for r in rows if r[1] and r[1] >= a.frm[:7] + "-01"]
-        if rows:
-            con.executemany("insert or replace into papers values (?,?,?,?,?,?,?,?,?,now())", rows)
-            kept += len(rows)
-        page += 1
-        print(f"page {page} seen {seen}/{size or '?'} kept {kept}", file=sys.stderr, flush=True)
-        url = f"{OAI}?verb=ListRecords&resumptionToken={urllib.parse.quote(tok)}" if tok else None
-        time.sleep(3)  # ponytail: fixed polite delay, arXiv asks ~3s between requests
+    # One request per calendar month of datestamps: a single multi-year `from`
+    # never returned its first page (observed 2026-11-04), one month answers in <1s.
+    import datetime as dt
+    start = dt.date.fromisoformat(a.frm)
+    stop = dt.date.fromisoformat(a.until) if a.until else dt.date.today()
+    kept_total = 0
+    m0 = start.replace(day=1)
+    while m0 <= stop:
+        m1 = (m0.replace(day=28) + dt.timedelta(days=4)).replace(day=1) - dt.timedelta(days=1)
+        frm, until = max(m0, start).isoformat(), min(m1, stop).isoformat()
+        if (RAW / f"{a.set}_{frm}_done").exists():  # resumable per month
+            m0 = m1 + dt.timedelta(days=1); continue
+        q = {"verb": "ListRecords", "metadataPrefix": "arXiv", "set": a.set, "from": frm, "until": until}
+        url = f"{OAI}?{urllib.parse.urlencode(q)}"
+        page, kept, seen = 0, 0, 0
+        while url:
+            xml = fetch(url)
+            (RAW / f"{a.set}_{frm}_{page:04d}.xml.gz").write_bytes(gzip.compress(xml))
+            rows, tok, size = parse(xml)
+            seen += len(rows)
+            rows = [r for r in rows if r[1] and r[1] >= a.frm[:7] + "-01"]
+            if rows:
+                con.executemany("insert or replace into papers values (?,?,?,?,?,?,?,?,?,now())", rows)
+                kept += len(rows)
+            page += 1
+            url = f"{OAI}?verb=ListRecords&resumptionToken={urllib.parse.quote(tok)}" if tok else None
+            time.sleep(3)  # ponytail: fixed polite delay, arXiv asks ~3s between requests
+        kept_total += kept
+        (RAW / f"{a.set}_{frm}_done").touch()
+        print(f"{frm}: {page} pages, seen {seen}, kept {kept} (total {kept_total})", file=sys.stderr, flush=True)
+        m0 = m1 + dt.timedelta(days=1)
     n = con.execute("select count(*) from papers").fetchone()[0]
-    print(f"done: {kept} kept this run, {n} papers in db")
+    print(f"done: {kept_total} kept this run, {n} papers in db")
 
 
 if __name__ == "__main__":
