@@ -4,7 +4,7 @@
 cd "$(dirname "$0")"
 mkdir -p data/log report
 PY=.venv/bin/python
-N=${EMBED_N:-150000}   # newest N papers get embeddings for the map
+N=${EMBED_N:-60000}   # sample size that gets embeddings for the map (see enrich.py)
 stage() {
   name=$1; shift; echo "== $name start $(date +%H:%M:%S)"
   if "$@" > "data/log/$name.log" 2>&1; then tail -50 "data/log/$name.log"; echo "== $name ok $(date +%H:%M:%S)"

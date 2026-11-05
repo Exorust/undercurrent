@@ -5,7 +5,7 @@ Set S2_API_KEY in the environment for higher rate limits (free key).
 Resumable: only papers with no row in s2_meta are requested.
 """
 import argparse, json, os, sys, time, urllib.request
-import duckdb
+import duckdb, numpy as np, pyarrow as pa
 from .harvest import DB
 
 URL = "https://api.semanticscholar.org/graph/v1/paper/batch?fields=externalIds,citationCount,influentialCitationCount,tldr,embedding.specter_v2"
@@ -34,12 +34,15 @@ def post(ids, tries=8):
 
 
 def main():
-    ap = argparse.ArgumentParser(); ap.add_argument("--limit", type=int, default=None); a = ap.parse_args()
+    ap = argparse.ArgumentParser(); ap.add_argument("--limit", type=int, default=None); ap.add_argument("--months", type=int, default=18)
+    a = ap.parse_args()
     con = duckdb.connect(str(DB)); con.execute(SCHEMA)
-    # --limit N means "the N newest papers"; on a rerun only the ones still missing are requested.
+    # --limit N = a fixed pseudo-random N-paper sample of the last --months months (ordered by md5 of the id, so a
+    # larger N later extends the same set). Spread over time matters more than recency for the map's time slider and
+    # for topic growth; without an API key S2 allows only ~1,500 papers/minute.
     todo = [r[0] for r in con.execute(
-        "select id from (select id from papers order by submitted desc, id desc" + (f" limit {a.limit}" if a.limit else "") +
-        ") where id not in (select id from s2_meta)").fetchall()]
+        f"select id from (select id from papers where submitted >= (select max(submitted) from papers) - interval {a.months} month "
+        "order by md5(id)" + (f" limit {a.limit}" if a.limit else "") + ") where id not in (select id from s2_meta)").fetchall()]
     print(f"{len(todo)} papers to enrich", file=sys.stderr)
     got_emb = 0
     for i in range(0, len(todo), 500):
@@ -52,8 +55,14 @@ def main():
             meta.append((pid, p.get("paperId"), p.get("citationCount"), p.get("influentialCitationCount"), (p.get("tldr") or {}).get("text")))
             v = (p.get("embedding") or {}).get("vector")
             if v: embs.append((pid, v))
-        con.executemany("insert or replace into s2_meta values (?,?,?,?,?,now())", meta)
-        if embs: con.executemany("insert or replace into embeddings values (?,?)", embs)
+        # Bulk insert through Arrow: executemany planned one query per row (768 constants each), ~0.1 s per paper.
+        mt = pa.table({"id": [m[0] for m in meta], "s2_id": [m[1] for m in meta], "citations": pa.array([m[2] for m in meta], pa.int32()),
+                       "influential": pa.array([m[3] for m in meta], pa.int32()), "tldr": [m[4] for m in meta]})
+        con.register("mt", mt); con.execute("insert or replace into s2_meta select id, s2_id, citations, influential, tldr, now() from mt"); con.unregister("mt")
+        if embs:
+            V = np.asarray([v for _, v in embs], dtype=np.float32)
+            et = pa.table({"id": [i for i, _ in embs], "vec": pa.FixedSizeListArray.from_arrays(pa.array(V.ravel()), 768)})
+            con.register("et", et); con.execute("insert or replace into embeddings select id, vec from et"); con.unregister("et")
         got_emb += len(embs)
         print(f"{i + len(batch)}/{len(todo)} embeddings so far {got_emb}", file=sys.stderr, flush=True)
         time.sleep(1.1 if os.environ.get("S2_API_KEY") else 3.5)
