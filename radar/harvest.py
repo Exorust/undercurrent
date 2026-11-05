@@ -31,7 +31,7 @@ def fetch_vecs(con, sql):
     """Run a query whose last column is `vec` (float[768]); return (pandas df of the other columns, float32 matrix).
     Goes through Arrow so vectors never become Python lists (150k vectors as lists cost several GB)."""
     import numpy as np
-    t = con.execute(sql).fetch_arrow_table()
+    t = con.execute(sql).to_arrow_table()
     V = np.asarray(t.column("vec").combine_chunks().flatten(), dtype=np.float32).reshape(len(t), -1)
     return t.drop_columns(["vec"]).to_pandas(), V
 

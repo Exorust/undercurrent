@@ -70,8 +70,13 @@ def main():
     for lvl, frac in LEVELS.items():
         mcs = max(15, int(frac * len(df)))
         cl = hdbscan.HDBSCAN(min_cluster_size=mcs, min_samples=10).fit_predict(xy)
+        noise = cl < 0
+        if noise.any() and (~noise).any():
+            # HDBSCAN leaves 25–40% of points unassigned; give each the majority label of its 15 nearest assigned points.
+            from sklearn.neighbors import KNeighborsClassifier
+            cl[noise] = KNeighborsClassifier(n_neighbors=15).fit(xy[~noise], cl[~noise]).predict(xy[noise])
         names = tfidf_labels(texts, cl)
-        print(f"level {lvl} (min size {mcs}): {len(names)} clusters, {100 * (cl < 0).mean():.0f}% unassigned", file=sys.stderr, flush=True)
+        print(f"level {lvl} (min size {mcs}): {len(names)} clusters, {100 * noise.mean():.0f}% assigned by nearest neighbours", file=sys.stderr, flush=True)
         if a.llm_labels and lvl >= 1:
             names = llm_names(texts, cl, names)
         layers[lvl] = np.array([names.get(int(c), "Unlabelled") for c in cl])
