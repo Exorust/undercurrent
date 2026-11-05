@@ -17,6 +17,9 @@ from .harvest import DB, RAW, SCHEMA
 API = "https://export.arxiv.org/api/query"
 NS = {"a": "http://www.w3.org/2005/Atom", "o": "http://a9.com/-/spec/opensearch/1.1/", "x": "http://arxiv.org/schemas/atom"}
 PAGE = 2000
+# cat:cs.* does not match papers whose only CS category is an alias: cs.NA is indexed as math.NA and cs.SY as eess.SY
+# (found 2026-11-05: about 600 papers a month were missing). arXiv cross-lists every paper of those two to CS.
+CATS = "cs.*,math.NA,eess.SY"
 
 
 def get(url, tries=8):
@@ -49,9 +52,9 @@ def parse(xml_bytes):
     return total, rows
 
 
-def window(d0, d1):
-    """All cs.* papers first submitted in [d0, d1]; retries until the count matches totalResults."""
-    q = f"cat:cs.* AND submittedDate:[{d0:%Y%m%d}0000 TO {d1:%Y%m%d}2359]"
+def window(d0, d1, cats=CATS):
+    """All papers in `cats` first submitted in [d0, d1]; retries until the count matches totalResults."""
+    q = f"({' OR '.join('cat:' + c for c in cats.split(','))}) AND submittedDate:[{d0:%Y%m%d}0000 TO {d1:%Y%m%d}2359]"
     for attempt in range(5):
         got, total, start = {}, None, 0
         while total is None or start < total:
@@ -71,15 +74,16 @@ def window(d0, d1):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--from", dest="frm", required=True); ap.add_argument("--until", default=None); ap.add_argument("--days", type=int, default=7)
+    ap.add_argument("--cats", default=CATS, help="comma-separated arXiv categories")
     a = ap.parse_args()
     RAW.mkdir(parents=True, exist_ok=True)
     con = duckdb.connect(str(DB)); con.execute(SCHEMA)
     d, stop, kept = dt.date.fromisoformat(a.frm), dt.date.fromisoformat(a.until) if a.until else dt.date.today(), 0
     while d <= stop:
         d1 = min(d + dt.timedelta(days=a.days - 1), stop)
-        mark = RAW / f"api_{d}_{d1}_done"
+        mark = RAW / f"api_{'' if a.cats == 'cs.*' else a.cats.replace(',', '+').replace('*', 'x') + '_'}{d}_{d1}_done"
         if not mark.exists():
-            total, rows = window(d, d1)
+            total, rows = window(d, d1, a.cats)
             if rows:
                 con.executemany("insert or replace into papers values (?,?,?,?,?,?,?,?,?,now())", rows)
             kept += len(rows); mark.touch()

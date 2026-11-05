@@ -8,7 +8,7 @@ two windows. Results go to the `signals` table and the top lists are printed.
 S1 (map-region growth) lives in merge.py because it needs clusters; S4 (HN
 check) is run for flagged terms only, see hn.py.
 """
-import argparse, collections, sys
+import argparse, collections, re, sys
 import duckdb, numpy as np, pandas as pd
 from scipy import sparse
 from sklearn.feature_extraction.text import CountVectorizer
@@ -22,6 +22,9 @@ create table if not exists signals (
 CUTOFF = None  # set by --cutoff for backtests: ignore papers submitted on/after this date
 # arXiv lists these as the same category under two names
 ALIAS = {"math.IT": "cs.IT", "math.NA": "cs.NA", "eess.SY": "cs.SY", "stat.TH": "math.ST", "math.MP": "math-ph", "q-fin.EC": "econ.GN"}
+# Product and model names are not fields, and in the backtest they faded ("openai o1", "deepseek r1").
+# ponytail: hand list plus "any token with a digit" (o1, gpt-4o, qwen3); extend the list when a name gets through.
+NAMES = set("openai gpt chatgpt deepseek gemini claude llama qwen grok mistral anthropic copilot sora deepmind nvidia kimi glm phi gemma".split())
 KW = dict(ngram_range=(2, 4), stop_words="english", binary=True, lowercase=True, token_pattern=r"(?u)\b[a-zA-Z][a-zA-Z0-9\-]+\b")
 
 
@@ -38,30 +41,44 @@ def windows(con, months):
     return recent, prior
 
 
-def convergence(con, months, min_recent=15):
-    """S2: category pairs whose co-occurrence grows faster than paper volume overall."""
-    df = con.execute(papers_sql("strftime(submitted, '%Y-%m') ym, categories")).df()
-    recent, prior = windows(con, months)
-    cnt = {"recent": collections.Counter(), "prior": collections.Counter()}
-    n = collections.Counter()
-    for ym, cats in zip(df.ym, df.categories):
-        w = "recent" if ym in recent else "prior" if ym in prior else None
-        if not w: continue
-        n[w] += 1
+def by_month(con):
+    """{month: (paper count, Counter of category pairs)}; alias names merged."""
+    out = {}
+    for ym, cats in con.execute(papers_sql("strftime(submitted, '%Y-%m') ym, categories")).fetchall():
+        n, pairs = out.get(ym) or (0, collections.Counter())
         cs = sorted({ALIAS.get(c, c) for c in cats})
-        for i in range(len(cs)):
-            for j in range(i + 1, len(cs)):
-                cnt[w][(cs[i], cs[j])] += 1
-    vol = n["recent"] / max(n["prior"], 1)  # overall volume change; a pair must beat this
+        pairs.update((cs[i], cs[j]) for i in range(len(cs)) for j in range(i + 1, len(cs)))
+        out[ym] = (n + 1, pairs)
+    return out
+
+
+def pair_window(bm, months):
+    n, cnt = 0, collections.Counter()
+    for m in months:
+        if m in bm: n += bm[m][0]; cnt.update(bm[m][1])
+    return n, cnt
+
+
+def pair_rows(bm, recent, prior, min_recent=30):
+    """The S2 flag rule. Returns (rows, {pair: recent count} for every pair with at least min_recent papers).
+    min_recent is 30 because smaller pairs mostly fell back in the backtest (BACKTEST.md)."""
+    (nr, cr), (np_, cp) = pair_window(bm, recent), pair_window(bm, prior)
+    vol = nr / max(np_, 1)  # overall volume change; a pair must beat this
     rows = []
-    for pair, r in cnt["recent"].items():
-        p = cnt["prior"].get(pair, 0)
+    for pair, r in cr.items():
+        p = cp.get(pair, 0)
         exp = p * vol
         g = (r + 1) / (exp + 1)
         z = (r - exp) / np.sqrt(r + exp + 1)  # rough Poisson significance of the increase
         if r < min_recent or g < 1.3 or z < 2: continue
         rows.append(("S2", "+".join(pair), r, p, float(g), None, None, None, float(z * np.log(g))))
-    return rows
+    return rows, {"+".join(k): v for k, v in cr.items() if v >= min_recent}
+
+
+def convergence(con, months):
+    """S2: category pairs whose co-occurrence grows faster than paper volume overall."""
+    recent, prior = windows(con, months)
+    return pair_rows(by_month(con), recent, prior)[0]
 
 
 def terms(con, months, min_recent=30):
@@ -86,8 +103,10 @@ def terms(con, months, min_recent=30):
     vec = CountVectorizer(vocabulary=sorted(cand), **KW)
     X = vec.transform(df.txt)
     rc = np.asarray(X[rec_mask].sum(0)).ravel()
-    cols = np.where(rc >= min_recent)[0]
-    X = X[:, cols].tocsc(); vocab = np.array(vec.get_feature_names_out())[cols]
+    names = vec.get_feature_names_out()
+    named = np.array([any(t in NAMES or any(ch.isdigit() for ch in t) for t in k.split()) for k in names])
+    cols = np.where((rc >= min_recent) & ~named)[0]
+    X = X[:, cols].tocsc(); vocab = np.array(names)[cols]
     T = CountVectorizer(vocabulary=list(vocab), **KW).transform(df.title.values[rec_mask])
     title_n = np.asarray(T.sum(0)).ravel()
 
@@ -118,23 +137,51 @@ def terms(con, months, min_recent=30):
     g_all = (rcount + 1) / (exp + 1)
     z_all = (rcount - exp) / np.sqrt(rcount + exp + 1)  # rough Poisson significance of the rise
     rows = []
+    txt = df.txt.values; plain = {}
+    stop = CountVectorizer(stop_words="english").get_stop_words()
+    def context(phrase, docs):
+        """How the phrase occurs word for word in docs: (share of docs, next-word counts, previous-word counts).
+        Punctuation becomes the word "." so a phrase cannot run across a comma or a bracket."""
+        pat = re.compile(r"(\S+) " + re.escape(phrase) + r" (\S+)")
+        hit, nxt, prv = 0, collections.Counter(), collections.Counter()
+        for d in docs:
+            if d not in plain: plain[d] = " . " + " ".join(re.sub(r"[^a-z0-9\-\s]+", " . ", txt[d].lower()).split()) + " . "
+            m = pat.search(plain[d])
+            if m: hit += 1; prv[m.group(1)] += 1; nxt[m.group(2)] += 1
+        return hit / max(len(docs), 1), nxt, prv
+    def dominant(words):
+        """The neighbour word if one word (plural merged) takes at least 60% of the occurrences, else None."""
+        by_stem = collections.Counter()
+        for w, c in words.items(): by_stem[re.sub(r"s$", "", w)] += c
+        if not by_stem: return None
+        st, c = by_stem.most_common(1)[0]
+        w = max((w for w in words if re.sub(r"s$", "", w) == st), key=words.get)
+        ok = c >= 0.6 * sum(words.values()) and w not in stop and re.fullmatch(r"[a-z][a-z0-9\-]+", w)
+        return (w, c / sum(words.values())) if ok else None
     for j in np.where((g_all >= 1.5) & (z_all >= 3) & (title_n >= 3) & (title_n >= 0.05 * rcount) & (kl >= 0.5))[0]:
         docs = X[:, j].nonzero()[0]
         breadth = len(set(surname[docs]) - {""})
         if breadth < 5: continue
+        # Stop words are removed before phrases are formed, so "models write" is counted in "models that write".
+        # Keep a phrase only if it occurs word for word in at least half of its recent papers.
+        # ponytail: this also drops real names that contain a stop word ("chain of thought"); to keep them,
+        # store the most common surface form instead of dropping.
+        key, share = vocab[j], 1.0
+        lit, nxt, prv = context(key, docs[rec_mask[docs]])
+        if lit < 0.5: continue
+        # Fragments: "frozen language" is nearly always followed by "model(s)", so the real phrase is the longer one.
+        # Counts are scaled by the share of occurrences that have the extension (an approximation, not a recount).
+        if (d := dominant(nxt)): key, share = f"{key} {d[0]}", share * d[1]
+        if (d := dominant(prv)): key, share = f"{d[0]} {key}", share * d[1]
         age_bonus = 1.5 if first[j] >= prior[-1] else 1.0  # first seen inside the two comparison windows
         score = z_all[j] * np.log(g_all[j]) * age_bonus * (1.0 + max(accel[j], 0) / 10)
-        rows.append(("S3", vocab[j], int(rcount[j]), int(pcount[j]), float(g_all[j]), f"{first[j]}-01", breadth, float(accel[j]), float(score)))
-    # A 4-gram and its sub-phrases score alike; keep the longest phrase of each nested family.
-    rows.sort(key=lambda r: -r[-1])
-    kept = []
-    for r in rows:
-        same = [i for i, k in enumerate(kept) if (r[1] in k[1] or k[1] in r[1]) and abs(r[2] - k[2]) <= 0.3 * max(r[2], k[2])]
-        if same:
-            if len(r[1]) > len(kept[same[0]][1]): kept[same[0]] = r[:8] + (kept[same[0]][8],)
-            continue
-        kept.append(r)
-    return kept
+        rows.append(("S3", key, int(rcount[j] * share), int(pcount[j] * share), float(g_all[j]), f"{first[j]}-01", breadth, float(accel[j]), float(score)))
+    best = {}
+    # One row per topic: "world-action models", "world action model" and an extended fragment that equals an existing phrase
+    # all reduce to the same form; the highest-scoring spelling is kept with its own counts.
+    for r in sorted(rows, key=lambda r: -r[-1]): best.setdefault(" ".join(re.sub(r"s$", "", t) for t in r[1].replace("-", " ").split()), r)
+    rows = list(best.values())
+    return rows
 
 
 def main():

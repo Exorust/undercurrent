@@ -28,8 +28,8 @@ def main():
          f"{n:,} arXiv CS papers, {lo:%Y-%m} to {hi:%Y-%m}. Growth compares the last 6 full months with the 6 before, corrected for the growth of CS as a whole.", ""]
     bt = ROOT / "BACKTEST.md"
     if bt.exists():
-        t = bt.read_text().split("\n")
-        L += ["## How much to trust this", "", "Backtest of the phrase signal: " + t[2], ""] + t[4:8] + [""]
+        # the summary part of BACKTEST.md, without its title, headings one level down
+        L += ["## How much to trust this", ""] + bt.read_text().split("\n## Details")[0].replace("\n## ", "\n### ").split("\n")[2:] + [""]
     L += ["## Rising phrases (S3)", "", "| phrase | papers recent/prior | growth | first seen | author groups | HN mentions, last 6 mo | variants |", "|---|---|---|---|---|---|---|"]
     rows = con.execute(f"select key, recent, prior, growth, first_seen, breadth from signals where signal='S3' and {live} order by score desc").fetchall()
     has_hn = "hn_counts" in [r[0] for r in con.execute("show tables").fetchall()]
@@ -38,9 +38,11 @@ def main():
         hn = con.execute("select coalesce(sum(n),0) from (select n from hn_counts where term=? order by ym desc limit 6)", [k]).fetchone()[0] if has_hn else ""
         L.append(f"| {k} | {r}/{p} | x{g:.1f} | {fs:%Y-%m} | {b} | {hn} | {', '.join(f['variants'][:4])} |")
     L += ["", "## Converging fields (S2)", "",
-          "Category pairs that share more papers than before. Check a pair by hand before acting on it: a small count or a reclassification by arXiv moderators can produce a false rise.", "",
+          "Category pairs that shared more papers in the last 6 months than in the 6 before. In the backtest above, flagged pairs did not keep growing "
+          "more often than other pairs, so read this as a description of the recent past. arXiv also changes its cross-listing practice from time to time, "
+          "which moves many pairs of one category together.", "",
           "| category pair | papers recent/prior | growth |", "|---|---|---|"]
-    for k, r, p, g in con.execute(f"select key, recent, prior, growth from signals where signal='S2' and {live} order by score desc limit 25").fetchall():
+    for k, r, p, g in con.execute(f"select key, recent, prior, growth from signals where signal='S2' and {live} order by score desc limit 15").fetchall():
         L.append(f"| {k} | {r}/{p} | x{g:.1f} |")
     if "merge_ideas" in [r[0] for r in con.execute("show tables").fetchall()]:
         L += ["", "## Merge ideas", "", "Written by an LLM from 5 papers per topic. Treat each as a prompt for your own thinking, and check the cited papers.", ""]
