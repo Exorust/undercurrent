@@ -17,7 +17,8 @@ OAI = "https://oaipmh.arxiv.org/oai"
 NS = {"o": "http://www.openarchives.org/OAI/2.0/", "a": "http://arxiv.org/OAI/arXiv/"}
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 DATA, RAW = ROOT / "data", ROOT / "data" / "raw"
-DB = DATA / "radar.duckdb"
+import os
+DB = pathlib.Path(os.environ.get("RADAR_DB", DATA / "radar.duckdb"))  # RADAR_DB lets a test run use a copy
 
 SCHEMA = """
 create table if not exists papers (
@@ -26,7 +27,16 @@ create table if not exists papers (
 """
 
 
-def fetch(url, tries=6):
+def fetch_vecs(con, sql):
+    """Run a query whose last column is `vec` (float[768]); return (pandas df of the other columns, float32 matrix).
+    Goes through Arrow so vectors never become Python lists (150k vectors as lists cost several GB)."""
+    import numpy as np
+    t = con.execute(sql).fetch_arrow_table()
+    V = np.asarray(t.column("vec").combine_chunks().flatten(), dtype=np.float32).reshape(len(t), -1)
+    return t.drop_columns(["vec"]).to_pandas(), V
+
+
+def fetch(url, tries=12):
     for i in range(tries):
         try:
             req = urllib.request.Request(url, headers={"User-Agent": "field-radar/0.1 (chandrahas.aroori@gmail.com)"})
@@ -37,8 +47,9 @@ def fetch(url, tries=6):
                 wait = int(e.headers.get("Retry-After", "20"))
                 print(f"503, waiting {wait}s", file=sys.stderr); time.sleep(wait); continue
             raise
-        except (urllib.error.URLError, TimeoutError):
-            time.sleep(10 * (i + 1))
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as e:
+            print(f"fetch error {e!r}, try {i + 1}/{tries}", file=sys.stderr, flush=True)
+            time.sleep(min(30 * (i + 1), 300))
     raise RuntimeError("fetch failed: " + url)
 
 

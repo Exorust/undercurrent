@@ -25,19 +25,21 @@ def post(ids, tries=8):
             with urllib.request.urlopen(urllib.request.Request(URL, body, hdr), timeout=120) as r:
                 return json.load(r)
         except urllib.error.HTTPError as e:
-            if e.code == 429:
-                time.sleep(5 * (i + 1)); continue
+            if e.code in (429, 500, 502, 503, 504):
+                time.sleep(min(10 * (i + 1), 60)); continue
             raise
-        except (urllib.error.URLError, TimeoutError):
-            time.sleep(10)
+        except (urllib.error.URLError, TimeoutError, ConnectionError):
+            time.sleep(15)
     raise RuntimeError("s2 batch failed")
 
 
 def main():
     ap = argparse.ArgumentParser(); ap.add_argument("--limit", type=int, default=None); a = ap.parse_args()
     con = duckdb.connect(str(DB)); con.execute(SCHEMA)
+    # --limit N means "the N newest papers"; on a rerun only the ones still missing are requested.
     todo = [r[0] for r in con.execute(
-        "select id from papers where id not in (select id from s2_meta) order by submitted desc" + (f" limit {a.limit}" if a.limit else "")).fetchall()]
+        "select id from (select id from papers order by submitted desc, id desc" + (f" limit {a.limit}" if a.limit else "") +
+        ") where id not in (select id from s2_meta)").fetchall()]
     print(f"{len(todo)} papers to enrich", file=sys.stderr)
     got_emb = 0
     for i in range(0, len(todo), 500):
