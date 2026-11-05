@@ -88,7 +88,8 @@ def main():
     hover = (df.title + " [" + df.primary_cat + ", " + pd.to_datetime(df.submitted).dt.strftime("%Y-%m") + "] arXiv:" + df.id).values
     sub = pd.to_datetime(df.submitted)
     plot = datamapplot.create_interactive_plot(
-        xy, layers[0], layers[1], layers[2], hover_text=hover,  # datamapplot wants finest first title="field-radar: arXiv CS",
+        xy, layers[0], layers[1], layers[2], hover_text=hover,  # datamapplot wants finest first
+        title="field-radar: arXiv CS",
         sub_title=f"{len(df):,} papers, {sub.min():%Y-%m} to {sub.max():%Y-%m}",
         histogram_data=sub, histogram_n_bins=sub.nunique(), histogram_settings={"histogram_title": "submitted"},
         enable_search=True, darkmode=True, inline_data=True)

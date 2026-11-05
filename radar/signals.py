@@ -28,6 +28,14 @@ NAMES = set("openai gpt chatgpt deepseek gemini claude llama qwen grok mistral a
 KW = dict(ngram_range=(2, 4), stop_words="english", binary=True, lowercase=True, token_pattern=r"(?u)\b[a-zA-Z][a-zA-Z0-9\-]+\b")
 
 
+def stem(w):
+    """Merge plural and singular: models/model, harnesses/harness. ponytail: not a real stemmer, policies/policy stay apart."""
+    return re.sub(r"(?<=ss)es$|(?<=[^s])s$", "", w)
+
+
+assert [stem(w) for w in "harnesses harness models architectures process".split()] == "harness harness model architecture process".split()
+
+
 def papers_sql(cols):
     return f"select {cols} from papers" + (f" where submitted < '{CUTOFF}'" if CUTOFF else "")
 
@@ -152,10 +160,10 @@ def terms(con, months, min_recent=30):
     def dominant(words):
         """The neighbour word if one word (plural merged) takes at least 60% of the occurrences, else None."""
         by_stem = collections.Counter()
-        for w, c in words.items(): by_stem[re.sub(r"s$", "", w)] += c
+        for w, c in words.items(): by_stem[stem(w)] += c
         if not by_stem: return None
         st, c = by_stem.most_common(1)[0]
-        w = max((w for w in words if re.sub(r"s$", "", w) == st), key=words.get)
+        w = max((w for w in words if stem(w) == st), key=words.get)
         ok = c >= 0.6 * sum(words.values()) and w not in stop and re.fullmatch(r"[a-z][a-z0-9\-]+", w)
         return (w, c / sum(words.values())) if ok else None
     for j in np.where((g_all >= 1.5) & (z_all >= 3) & (title_n >= 3) & (title_n >= 0.05 * rcount) & (kl >= 0.5))[0]:
@@ -179,7 +187,7 @@ def terms(con, months, min_recent=30):
     best = {}
     # One row per topic: "world-action models", "world action model" and an extended fragment that equals an existing phrase
     # all reduce to the same form; the highest-scoring spelling is kept with its own counts.
-    for r in sorted(rows, key=lambda r: -r[-1]): best.setdefault(" ".join(re.sub(r"s$", "", t) for t in r[1].replace("-", " ").split()), r)
+    for r in sorted(rows, key=lambda r: -r[-1]): best.setdefault(" ".join(stem(t) for t in r[1].replace("-", " ").split()), r)
     rows = list(best.values())
     return rows
 
