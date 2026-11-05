@@ -69,7 +69,8 @@ def main():
     con.execute("delete from topics"); con.execute("delete from topic_members")
     for lvl, frac in LEVELS.items():
         mcs = max(15, int(frac * len(df)))
-        cl = hdbscan.HDBSCAN(min_cluster_size=mcs, min_samples=10).fit_predict(xy)
+        # Coarse level uses leaf selection: the default (eom) merged 88% of 60k papers into one cluster.
+        cl = hdbscan.HDBSCAN(min_cluster_size=mcs, min_samples=10, cluster_selection_method="leaf" if lvl == 2 else "eom").fit_predict(xy)
         noise = cl < 0
         if noise.any() and (~noise).any():
             # HDBSCAN leaves 25–40% of points unassigned; give each the majority label of its 15 nearest assigned points.
@@ -87,9 +88,9 @@ def main():
     hover = (df.title + " [" + df.primary_cat + ", " + pd.to_datetime(df.submitted).dt.strftime("%Y-%m") + "] arXiv:" + df.id).values
     sub = pd.to_datetime(df.submitted)
     plot = datamapplot.create_interactive_plot(
-        xy, layers[2], layers[1], layers[0], hover_text=hover, title="field-radar: arXiv CS",
+        xy, layers[0], layers[1], layers[2], hover_text=hover,  # datamapplot wants finest first title="field-radar: arXiv CS",
         sub_title=f"{len(df):,} papers, {sub.min():%Y-%m} to {sub.max():%Y-%m}",
-        histogram_data=sub, histogram_settings={"histogram_title": "submitted"},
+        histogram_data=sub, histogram_n_bins=sub.nunique(), histogram_settings={"histogram_title": "submitted"},
         enable_search=True, darkmode=True, inline_data=True)
     pathlib.Path(a.out).parent.mkdir(exist_ok=True)
     plot.save(a.out)

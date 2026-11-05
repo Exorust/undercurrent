@@ -113,3 +113,19 @@ field-radar/
 ```
 
 Run everything with `.venv/bin/python -m radar.<module>`. Monthly run is a single `make monthly` later; not needed for v1.
+
+## 10. State after the first full run (2026-11-04)
+
+Run with `./run_all.sh`; each stage logs to `data/log/<stage>.log`. Outputs: `report/2026-11.md`, `report/map.html`, `BACKTEST.md`.
+
+What differs from the plan above:
+
+- **Harvest has two sources.** arXiv's bulk endpoint (OAI-PMH) stopped answering uncached requests on 2026-11-04, at datestamp April 2026. `radar/harvest_api.py` uses the arXiv search API, which filters on the true first-submission date, and covered 2025-07-01 to today. Total 452,360 papers. Gap: papers submitted before July 2025 and revised after April 2026 are missing until `radar/harvest.py` can finish (it resumes from the marker files in `data/raw/`).
+- **Embeddings cover a sample, not everything.** Semantic Scholar allows about 1,500 papers per minute without an API key, so `radar/enrich.py --limit 60000` fetches a fixed sample of the last 18 months, ordered by `md5(id)` so a larger limit extends the same set. 59,753 papers have vectors. Set `S2_API_KEY` to go about 3 times faster.
+- **S1 (topic growth on map clusters) is only used inside merge ideas**, on the 60,000-paper sample. It is not a separate table in the report.
+- **S3 needed two filters that were not in the plan.** A phrase must appear in titles (at least 3 titles and 5% of its recent papers), and its mix of primary categories must differ from the average recent paper (KL divergence at least 0.5). Without them the list was writing-style phrases such as "central finding". Ranking uses a rough significance value `z = (recent - expected) / sqrt(recent + expected + 1)` multiplied by `log(growth)`.
+- **Backtest was run from 2025-04-01, not 2022**, because the data starts in November 2023. Result, corrected for the 1.26x growth of all CS: of the top 50 flagged phrases 42% grew at least 1.5x faster than the field, 40% kept pace, 18% faded (median 1.41). All 156 candidates: 35% / 48% / 17% (median 1.25). So the filters select phrases that beat the field and the ranking adds a small lift. Product and model names fade ("openai o1", "deepseek r1"); method names grow. S2 has no numerical backtest yet.
+- **Map clustering.** HDBSCAN leaves 34% to 39% of points unassigned; each gets the majority label of its 15 nearest assigned points. The coarse level uses leaf cluster selection (27 clusters); the default selection put 88% of papers into one cluster.
+- **Merge distance band is relative.** Topic distances from the home field were all between 0.04 and 0.09, so the fixed band in section 5 selected nothing. `radar/merge.py` takes topics between the 25th and 75th percentile of distance.
+
+Not built yet: notes on the map, the two-region question, the home-field marker, growth colouring, the user-documents layer, a product-name filter for S3, a check of the `math.PR` pairs in S2 (seven rise together, which may be a reclassification by arXiv).
