@@ -1,63 +1,63 @@
 # Backtest: S3 phrases flagged with data before 2025-04-01
 
-Measured: monthly paper rate in 2025-10..2026-03 divided by the monthly rate in the 6 months before the cutoff.
+Measured: monthly paper rate in 2025-10..2026-03 divided by the monthly rate in the 6 months before the cutoff, then divided by 1.26, the growth of all arXiv CS papers between the same two windows. A ratio of 1.0 means the phrase only kept pace with the field.
 
 | group | n | grew (>=1.5x) | flat | faded (<0.75x) | median ratio |
 |---|---|---|---|---|---|
-| top 50 flagged | 50 | 38% | 44% | 18% | 1.29 |
-| all candidates (baseline) | 156 | 31% | 51% | 19% | 1.20 |
+| top 50 flagged | 50 | 42% | 40% | 18% | 1.41 |
+| all candidates (baseline) | 156 | 35% | 48% | 17% | 1.25 |
 
 ## Top 50 flagged phrases
 
 | phrase | before/mo | later/mo | ratio |
 |---|---|---|---|
-| deepseek r1 | 8.2 | 4.2 | 0.51 |
-| large reasoning models | 7.2 | 30.3 | 4.23 |
-| test-time scaling | 9.2 | 34.3 | 3.75 |
-| openai o1 | 14.3 | 1.7 | 0.12 |
-| reasoning models | 25.8 | 77.0 | 2.98 |
-| process reward models | 5.0 | 6.0 | 1.20 |
-| inference-time scaling | 5.3 | 9.7 | 1.81 |
-| inference scaling | 6.0 | 2.5 | 0.42 |
-| sparse autoencoders | 16.8 | 18.0 | 1.07 |
-| process reward | 8.7 | 10.2 | 1.17 |
-| inference-time compute | 5.3 | 3.2 | 0.59 |
-| test-time compute | 8.2 | 11.0 | 1.35 |
-| vision-language models | 182.0 | 254.5 | 1.40 |
-| structured reasoning | 9.2 | 28.5 | 3.11 |
-| video generation | 77.8 | 86.8 | 1.12 |
-| sparse autoencoder | 5.2 | 7.3 | 1.42 |
-| reasoning trajectories | 5.2 | 23.3 | 4.52 |
-| agentic ai | 7.3 | 54.5 | 7.43 |
-| llm reasoning | 29.7 | 62.5 | 2.11 |
-| llm agents | 46.5 | 97.5 | 2.10 |
-| token reduction | 6.2 | 7.7 | 1.24 |
-| multimodal reasoning | 13.8 | 45.8 | 3.31 |
-| video large language models | 6.8 | 6.8 | 1.00 |
-| enhanced reasoning | 5.8 | 5.0 | 0.86 |
-| reasoning process | 33.2 | 59.5 | 1.79 |
-| agentic systems | 5.0 | 30.2 | 6.03 |
-| autoregressive modeling | 6.8 | 8.3 | 1.22 |
-| reasoning llms | 19.2 | 24.5 | 1.28 |
-| process supervision | 5.7 | 3.2 | 0.56 |
-| agentic workflow | 5.0 | 7.8 | 1.57 |
-| gui agents | 6.0 | 13.0 | 2.17 |
-| retrieval-augmented generation | 128.5 | 152.7 | 1.19 |
-| similarity analysis | 5.2 | 6.3 | 1.23 |
-| enhancing llm | 12.0 | 5.7 | 0.47 |
-| visual understanding | 26.3 | 27.2 | 1.03 |
-| flow matching | 29.5 | 65.3 | 2.21 |
-| chain-of-thought reasoning | 18.8 | 30.2 | 1.60 |
-| code translation | 6.3 | 4.0 | 0.63 |
-| visual token | 9.8 | 12.7 | 1.29 |
-| token compression | 5.7 | 9.5 | 1.68 |
-| action generation | 5.3 | 12.3 | 2.31 |
-| kv cache | 28.5 | 38.8 | 1.36 |
-| diffusion transformers | 19.7 | 23.2 | 1.18 |
-| federated fine-tuning | 5.2 | 3.7 | 0.71 |
-| gaussian splatting | 108.2 | 85.7 | 0.79 |
-| step-by-step reasoning | 7.7 | 10.7 | 1.39 |
-| gemini flash | 5.5 | 20.5 | 3.73 |
-| visual generation | 12.2 | 15.7 | 1.29 |
-| data alignment | 5.5 | 1.5 | 0.27 |
-| advanced reasoning | 13.0 | 13.5 | 1.04 |
+| deepseek r1 | 8.2 | 4.5 | 0.44 |
+| large reasoning models | 7.2 | 44.0 | 4.87 |
+| test-time scaling | 9.2 | 50.3 | 4.36 |
+| openai o1 | 14.3 | 2.0 | 0.11 |
+| reasoning models | 25.8 | 109.0 | 3.35 |
+| process reward models | 5.0 | 8.8 | 1.40 |
+| inference-time scaling | 5.3 | 13.5 | 2.01 |
+| inference scaling | 6.0 | 3.0 | 0.40 |
+| sparse autoencoders | 16.8 | 26.5 | 1.25 |
+| process reward | 8.7 | 17.0 | 1.56 |
+| inference-time compute | 5.3 | 5.5 | 0.82 |
+| test-time compute | 8.2 | 14.5 | 1.41 |
+| vision-language models | 182.0 | 334.8 | 1.46 |
+| structured reasoning | 9.2 | 37.2 | 3.22 |
+| video generation | 77.8 | 113.7 | 1.16 |
+| sparse autoencoder | 5.2 | 9.8 | 1.51 |
+| reasoning trajectories | 5.2 | 33.2 | 5.09 |
+| agentic ai | 7.3 | 70.7 | 7.65 |
+| llm reasoning | 29.7 | 85.0 | 2.27 |
+| llm agents | 46.5 | 140.5 | 2.40 |
+| token reduction | 6.2 | 10.5 | 1.35 |
+| multimodal reasoning | 13.8 | 59.0 | 3.38 |
+| video large language models | 6.8 | 8.0 | 0.93 |
+| enhanced reasoning | 5.8 | 5.5 | 0.75 |
+| reasoning process | 33.2 | 76.5 | 1.83 |
+| agentic systems | 5.0 | 42.0 | 6.67 |
+| autoregressive modeling | 6.8 | 10.2 | 1.18 |
+| reasoning llms | 19.2 | 33.8 | 1.40 |
+| process supervision | 5.7 | 5.2 | 0.72 |
+| agentic workflow | 5.0 | 10.8 | 1.72 |
+| gui agents | 6.0 | 18.0 | 2.38 |
+| retrieval-augmented generation | 128.5 | 195.3 | 1.21 |
+| similarity analysis | 5.2 | 7.8 | 1.20 |
+| enhancing llm | 12.0 | 7.3 | 0.49 |
+| visual understanding | 26.3 | 35.2 | 1.06 |
+| flow matching | 29.5 | 96.2 | 2.59 |
+| chain-of-thought reasoning | 18.8 | 39.5 | 1.66 |
+| code translation | 6.3 | 5.7 | 0.71 |
+| visual token | 9.8 | 16.8 | 1.36 |
+| token compression | 5.7 | 12.2 | 1.70 |
+| action generation | 5.3 | 18.3 | 2.73 |
+| kv cache | 28.5 | 52.5 | 1.46 |
+| diffusion transformers | 19.7 | 32.8 | 1.32 |
+| federated fine-tuning | 5.2 | 4.2 | 0.64 |
+| gaussian splatting | 108.2 | 109.8 | 0.81 |
+| step-by-step reasoning | 7.7 | 13.8 | 1.43 |
+| gemini flash | 5.5 | 27.3 | 3.94 |
+| visual generation | 12.2 | 19.0 | 1.24 |
+| data alignment | 5.5 | 2.7 | 0.38 |
+| advanced reasoning | 13.0 | 15.8 | 0.97 |

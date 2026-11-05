@@ -34,12 +34,17 @@ def main():
     later = dict(zip(vec.get_feature_names_out(), np.asarray(vec.transform(df.txt).sum(0)).ravel()))
     sig["later_rate"] = sig.key.map(later) / len(have)
     sig["before_rate"] = sig.recent / a.months
-    sig["ratio"] = sig.later_rate / sig.before_rate
+    # Correct for the growth of all of arXiv CS between the two windows, else every phrase looks like it grew.
+    before_months = [str(cut - i) for i in range(1, a.months + 1)]
+    n_before = con.execute("select count(*) from papers where strftime(submitted,'%Y-%m') in (" + ",".join(f"'{m}'" for m in before_months) + ")").fetchone()[0]
+    vol = (len(df) / len(have)) / (n_before / a.months)
+    sig["ratio"] = sig.later_rate / sig.before_rate / vol
     top = sig.head(a.top)
 
     def stats(d): return (d.ratio >= 1.5).mean(), ((d.ratio >= 0.75) & (d.ratio < 1.5)).mean(), (d.ratio < 0.75).mean(), d.ratio.median()
     L = [f"# Backtest: S3 phrases flagged with data before {a.cutoff}", "",
-         f"Measured: monthly paper rate in {have[0]}..{have[-1]} divided by the monthly rate in the {a.months} months before the cutoff.", "",
+         f"Measured: monthly paper rate in {have[0]}..{have[-1]} divided by the monthly rate in the {a.months} months before the cutoff, "
+         f"then divided by {vol:.2f}, the growth of all arXiv CS papers between the same two windows. A ratio of 1.0 means the phrase only kept pace with the field.", "",
          "| group | n | grew (>=1.5x) | flat | faded (<0.75x) | median ratio |", "|---|---|---|---|---|---|"]
     for name, d in ((f"top {a.top} flagged", top), ("all candidates (baseline)", sig)):
         g, f, x, m = stats(d); L.append(f"| {name} | {len(d)} | {100*g:.0f}% | {100*f:.0f}% | {100*x:.0f}% | {m:.2f} |")
