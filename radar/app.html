@@ -5,11 +5,11 @@
 <link rel="icon" href="data:,">
 <style>
 /* Critical defaults: the skeleton does not wait for Tailwind or web fonts. */
-:root{color-scheme:light;--color-page:#eeede9;--color-surface:#ffffff;--color-side:#f7f7f5;--color-hover:#efefed;--color-selected:#e9e9e6;--color-hair:#e6e5e1;--color-text:#1c1c1c;--color-secondary:#5f5f5f;--color-muted:#9a9a9a;--color-a:#1c1c1c;--color-b:#1c1c1c;--color-g1:#2c5f9e;--color-g2:#6c93c3;--color-g3:#a9bcd4;--color-g4:#a6a6a6;--color-g5:#e5b183;--color-g6:#df8743;--color-g7:#c4501b;--color-nodata:#d9d9d6;--color-bg:#eeede9;--color-tile:#ffffff;--color-well:#f3f3f1;--color-solid:#ffffff;--color-pop:#ffffff;--color-map:#ffffff;--color-border:#e6e5e1;--color-btn:#ffffff;--color-sel:#e9e9e6;--color-green:#1c1c1c;--color-green-dk:#5f5f5f;--color-orange:#1c1c1c;--color-orange-tint:#e9e9e6;--color-a-map:#1c1c1c;--color-panel:#ffffff;--color-divider:#efefed;--color-tint:#f3f3f1;--color-error:#fff1f0;}
+:root{color-scheme:light;--color-page:#ffffff;--color-surface:#ffffff;--color-side:#f7f7f5;--color-hover:#efefed;--color-selected:#e9e9e6;--color-hair:#e6e5e1;--color-text:#1c1c1c;--color-secondary:#5f5f5f;--color-muted:#636363;--color-a:#1c1c1c;--color-b:#1c1c1c;--color-g1:#2c5f9e;--color-g2:#6c93c3;--color-g3:#a9bcd4;--color-g4:#a6a6a6;--color-g5:#e5b183;--color-g6:#df8743;--color-g7:#c4501b;--color-nodata:#d9d9d6;--color-bg:#ffffff;--color-tile:#ffffff;--color-well:#f3f3f1;--color-solid:#ffffff;--color-pop:#ffffff;--color-map:#ffffff;--color-border:#e6e5e1;--color-btn:#ffffff;--color-sel:#e9e9e6;--color-green:#1c1c1c;--color-green-dk:#5f5f5f;--color-orange:#1c1c1c;--color-orange-tint:#e9e9e6;--color-a-map:#1c1c1c;--color-panel:#ffffff;--color-divider:#efefed;--color-tint:#f3f3f1;--color-error:#fff1f0;}
 html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text)}
 [hidden]{display:none!important}
-#app{display:grid;height:calc(100vh - 24px);margin:12px;padding:0;gap:0;border:1px solid var(--color-hair);border-radius:20px;background:var(--color-surface);box-shadow:0 8px 40px rgba(0,0,0,.08);overflow:hidden;grid-template-columns:248px minmax(0,1fr) 376px;grid-template-rows:44px 24px minmax(0,1fr)}
-#side{grid-row:1/4;grid-column:1} header{grid-row:1;grid-column:2} #mapwrap{grid-row:3;grid-column:2;position:relative;background:#ffffff} #insp{grid-row:1/4;grid-column:3}
+#app{display:grid;height:100vh;margin:0;padding:0;gap:0;border:0;border-radius:0;background:var(--color-surface);box-shadow:none;overflow:hidden;grid-template-columns:248px minmax(0,1fr) 376px;grid-template-rows:44px 24px minmax(0,1fr)}
+#side{grid-row:1/4;grid-column:1} #titleControls{grid-row:1;grid-column:2} #mapwrap{grid-row:3;grid-column:2;position:relative;background:#ffffff} #insp{grid-row:1/4;grid-column:3}
 #tabs{visibility:hidden}
 #loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--color-muted)}
 </style>
@@ -17,7 +17,7 @@ html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text
 <script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.5"></script>
 <style type="text/tailwindcss">
 @theme static {
-  --color-page: #eeede9;
+  --color-page: #ffffff;
   --color-surface: #ffffff;
   --color-side: #f7f7f5;
   --color-hover: #efefed;
@@ -25,7 +25,7 @@ html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text
   --color-hair: #e6e5e1;
   --color-text: #1c1c1c;
   --color-secondary: #5f5f5f;
-  --color-muted: #9a9a9a;
+  --color-muted: #636363;
   --color-a: #1c1c1c;
   --color-b: #1c1c1c;
   --color-g1: #2c5f9e;
@@ -36,7 +36,7 @@ html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text
   --color-g6: #df8743;
   --color-g7: #c4501b;
   --color-nodata: #d9d9d6;
-  --color-bg: #eeede9;
+  --color-bg: #ffffff;
   --color-tile: #ffffff;
   --color-well: #f3f3f1;
   --color-solid: #ffffff;
@@ -60,12 +60,12 @@ html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text
 <style>
 /* plain CSS (unlayered, so it wins over Tailwind's preflight layer); critical tokens also exist before the @theme block runs */
 html,body{height:100%;margin:0;overflow:hidden}
-/* F44: one light window on a warm grey page. */
-body{background:var(--color-page);color:var(--color-text);font:13px/1.4 "Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+/* F44 light surfaces, extended to the viewport edges. */
+body{background:var(--color-page);color:var(--color-text);font:14px/1.4 "Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 *{box-sizing:border-box}
 *{scrollbar-width:thin;scrollbar-color:#e6e5e1 transparent}
 .mono,td.n,.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
-.muted{color:var(--color-muted)} .small{font-size:12px} .tiny{font-size:11px}
+.muted{color:var(--color-muted)} .small{font-size:12px} .tiny{font-size:12px}
 a{color:var(--color-text);text-decoration:none;text-underline-offset:3px} a:hover{text-decoration:underline;text-decoration-color:var(--color-orange)}
 .plist a{color:var(--color-text)}
 button,select,input{appearance:none;font:inherit;color:inherit;background:var(--color-btn);border:1px solid var(--color-border);border-radius:10px;transition:background-color .1s,border-color .1s}
@@ -93,9 +93,9 @@ input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;b
 details>summary{list-style:none;cursor:pointer} details>summary::-webkit-details-marker{display:none}
 .seg{display:inline-flex} .seg button{border-radius:0;margin-left:-1px} .seg button:first-child{border-radius:10px 0 0 10px;margin:0} .seg button:last-child{border-radius:0 10px 10px 0}
 .seg button:not([aria-pressed=true]):not([aria-checked=true]){background:var(--color-well);color:var(--color-muted)}
-h4{margin:12px 0 5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--color-muted);font-weight:500}
+h3,.section-label{margin:12px 0 5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--color-muted);font-weight:500}
 /* thin line icons (Lucide-style paths, stroke 1.5) drawn as masks in currentColor, so labels keep their DOM text */
-h4[data-i]::before{content:"";display:inline-block;width:14px;height:14px;margin-right:7px;vertical-align:-2.5px;background:currentColor;-webkit-mask:var(--ic) center/14px 14px no-repeat;mask:var(--ic) center/14px 14px no-repeat;opacity:.9}
+h3[data-i]::before,h2.sech[data-i]::before,.section-label[data-i]::before{content:"";display:inline-block;width:14px;height:14px;margin-right:7px;vertical-align:-2.5px;background:currentColor;-webkit-mask:var(--ic) center/14px 14px no-repeat;mask:var(--ic) center/14px 14px no-repeat;opacity:.9}
 [data-i=layers]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 2 10 5-10 5L2 7z'/%3E%3Cpath d='m2 17 10 5 10-5'/%3E%3Cpath d='m2 12 10 5 10-5'/%3E%3C/svg%3E")}
 [data-i=palette]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22a10 10 0 1 1 10-10c0 2.8-2.2 4-4.5 4H16a2 2 0 0 0-1.5 3.3A1.6 1.6 0 0 1 12 22z'/%3E%3Ccircle cx='7.5' cy='11' r='1'/%3E%3Ccircle cx='11' cy='7' r='1'/%3E%3Ccircle cx='16' cy='8.5' r='1'/%3E%3C/svg%3E")}
 [data-i=trend]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpath d='M16 7h6v6'/%3E%3C/svg%3E")}
@@ -119,13 +119,13 @@ h4[data-i]::before{content:"";display:inline-block;width:14px;height:14px;margin
 /* growth badge: step colour as text on a well, hairline in that colour */
 .gr{display:inline-block;min-width:44px;text-align:center;border-radius:8px;padding:0 5px;color:var(--gc,var(--color-text));background:var(--color-well);border:1px solid color-mix(in srgb,var(--gc,var(--color-muted)) 40%,transparent);font-weight:500;font-size:12px;line-height:17px;font-family:"JetBrains Mono",monospace}
 /* "new" tag: outline pill with an orange dot */
-.new{display:inline-flex;align-items:center;gap:4px;background:transparent;color:var(--color-orange);border:1px solid #e9e9e6;border-radius:9999px;padding:0 6px 0 5px;font-size:11px;line-height:15px;font-weight:500;letter-spacing:0;text-transform:none}
+.new{display:inline-flex;align-items:center;gap:4px;background:transparent;color:var(--color-orange);border:1px solid #e9e9e6;border-radius:9999px;padding:0 6px 0 5px;font-size:12px;line-height:15px;font-weight:500;letter-spacing:0;text-transform:none}
 .new::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--color-orange);flex:none}
-.chip{display:inline-block;border:1px solid var(--color-hair);border-radius:10px;padding:0 7px;font-size:11px;margin:1px 4px 1px 0;color:var(--color-text);background:var(--color-well);line-height:16px}
-.rank{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--color-sel);color:var(--color-text);font-size:11px;text-align:center;line-height:16px;font-weight:600}
+.chip{display:inline-block;border:1px solid var(--color-hair);border-radius:10px;padding:0 7px;font-size:12px;margin:1px 4px 1px 0;color:var(--color-text);background:var(--color-well);line-height:16px}
+.rank{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--color-sel);color:var(--color-text);font-size:12px;text-align:center;line-height:16px;font-weight:600}
 #hname{color:var(--color-text);text-decoration:none} a#hname[href]:hover{color:var(--color-text);text-decoration:underline;text-decoration-color:var(--color-orange)}
-#statusDot{order:-1;font-size:9px;line-height:1}
-#infoBtn{width:18px;height:18px;padding:0;border-radius:50%;font-size:11px;line-height:16px;flex:none}
+#statusDot{order:-1;font-size:12px;line-height:1}
+#infoBtn{width:18px;height:18px;padding:0;border-radius:50%;font-size:12px;line-height:16px;flex:none}
 #mapwrap::after{content:"";position:absolute;inset:0;border-radius:16px;box-shadow:none;pointer-events:none;z-index:4}
 #map{position:absolute;inset:0;width:100%;height:100%}
 #map:focus-visible{outline:2px solid var(--color-text)!important;outline-offset:2px}
@@ -133,7 +133,7 @@ h4[data-i]::before{content:"";display:inline-block;width:14px;height:14px;margin
 #inspTop{height:64px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--color-hair)}
 #abBlock{padding:10px 14px;border-bottom:1px solid var(--color-hair);background:transparent}
 #inspBody{padding:12px 14px;position:relative}
-#inspBody.busy>*:not(.prog):not(#slowLine){opacity:.5}
+#inspBody.busy>*:not(.prog):not(#slowLine){opacity:1}
 #zoomBtns{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px;z-index:5}
 #zoomBtns button{width:26px;height:26px;padding:0;background:#ffffff}
 #zoomBtns button:hover{background:#efefed}
@@ -177,10 +177,10 @@ td.n,th.n{text-align:right} tr[tabindex]{cursor:pointer} tr.hl{background:#e6e5e
 #infoPop{position:fixed;z-index:50;width:360px;background:var(--color-pop);border:1px solid var(--color-border);border-radius:12px;padding:10px 12px;font-size:12px;max-height:70vh;overflow:auto;box-shadow:0 12px 32px rgba(0,0,0,.08)}
 #infoPop p{margin:0 0 6px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;padding:8px 12px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.08)}
-#bench{position:fixed;right:8px;bottom:8px;z-index:70;background:var(--color-solid);font:11px "JetBrains Mono",monospace;padding:6px;white-space:pre}
+#bench{position:fixed;right:8px;bottom:8px;z-index:70;background:var(--color-solid);font:12px "JetBrains Mono",monospace;padding:6px;white-space:pre}
 .err{background:#fff1f0;color:#1c1c1c;border-radius:10px;padding:8px;margin:6px 0}
 #lightRow{display:block;margin-top:5px}
-#leftNote{margin-top:12px;font-size:11px;color:var(--color-muted);white-space:normal}
+#leftNote{margin-top:12px;font-size:12px;color:var(--color-muted);white-space:normal}
 .savedSum{display:none}
 /* Uniform controls, including compact-header controls and generated chips. */
 button,select,input,.slot .lbl,#winSum,
@@ -196,7 +196,7 @@ button.on:hover:not(:disabled),button[aria-pressed=true]:hover:not(:disabled),bu
 /* The inspector scrolls within the shared window. */
 #mapwrap,#insp{border-radius:16px;overflow:hidden;min-width:0}
 #insp{background:var(--color-tile);box-shadow:none;overflow-y:auto;}
-#inspBody h3{font-size:22px!important;line-height:1.2;font-weight:400;letter-spacing:-.01em}
+#inspBody h2{font-size:22px!important;line-height:1.2;font-weight:400;letter-spacing:-.01em}
 #hname{font-weight:600}
 #tabbar button:hover,th button:hover,.dd>div button:hover,.plist>div:hover,#savedList>div:hover{background:var(--color-hover)}
 #levelBox button{padding:3px 7px}
@@ -214,7 +214,7 @@ button[data-act=delConfirm]{background:transparent;color:var(--color-orange);bor
 .chip:hover{background:#e6e5e1}
 .chip::before,.pill::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--dot,var(--color-muted));margin-right:5px;vertical-align:1px}
 /* Status and selection pills. */
-.pill{background:transparent;border-radius:9999px!important;border-color:color-mix(in srgb,var(--dot,var(--color-muted)) 50%,transparent)!important;color:var(--pc,var(--color-text));text-transform:none;letter-spacing:0;font-size:11px!important}
+.pill{background:transparent;border-radius:9999px!important;border-color:color-mix(in srgb,var(--dot,var(--color-muted)) 50%,transparent)!important;color:var(--pc,var(--color-text));text-transform:none;letter-spacing:0;font-size:12px!important}
 .pill{white-space:nowrap}
 .pill[data-status=new]{--dot:var(--color-orange);--pc:var(--color-orange)}
 .pill[data-status=forming]{--dot:var(--color-green);--pc:var(--color-green)}
@@ -225,7 +225,7 @@ button[data-act=delConfirm]{background:transparent;color:var(--color-orange);bor
 #loading,#caption{color:var(--color-text);text-shadow:0 1px 3px var(--color-map)}
 #colourBox label:has(input:focus-visible){outline:2px solid var(--color-orange);outline-offset:2px}
 /* ---------- F43 layout: sidebar of verbs | title bar + map card | inspector ---------- */
-#app{display:grid;height:calc(100vh - 24px);height:calc(100dvh - 24px);margin:12px;padding:0;gap:0;grid-template-columns:var(--sw,248px) minmax(0,1fr) var(--iw,376px);grid-template-rows:44px 24px minmax(0,1fr)}
+#app{display:grid;height:100vh;height:100dvh;margin:0;padding:0;gap:0;grid-template-columns:var(--sw,248px) minmax(0,1fr) var(--iw,376px);grid-template-rows:44px 24px minmax(0,1fr)}
 body.rail{--sw:56px}
 i[data-i]{display:inline-block;width:16px;height:16px;flex:none;background:currentColor;-webkit-mask:var(--ic) center/16px 16px no-repeat;mask:var(--ic) center/16px 16px no-repeat}
 button.ib{width:30px;height:30px;padding:0!important;display:inline-grid;place-items:center;border:1px solid transparent!important;background:transparent;color:var(--color-muted);flex:none}
@@ -243,25 +243,25 @@ button.ib:hover:not(:disabled){color:var(--color-text);background:var(--color-ho
 #side button.verb[aria-pressed=true],#side button.verb.on{background:var(--color-sel)}
 #side button.verb[aria-pressed=true] i,#side button.verb.on i{color:var(--color-orange)}
 .vl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-kbd{font:500 11px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--color-muted);min-width:10px;text-align:right}
+kbd{font:500 12px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--color-muted);min-width:10px;text-align:right}
 #selSec{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 0 6px}
-#side h4.sech{margin:14px 10px 6px;display:flex;align-items:center}
-.cnt{margin-left:auto;font:500 11px "JetBrains Mono",monospace;color:var(--color-muted);letter-spacing:0}
+#side h2.sech{margin:14px 10px 6px;display:flex;align-items:center}
+.cnt{margin-left:auto;font:500 12px "JetBrains Mono",monospace;color:var(--color-muted);letter-spacing:0}
 #selEmpty{padding:2px 10px 4px;line-height:1.45}
 .slot,.sitem{display:flex;align-items:center;gap:9px;min-height:32px;padding:0 4px 0 10px;border-radius:10px;font-size:13px;min-width:0;margin:0}
 .slot:empty{display:none}
 .slot:hover,.sitem:hover,.slot:focus-within,.sitem:focus-within{background:var(--color-hover)}
-.slot b{width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:#ffffff;font-size:11px;flex:none;font-weight:600}
+.slot b{width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:#ffffff;font-size:12px;flex:none;font-weight:600}
 .slot b.cur{width:10px;height:10px;margin:0 4px;border-radius:50%;background:transparent;box-shadow:0 0 0 2px #fff}
 .sitem .dot{width:6px;height:6px;margin:0 6px;border-radius:50%;background:var(--color-muted);flex:none}
 .sn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;cursor:pointer}
 #side .sitem button.sn{border:0!important;background:transparent;padding:0;font-size:13px!important;color:var(--color-text);height:30px}
-.sk{font-size:11px;color:var(--color-muted);text-transform:none;letter-spacing:0;margin-right:2px}
-.sc{font:11px "JetBrains Mono",monospace;color:var(--color-muted);flex:none}
+.sk{font-size:12px;color:var(--color-muted);text-transform:none;letter-spacing:0;margin-right:2px}
+.sc{font:12px "JetBrains Mono",monospace;color:var(--color-muted);flex:none}
 .sbtns{display:none;gap:3px;flex:none}
 .slot:hover .sbtns,.slot:focus-within .sbtns,.sitem:hover .sbtns,.sitem:focus-within .sbtns{display:flex}
 .slot:hover .sc,.slot:focus-within .sc,.sitem:hover .sc,.sitem:focus-within .sc{display:none}
-#side .sbtns button,#side button.sx{width:22px;height:22px;padding:0;border-radius:7px!important;font-size:11px!important;line-height:20px;flex:none}
+#side .sbtns button,#side button.sx{width:22px;height:22px;padding:0;border-radius:7px!important;font-size:12px!important;line-height:20px;flex:none}
 #side button.sx{border:0!important;background:transparent;color:var(--color-muted);font-size:14px!important}
 #side button.sx:hover{color:var(--color-orange);background:#e9e9e6}
 #swapBtn{margin:4px 10px 0;font-size:12px!important;padding:2px 8px}
@@ -270,28 +270,28 @@ kbd{font:500 11px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--color-mu
 #savedList>div.sitem:hover,#savedList>div.sitem:focus-within{background:var(--color-hover)}
 #savedList>div>button.sn{flex:1;white-space:nowrap}
 #savedBox>summary{display:none}
-#leftNote{flex:none;margin:6px 6px 8px;font-size:11px;line-height:1.4;color:var(--color-muted)}
+#leftNote{flex:none;margin:6px 6px 8px;font-size:12px;line-height:1.4;color:var(--color-muted)}
 #leftNote:empty{display:none}
 #sideFoot{flex:none;display:flex;align-items:center;gap:6px;padding:8px 0 0 0;border-top:1px solid var(--color-hair)}
 #side #viewBtn{flex:1;display:flex;align-items:center;gap:11px;height:34px;padding:0 10px;border:1px solid transparent!important;background:transparent;color:var(--color-text);text-align:left}
 #side #viewBtn i{color:var(--color-muted)}
 #side #viewBtn:hover,#side #viewBtn[aria-expanded=true]{background:var(--color-hover)}
-#status{font-size:11px;color:var(--color-muted);display:inline-flex;align-items:center;gap:5px;border:1px solid #e6e5e1;border-radius:9999px;padding:1px 8px 1px 6px;line-height:16px;max-width:110px;overflow:hidden;white-space:nowrap}
+#status{font-size:12px;color:var(--color-muted);display:inline-flex;align-items:center;gap:5px;border:1px solid #e6e5e1;border-radius:9999px;padding:1px 8px 1px 6px;line-height:16px;max-width:110px;overflow:hidden;white-space:nowrap}
 #statusHost{overflow:hidden;text-overflow:ellipsis}
 #ghLink{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:10px;color:var(--color-muted);text-decoration:none}
 #ghLink:hover{color:var(--color-text);background:var(--color-hover)}
 /* title bar */
-header{grid-row:1;grid-column:2;display:flex;align-items:center;gap:10px;min-width:0;white-space:nowrap;padding:0 2px;border-bottom:0}
+#titleControls{grid-row:1;grid-column:2;display:flex;align-items:center;gap:10px;min-width:0;white-space:nowrap;padding:0 2px;border-bottom:0}
 #hmain{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
 #winLabel{grid-column:2;grid-row:2;min-width:0;padding:3px 10px;font-size:12px;line-height:18px;color:var(--color-muted);white-space:nowrap;background:var(--color-surface)} #winLabel b{color:inherit;font-weight:400}
 #winDD{position:relative;flex:none}
 #tbar{display:flex;align-items:center;gap:2px;margin-left:auto;flex:none;padding-left:8px;border-left:1px solid var(--color-hair)}
-header button.tb{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 6px;border:1px solid transparent!important;background:transparent;color:var(--color-muted)}
-header button.tb:hover:not(:disabled){color:var(--color-text);background:var(--color-hover)}
-header button.tb[aria-pressed=true]{color:var(--color-text);background:var(--color-sel)}
-header button.tb[aria-pressed=true] i{color:var(--color-orange)}
-.tc{font:500 11px/16px "JetBrains Mono",monospace;background:var(--color-well);border-radius:8px;padding:0 5px;color:var(--color-muted)}
-header #menuBtn{display:none}
+#titleControls button.tb{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 6px;border:1px solid transparent!important;background:transparent;color:var(--color-muted)}
+#titleControls button.tb:hover:not(:disabled){color:var(--color-text);background:var(--color-hover)}
+#titleControls button.tb[aria-pressed=true]{color:var(--color-text);background:var(--color-sel)}
+#titleControls button.tb[aria-pressed=true] i{color:var(--color-orange)}
+.tc{font:500 12px/16px "JetBrains Mono",monospace;background:var(--color-well);border-radius:8px;padding:0 5px;color:var(--color-muted)}
+#titleControls #menuBtn{display:none}
 /* map card */
 #mapwrap{grid-row:3;grid-column:2;position:relative;overflow:hidden;background:var(--color-map);border-radius:16px;min-width:0;min-height:0}
 #insp{grid-row:1/4;grid-column:3;min-height:0;position:relative}
@@ -299,15 +299,15 @@ header #menuBtn{display:none}
 #legendBox{position:absolute;left:10px;top:10px;z-index:5;width:300px;height:24px;padding:2px 6px;border-radius:10px;background:#ffffff;box-shadow:inset 0 0 0 1px var(--color-hair)}
 #legendHead{display:none}
 #legendBox .rows{display:flex;height:20px;gap:3px;align-items:center}
-#legendBox .row{flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:3px;font-size:11px;line-height:20px}
+#legendBox .row{flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:3px;font-size:12px;line-height:20px}
 #legendBox .row span.t,#legendBox .row .lnum{display:none}
 #legendBox s{display:inline-block;width:12px;height:10px;text-decoration:none;flex:none;border-radius:3px}
-#legendBox em{margin:0;color:var(--color-muted);font-style:normal;font:11px "JetBrains Mono",monospace}
-#legendBox .row .new{padding:0 4px 0 3px;font-size:10px;line-height:13px;gap:3px}
-#legendBox.lightness .row .lnum{display:inline;font-size:10px} #legendBox.lightness .row em{display:none}
-#legendBox .txt{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:20px;color:var(--color-muted)}
+#legendBox em{margin:0;color:var(--color-muted);font-style:normal;font:12px "JetBrains Mono",monospace}
+#legendBox .row .new{padding:0 4px 0 3px;font-size:12px;line-height:13px;gap:3px}
+#legendBox.lightness .row .lnum{display:inline;font-size:12px} #legendBox.lightness .row em{display:none}
+#legendBox .txt{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:20px;color:var(--color-muted)}
 #legendBox .row s[style*=gradient]{width:90px!important}
-#caption{position:absolute;left:12px;top:40px;bottom:auto;right:50px;font-size:11px;color:var(--color-muted);pointer-events:none;z-index:4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#caption{position:absolute;left:12px;top:40px;bottom:auto;right:50px;font-size:12px;color:var(--color-muted);pointer-events:none;z-index:4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #hintWrap{position:absolute;top:8px;left:322px;right:46px;z-index:7;display:flex;justify-content:center;pointer-events:none}
 #hint{height:28px;line-height:26px;padding:0 14px;border-radius:9999px;font-size:12px;background:#ffffff;border:1px solid #e9e9e6;color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;box-shadow:0 6px 20px rgba(0,0,0,.08)}
 /* floating composer: THE search box */
@@ -316,7 +316,7 @@ header #menuBtn{display:none}
 #searchBox:focus-within{box-shadow:0 4px 24px rgba(0,0,0,.08)}
 #searchBox>i{color:var(--color-muted)}
 #searchBox input#q{flex:1;min-width:0;width:auto;height:40px;background:transparent!important;border:0!important;font-size:14px!important;padding:0}
-#searchBox input#q:focus-visible{outline:none}
+#searchBox input#q:focus-visible{outline:2px solid var(--color-text);outline-offset:2px}
 #cchips{display:flex;align-items:center;gap:6px;flex:none}
 #modeRow{display:inline-flex}
 #modeRow label{display:inline-flex;align-items:center;height:28px;padding:0 9px;font-size:12px;color:var(--color-muted);background:var(--color-well);border:1px solid var(--color-border);cursor:pointer;position:relative}
@@ -328,9 +328,9 @@ button.chipbtn{height:28px;padding:0 10px!important;display:inline-flex;align-it
 button.chipbtn i{width:14px;height:14px;-webkit-mask-size:14px;mask-size:14px}
 button.chipbtn[aria-pressed=true]{background:var(--color-orange-tint);color:var(--color-orange);border-color:var(--color-orange)!important}
 #sugg{top:auto;bottom:calc(100% + 8px);margin:0;max-height:340px;padding:6px}
-#sugg li.gh{cursor:default;color:var(--color-muted);text-transform:none;letter-spacing:0;font-size:11px;padding:6px 6px 3px}
+#sugg li.gh{cursor:default;color:var(--color-muted);text-transform:none;letter-spacing:0;font-size:12px;padding:6px 6px 3px}
 #sugg li.gh:hover{background:transparent}
-#sugg li .muted{font-size:11px}
+#sugg li .muted{font-size:12px}
 #mapwrap.sheet-open #composer{display:none}
 /* tables sheet over the lower half of the map */
 #tabs{position:absolute;left:0;right:0;bottom:0;height:var(--sheet-h,50%);z-index:9;display:grid;grid-template-rows:40px minmax(0,1fr);min-height:0;border-radius:16px 16px 0 0;overflow:hidden;background:#ffffff;box-shadow:0 -4px 24px rgba(0,0,0,.08);transform:translateY(calc(100% + 12px));transition:transform .22s ease;visibility:hidden}
@@ -342,19 +342,19 @@ button.chipbtn[aria-pressed=true]{background:var(--color-orange-tint);color:var(
 thead,th{background:#ffffff}
 /* popovers */
 #viewPop{position:fixed;z-index:50;width:268px;max-height:calc(100vh - 24px);overflow:auto;background:var(--color-pop);border:1px solid var(--color-border);border-radius:14px;padding:4px 12px 12px;box-shadow:0 12px 32px rgba(0,0,0,.08)}
-#viewPop h4{margin:12px 0 6px}
+#viewPop h3,.section-label{margin:12px 0 6px}
 #viewPop #layersBox>summary{display:none}
 #viewPop #largeLine{margin-top:8px}
 #scrim{display:none}
 /* rail: verbs as icons with tooltips, selections as coloured dots */
 body.rail #side{padding:12px 8px 10px}
-body.rail #crumb,body.rail .vl,body.rail kbd,body.rail h4.sech,body.rail #recentBox,body.rail #savedBox,body.rail #leftNote,body.rail #selEmpty,body.rail #status,body.rail #swapBtn,body.rail .sn,body.rail .sc,body.rail .sbtns,body.rail .slot .sx{display:none!important}
+body.rail #crumb,body.rail .vl,body.rail kbd,body.rail h2.sech,body.rail #recentBox,body.rail #savedBox,body.rail #leftNote,body.rail #selEmpty,body.rail #status,body.rail #swapBtn,body.rail .sn,body.rail .sc,body.rail .sbtns,body.rail .slot .sx{display:none!important}
 body.rail #logoRow{justify-content:center;padding:0}
 body.rail #side button.verb{justify-content:center;padding:0}
 body.rail .slot{justify-content:center;padding:0;margin-top:4px}
 body.rail #sideFoot{flex-direction:column;gap:4px}
 body.rail #side #viewBtn{flex:none;width:34px;padding:0;justify-content:center}
-body.side-over #side{position:fixed;left:12px;top:12px;bottom:12px;width:248px;z-index:46;background:#f7f7f5;box-shadow:inset 0 0 0 1px var(--color-hair),0 16px 48px rgba(0,0,0,.08)}
+body.side-over #side{position:fixed;left:0;top:0;bottom:0;width:248px;z-index:46;background:#f7f7f5;box-shadow:inset 0 0 0 1px var(--color-hair),0 16px 48px rgba(0,0,0,.08)}
 body.side-over #scrim{display:block;position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.35)}
 #selBar{position:sticky;top:0;z-index:2;display:flex;gap:6px;flex-wrap:wrap;margin:-12px -14px 10px;padding:10px 14px;background:#ffffff;border-bottom:1px solid var(--color-hair)}
 /* F44 components; responsive positioning below remains shared with F43. */
@@ -362,12 +362,12 @@ body.side-over #scrim{display:block;position:fixed;inset:0;z-index:45;background
 #mapwrap,#insp{border-radius:0;box-shadow:none;background:var(--color-surface)}
 #mapwrap::after{display:none}
 #insp{border-left:1px solid var(--color-hair)}
-header{background:var(--color-surface);border-bottom:1px solid var(--color-hair);padding:0 10px;gap:8px}
+#titleControls{background:var(--color-surface);border-bottom:1px solid var(--color-hair);padding:0 10px;gap:8px}
 #hmain{gap:8px}
-header #qswitch button{font-size:12px!important;padding:3px 7px}
-header #tbar{padding-left:6px}
-header button.tb{font-size:12px!important;gap:4px;padding:0 5px}
-#crumb{gap:4px;font:400 10px/1 Inter,system-ui,sans-serif;letter-spacing:0;text-transform:none}
+#titleControls #qswitch button{font-size:12px!important;padding:3px 7px}
+#titleControls #tbar{padding-left:6px}
+#titleControls button.tb{font-size:12px!important;gap:4px;padding:0 5px}
+#crumb{gap:4px;font:400 12px/1 Inter,system-ui,sans-serif;letter-spacing:0;text-transform:none}
 #logoRow{padding-left:4px;gap:2px}
 #crumb #hname{font:400 20px/1 "Instrument Serif",serif;letter-spacing:0;text-transform:none;flex:none}
 #side button.verb,#side #viewBtn{height:36px;font-size:14px!important;border-radius:8px!important}
@@ -396,7 +396,7 @@ button.pri:hover:not(:disabled),button[data-act=ideas]:hover:not(:disabled),butt
 #colourBox label:has(input:checked){background:#ffffff;color:var(--color-text);box-shadow:0 1px 2px rgba(0,0,0,.08)}
 .chip,.pill,.new,.gr{border-radius:999px!important;background:#f3f3f1}
 .chip,.pill{border-color:transparent!important}
-.pill[data-status=new],.new{--dot:#c4501b;--pc:#b5481a;color:#b5481a}
+.pill[data-status=new],.new{--dot:#c4501b;--pc:#a44017;color:#a44017}
 .new{border-color:#c4501b;letter-spacing:0}
 .new::before{background:#c4501b}
 .pill[data-status=forming]{--dot:#5f5f5f;--pc:#5f5f5f}
@@ -414,7 +414,7 @@ button.pri:hover:not(:disabled),button[data-act=ideas]:hover:not(:disabled),butt
 thead,th,#selBar{background:#ffffff}
 td,.plist>div{border-bottom-color:var(--color-hover)}
 tr[tabindex]:hover,.plist>div:hover{background:var(--color-side)}
-tr.hl{background:var(--color-selected);outline:none}
+tr.hl{background:var(--color-selected)}
 #inspBody .kv,#abBlock .kv,.winsum,.wellbox{background:transparent;border-radius:0}
 #zoomBtns button,#legendBox{background:#ffffff}
 #zoomBtns button:hover{background:var(--color-hover)}
@@ -429,7 +429,7 @@ tr.hl{background:var(--color-selected);outline:none}
 @media (max-width:1499px){#app{--iw:360px;--sw:56px}}
 @media (max-width:1199px){
   #app{grid-template-columns:var(--sw,248px) minmax(0,1fr)}
-  #insp{position:fixed;right:12px;top:12px;bottom:12px;width:380px;z-index:35;transform:translateX(calc(100% + 24px));transition:transform .2s ease;background:#ffffff;box-shadow:inset 0 0 0 1px var(--color-hair),-8px 0 24px rgba(0,0,0,.08)}
+  #insp{position:fixed;right:0;top:0;bottom:0;width:380px;z-index:35;transform:translateX(calc(100% + 24px));transition:transform .2s ease;background:#ffffff;box-shadow:inset 0 0 0 1px var(--color-hair),-8px 0 24px rgba(0,0,0,.08)}
   body.drawer #insp{transform:none}
   #drawerClose{display:grid!important}
   #selBar{padding-right:48px}
@@ -440,8 +440,8 @@ tr.hl{background:var(--color-selected);outline:none}
   #app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 24px minmax(0,1fr);padding:0;gap:0}
   #side{display:none}
   body.side-over #side{display:flex;left:0;top:0;bottom:0;width:min(300px,86vw);border-radius:0 16px 16px 0}
-  header{grid-column:1;flex-wrap:wrap;row-gap:6px;white-space:normal;padding:6px 8px}
-  header #menuBtn{display:inline-grid}
+  #titleControls{grid-column:1;flex-wrap:wrap;row-gap:6px;white-space:normal;padding:6px 8px}
+  #titleControls #menuBtn{display:inline-grid}
   #tbar{order:1;border-left:0;padding-left:0}
   #hmain{display:contents}
   #infoBtn{order:0} #qswitch{order:2} #winDD{order:3}
@@ -464,8 +464,8 @@ tr.hl{background:var(--color-selected);outline:none}
 #tourSpot{position:fixed;z-index:1001;pointer-events:none;border-radius:12px;box-shadow:0 0 0 2px #1c1c1c,0 0 0 200vmax rgba(28,28,28,.35);transition:left .25s ease,top .25s ease,width .25s ease,height .25s ease}
 #tourSpot.none{left:50%!important;top:50%!important;width:0!important;height:0!important;box-shadow:0 0 0 200vmax rgba(28,28,28,.35)}
 #tourCard{position:fixed;z-index:1002;width:320px;padding:14px 16px 12px;border-radius:14px;background:#ffffff;box-shadow:0 12px 40px rgba(0,0,0,.14);color:var(--color-text);transition:left .25s ease,top .25s ease}
-#tourCard:focus{outline:none}
-#tourCard .tstep{font:500 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:0;text-transform:none;color:var(--color-muted)}
+#tourCard:focus{outline:2px solid var(--color-text);outline-offset:2px}
+#tourCard .tstep{font:500 12px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:0;text-transform:none;color:var(--color-muted)}
 #tourCard h2{margin:8px 0 6px;font:500 17px/1.25 "Inter",system-ui,sans-serif;letter-spacing:-.01em;color:var(--color-text)}
 #tourCard p{margin:0;font-size:13px;line-height:1.45;color:#5f5f5f}
 #tourCard .trow{display:flex;align-items:center;gap:6px;margin-top:14px}
@@ -476,42 +476,109 @@ tr.hl{background:var(--color-selected);outline:none}
 #tourCard.dock.top{top:0!important;bottom:auto;border-radius:0 0 16px 16px}
 #tourCard.dock .tptr,#tourCard.center .tptr{display:none}
 @media (prefers-reduced-motion: reduce){.prog{animation:none;background:var(--color-orange)} #tourCard,#tourSpot{transition:none}}
+
+/* Viewport and WCAG 2.2 adjustments; internal panels retain their hairlines. */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0}
+html,body{width:100%;background:#ffffff}
+#app{width:100%;min-width:0;border:0;border-radius:0;box-shadow:none}
+h2.sech{font-size:12px;font-weight:500;color:var(--color-muted)}
+input::placeholder{color:var(--color-muted);opacity:1}
+button,summary[role=button]{min-height:28px;min-width:28px}
+.chip{min-height:26px;margin:2px 4px 2px 0;line-height:20px!important;max-width:100%;white-space:normal;overflow-wrap:anywhere}
+#infoBtn,#zoomBtns button,#side .sbtns button,#side button.sx{width:28px;height:28px;min-width:28px;min-height:28px}
+.sbtns{gap:4px}
+#side .slot{position:relative}
+body.rail .slot{min-height:28px}
+body.rail .slot .sn{display:block!important;position:absolute;inset:0;font-size:12px;overflow:hidden;color:transparent;text-indent:-10000px}
+body.rail .slot .sn .sk{display:none}
+#winLabel{overflow:hidden;text-overflow:ellipsis}
+#inspBody,#abBlock{overflow-wrap:anywhere}
+.kv{grid-template-columns:minmax(0,auto) minmax(0,1fr)}
+#tabs{max-height:calc(100% - 40px)}
+#tabbar{min-width:0;overflow-x:auto}
+#tabbar button{flex:none}
+#sheetHead{min-width:0}
+#legendBox{height:auto;min-height:28px}
+#legendBox .rows{height:auto;flex-wrap:wrap}
+#legendBox .row{flex:0 0 auto;min-height:20px}
+#caption{top:64px}
+#hint{height:auto;min-height:28px;white-space:normal;line-height:1.4;padding:4px 10px}
+#hintWrap{max-height:calc(100% - 120px);overflow:auto}
+
+#sugg{max-height:min(340px,calc(100dvh - 220px))}
+#infoPop,#viewPop{max-width:calc(100vw - 16px)}
+#toast{max-width:calc(100vw - 16px);width:max-content}
+#banner{height:auto;min-height:32px;max-height:40dvh;overflow:auto}
+#tourCard{max-height:calc(100dvh - 16px);overflow:auto}
+:focus-visible,tr.hl:focus-visible{outline:2px solid #1c1c1c!important;outline-offset:2px}
+@media (min-width:701px) and (max-width:1499px){#titleControls .tl{display:none}}
+@media (max-width:1199px){
+  #insp{visibility:hidden;transform:none;max-width:100vw}
+  body.drawer #insp{visibility:visible}
+  #side{overflow-y:auto}
+  #logoRow{margin-bottom:4px}
+  #verbs{padding-bottom:4px}
+}
+@media (min-width:701px) and (max-width:900px){
+  #hintWrap{left:10px;top:88px}
+}
+@media (max-width:700px){
+  #titleControls{column-gap:6px}
+  #hintWrap{top:64px}
+  #titleControls #tbar{padding-left:0;gap:0}
+  #titleControls button.tb{padding:0 3px;gap:2px}
+  #tabbar{padding:0 4px}
+  #tabbar button{padding:3px 8px}
+  #cchips{flex-wrap:wrap;gap:4px}
+  #insp{height:64dvh}
+  #winDD>div{max-height:calc(100dvh - 140px)}
+}
+@media (prefers-contrast:more){
+  :root{--color-hair:#bdbcb8;--color-border:#bdbcb8;--color-divider:#bdbcb8;--color-muted:#3d3d3d}
+  *,*::before,*::after{border-color:#bdbcb8}
+  :root #app :is(#side,#titleControls,#mapwrap,#insp) button,:root :is(#viewPop,#infoPop,#toast,#tourCard) button,:root .chip,:root .pill,:root #modeRow label{border:1px solid #1c1c1c!important}
+  td,.plist>div{border-bottom-color:#bdbcb8}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+}
 </style>
 </head>
 <body>
 <div id="app">
-<nav id="side" aria-label="Sidebar">
+<nav id="side" aria-label="Main">
   <div id="logoRow">
     <span id="crumb"><a id="crumbLink">charoori</a><span class="sep" aria-hidden="true">/</span><a id="hname">undercurrent</a></span>
     <button id="sideBtn" class="ib nu" data-act="side" aria-label="Collapse sidebar" title="Collapse sidebar" aria-expanded="true"><i data-i="sidebar"></i></button>
   </div>
   <div id="verbs" role="group" aria-label="Actions">
-    <button class="verb nu" id="vOverview" data-act="overview" title="Overview: clear selections, back to What is arriving"><i data-i="home"></i><span class="vl">Overview</span><kbd></kbd></button>
-    <button class="verb nu" id="vSearch" data-act="focusSearch" title="Search (/)"><i data-i="search"></i><span class="vl">Search</span><kbd>/</kbd></button>
-    <button class="verb nu" id="lassoBtn" data-act="lasso" aria-pressed="false" title="Lasso (L)"><i data-i="lasso"></i><span class="vl">Lasso</span><kbd>L</kbd></button>
-    <button class="verb nu" id="vCompare" data-act="compare" aria-pressed="false" title="Compare A·B (C)"><i data-i="compare"></i><span class="vl">Compare A·B</span><kbd>C</kbd></button>
-    <button class="verb nu" id="vConnect" data-act="connections" aria-pressed="false" title="Connections (2)"><i data-i="merge"></i><span class="vl">Connections</span><kbd>2</kbd></button>
-    <button class="verb nu" id="tourBtn" data-act="tour" title="Tour"><i data-i="help"></i><span class="vl">Tour</span><kbd></kbd></button>
+    <button class="verb nu" id="vOverview" aria-label="Overview" data-act="overview" title="Overview: clear selections, back to What is arriving"><i data-i="home"></i><span class="vl">Overview</span><kbd></kbd></button>
+    <button class="verb nu" id="vSearch" aria-label="Search" data-act="focusSearch" title="Search (/)"><i data-i="search"></i><span class="vl">Search</span><kbd>/</kbd></button>
+    <button class="verb nu" id="lassoBtn" aria-label="Lasso" data-act="lasso" aria-pressed="false" title="Lasso (L)"><i data-i="lasso"></i><span class="vl">Lasso</span><kbd>L</kbd></button>
+    <button class="verb nu" id="vCompare" aria-label="Compare A·B" data-act="compare" aria-pressed="false" title="Compare A·B (C)"><i data-i="compare"></i><span class="vl">Compare A·B</span><kbd>C</kbd></button>
+    <button class="verb nu" id="vConnect" aria-label="Connections" data-act="connections" aria-pressed="false" title="Connections (2)"><i data-i="merge"></i><span class="vl">Connections</span><kbd>2</kbd></button>
+    <button class="verb nu" id="tourBtn" aria-label="Tour" data-act="tour" title="Tour"><i data-i="help"></i><span class="vl">Tour</span><kbd></kbd></button>
   </div>
   <div id="selSec">
-    <h4 class="sech">Selections</h4>
+    <h2 class="sech">Selections</h2>
     <div id="compareBox">
       <div class="slot" id="slotCur"></div><div class="slot" id="slotA"></div><div class="slot" id="slotB"></div>
       <div id="selEmpty" class="muted small">Nothing selected yet. Click a topic, search, or lasso.</div>
       <button id="swapBtn" class="nu" data-act="swap" aria-label="Swap A and B" title="Swap A and B" hidden>⇄ swap A and B</button>
     </div>
-    <div id="recentBox" hidden><h4 class="sech">Recent</h4><div id="recentList"></div></div>
-    <details id="savedBox" open><summary class="savedSum">Saved</summary><div><h4 class="sech" data-i="bookmark">Saved <span id="savedCount" class="cnt">0</span></h4><div id="savedList"><div class="muted">none yet</div></div></div></details>
+    <div id="recentBox" hidden><h2 class="sech">Recent</h2><div id="recentList"></div></div>
+    <details id="savedBox" open><summary class="savedSum">Saved</summary><div><h2 class="sech" data-i="bookmark">Saved <span id="savedCount" class="cnt">0</span></h2><div id="savedList"><div class="muted">none yet</div></div></div></details>
   </div>
   <div id="leftNote"></div>
   <div id="sideFoot">
-    <button id="viewBtn" class="nu" data-act="view" aria-haspopup="dialog" aria-expanded="false" title="View: level, colour, layers"><i data-i="sliders"></i><span class="vl">View</span></button>
+    <button id="viewBtn" aria-label="View settings" class="nu" data-act="view" aria-haspopup="dialog" aria-expanded="false" title="View: level, colour, layers"><i data-i="sliders"></i><span class="vl">View</span></button>
     <span id="status">server: <span id="statusHost"></span> <span id="statusDot">●</span></span>
     <a id="ghLink" target="_blank" rel="noopener" aria-label="undercurrent on GitHub" title="undercurrent on GitHub"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
   </div>
 </nav>
 
-<header>
+<header id="titleRegion" style="display:contents">
+<div id="titleControls">
   <button id="menuBtn" class="ib nu" data-act="menu" aria-label="Open menu" title="Menu"><i data-i="menu"></i></button>
   <div id="hmain">
     <span class="seg" id="qswitch" role="group" aria-label="Question">
@@ -534,19 +601,23 @@ tr.hl{background:var(--color-selected);outline:none}
     <button id="infoBtn" data-act="info" aria-label="How the numbers are computed" aria-expanded="false">i</button>
   </div>
   <div id="tbar" role="toolbar" aria-label="Tables">
-    <button class="tb nu" id="tbTopics" data-act="sheet" data-t="topics" aria-pressed="false" title="Topics table"><i data-i="table"></i><span class="tl">Topics</span><span class="tc" id="cTopics">–</span></button>
-    <button class="tb nu" id="tbLinks" data-act="sheet" data-t="links" aria-pressed="false" title="Links table"><i data-i="merge"></i><span class="tl">Links</span><span class="tc" id="cLinks">–</span></button>
-    <button class="tb nu" id="tbPhrases" data-act="sheet" data-t="phrases" aria-pressed="false" title="Rising phrases table"><i data-i="hash"></i><span class="tl">Phrases</span><span class="tc" id="cPhrases">–</span></button>
-    <button class="tb nu" id="tbIdeas" data-act="sheet" data-t="ideas" aria-pressed="false" title="Ideas"><i data-i="bulb"></i><span class="tl">Ideas</span><span class="tc" id="cIdeas">–</span></button>
+    <button class="tb nu" id="tbTopics" aria-label="Topics table" data-act="sheet" data-t="topics" aria-pressed="false" title="Topics table"><i data-i="table"></i><span class="tl">Topics</span><span class="tc" id="cTopics">–</span></button>
+    <button class="tb nu" id="tbLinks" aria-label="Links table" data-act="sheet" data-t="links" aria-pressed="false" title="Links table"><i data-i="merge"></i><span class="tl">Links</span><span class="tc" id="cLinks">–</span></button>
+    <button class="tb nu" id="tbPhrases" aria-label="Rising phrases table" data-act="sheet" data-t="phrases" aria-pressed="false" title="Rising phrases table"><i data-i="hash"></i><span class="tl">Phrases</span><span class="tc" id="cPhrases">–</span></button>
+    <button class="tb nu" id="tbIdeas" aria-label="Ideas" data-act="sheet" data-t="ideas" aria-pressed="false" title="Ideas"><i data-i="bulb"></i><span class="tl">Ideas</span><span class="tc" id="cIdeas">–</span></button>
   </div>
-</header>
+</div>
 <div id="winLabel"></div>
+</header>
 
 <main id="mapwrap">
-  <canvas id="map" tabindex="0" role="img" aria-label="Map of papers"></canvas>
+  <h1 class="sr-only">undercurrent: map of arXiv computer-science papers</h1>
+  <div id="announcements" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+  <p id="mapSummary" class="sr-only">Loading the current view. The Topics and Links tables hold the same data in text form.</p>
+  <canvas id="map" tabindex="0" role="img" aria-label="Map of papers" aria-describedby="mapSummary"></canvas>
   <svg id="lassoSvg"><path id="lassoPath" fill="none" stroke="#1c1c1c" stroke-width="1.5"/></svg>
   <div id="loading">Loading map points: <span id="loadN">0.0</span> of <span id="loadT">7.8</span> MB<div class="bar"><i id="loadBar"></i></div></div>
-  <div id="legendBox"><h4 id="legendHead" data-i="trend">Growth vs CS, topics</h4><div class="rows" id="legendRows"></div></div>
+  <div id="legendBox"><h3 id="legendHead" data-i="trend">Growth vs CS, topics</h3><div class="rows" id="legendRows"></div></div>
   <div id="hintWrap"><div id="hint" role="status" aria-live="polite" hidden></div></div>
   <div id="zoomBtns"><button tabindex="-1" data-act="zin" aria-label="Zoom in">+</button><button tabindex="-1" data-act="zout" aria-label="Zoom out">−</button><button tabindex="-1" data-act="fit" aria-label="Fit map">⤢</button></div>
   <div id="caption"></div>
@@ -563,7 +634,7 @@ tr.hl{background:var(--color-selected);outline:none}
       </div>
     </div>
   </div>
-  <section id="tabs" aria-label="Tables" inert>
+  <section id="tabs" role="region" aria-label="Tables" inert>
     <div id="handle" title="Drag to resize; double-click to close"></div>
     <div id="sheetHead">
       <div id="tabbar" role="tablist" aria-label="Tables">
@@ -579,18 +650,18 @@ tr.hl{background:var(--color-selected);outline:none}
   </section>
 </main>
 
-<aside id="insp" aria-label="Inspector" aria-live="polite">
+<aside id="insp" aria-label="Details">
   <button id="drawerClose" class="ib nu" data-act="drawerClose" aria-label="Close inspector" title="Close (Esc)"><i data-i="x"></i></button>
   <div id="inspTop"></div><div id="abBlock"></div><div id="inspBody"></div>
 </aside>
 </div>
 <div id="scrim" data-act="scrim"></div>
-<div id="viewPop" role="dialog" aria-label="View settings" hidden>
-  <div id="levelBox"><h4 data-i="layers">Level</h4>
+<div id="viewPop" role="dialog" aria-modal="false" aria-label="View settings" hidden>
+  <div id="levelBox"><h2 class="sech" data-i="layers">Level</h2>
     <span class="seg" role="radiogroup" aria-label="Level">
       <button role="radio" data-act="level" data-l="2" aria-checked="false">areas <span style="display:block">(20)</span></button><button role="radio" data-act="level" data-l="1" aria-checked="true">topics <span style="display:block">(116)</span></button><button role="radio" data-act="level" data-l="0" aria-checked="false">sub-topics <span style="display:block">(368)</span></button>
     </span></div>
-  <div id="colourBox"><h4 data-i="palette">Colour by</h4>
+  <div id="colourBox"><h2 class="sech" data-i="palette">Colour by</h2>
     <div class="opts small" role="radiogroup" aria-label="Colour by" style="line-height:1.8">
       <label><input type="radio" name="colour" value="growth" checked>Growth</label><br>
       <label><input type="radio" name="colour" value="topic">Topic</label><br>
@@ -598,7 +669,7 @@ tr.hl{background:var(--color-selected);outline:none}
       <label id="distLabel" title="Set A first"><input type="radio" name="colour" value="dist" disabled>Distance to A</label>
     </div></div>
   <label id="lightRow" class="small muted"><input type="checkbox" id="lightness">Lightness only</label>
-  <details id="layersBox" open><summary>layers ▾</summary><div><h4 data-i="merge">Map layers</h4>
+  <details id="layersBox" open><summary>layers ▾</summary><div><h2 class="sech" data-i="merge">Map layers</h2>
     <div class="small" style="line-height:1.9">
       <label><input type="checkbox" role="switch" id="tNodes">topic nodes</label><br>
       <label><input type="checkbox" role="switch" id="tBridges">bridge links</label><br>
@@ -609,9 +680,9 @@ tr.hl{background:var(--color-selected);outline:none}
   </div></details>
   <div id="largeLine" class="tiny muted" hidden></div>
 </div>
-<div id="banner" hidden></div>
-<div id="infoPop" role="dialog" aria-label="How the numbers are computed" hidden></div>
-<div id="toast" hidden></div>
+<div id="banner" role="region" aria-label="Server status" hidden></div>
+<div id="infoPop" role="dialog" aria-modal="false" aria-label="How the numbers are computed" hidden></div>
+<div id="toast" role="region" aria-label="Notifications" hidden></div>
 
 <script async id="deckjs" src="https://cdn.jsdelivr.net/npm/deck.gl@9.1.15/dist.min.js"></script>
 <script async id="animejs" src="https://cdn.jsdelivr.net/npm/animejs@4.5.0/dist/bundles/anime.umd.min.js"></script>
@@ -619,7 +690,7 @@ tr.hl{background:var(--color-selected);outline:none}
 'use strict';
 // ---------- constants ----------
 const G = ['#2c5f9e','#6c93c3','#a9bcd4','#a6a6a6','#e5b183','#df8743','#c4501b'], ND = '#d9d9d6';
-const GT = ['#2c5f9e','#3d6aa3','#56708f','#666666','#94653a','#ad5c24','#b5481a'];
+const GT = ['#2c5f9e','#3b669d','#4e6683','#666666','#825832','#964e1e','#a44017'];
 const LG = ['#e8e7e3','#c8c8c5','#a8a8a6','#888888','#686868','#484848','#1c1c1c'];
 const STEP_TXT = ['shrinking fast (under ×0.5)','shrinking','slightly shrinking','flat (×0.9 to ×1.1)','slightly growing','growing','growing fast (×2 or more)'];
 const CUTS = [0.5, 0.71, 0.9, 1.11, 1.41, 2.0];
@@ -663,6 +734,22 @@ const R = window.__radar = window.__wb = {
   zoomTo(f, xy, ms) { flyTo({target: xy || VS.target, zoom: Z0 + Math.log2(f)}, ms ?? 0); },
 };
 const anim = (el, props) => { R.animCount++; if (window.anime && anime.animate) anime.animate(el, {...props, duration: RM.matches ? 0 : (props.duration || 200)}); };
+
+function announce(text) { $('announcements').textContent = text; }
+function announceSelection(sel) {
+  if (![S.focus, S.A, S.B, S.cur].includes(sel)) return;
+  const j = sel.data, search = sel.kind === 'phrase' || sel.kind === 'query';
+  if (sel.err) { announce(sel.err === 'empty' ? `Search: 0 papers for ${sel.spec.phrase ?? sel.spec.query ?? sel.label}` : `Selection: ${sel.err}`); return; }
+  if (!j) return;
+  const g = j.growth || {}, growth = g.is_new ? 'new' : g.growth == null ? 'not computed' : '×' + g.growth.toFixed(1);
+  announce(search ? `Search: ${fmt(j.n)} papers for ${sel.spec.phrase ?? sel.spec.query}` : sel.kind === 'lasso' ? `Lasso: ${fmt(j.n)} papers` : `Selected ${sel.kind === 'topic' ? LEVEL_ONE[sel.level].toLowerCase() + ' ' : ''}${sel.label}, ${fmt(j.n)} papers, growth ${growth}`);
+}
+function updateMapSummary() {
+  if (!S.MS.length) return;
+  const fastest = badgeTopics().map(t => `${t.label}, ${t.is_new ? 'new' : t.growth == null ? 'growth not computed' : 'growth ×' + t.growth.toFixed(1)}`).join('; ');
+  const text = `${winText()}. Colour mode: ${S.grey ? 'grey, connections' : S.colour === 'dist' ? 'distance to A' : S.colour}${S.lightness ? ', lightness only' : ''}. Five fastest-growing topics with at least 200 papers: ${fastest || 'loading'}. The Topics and Links tables hold the same data in text form.`;
+  if ($('mapSummary').textContent !== text) $('mapSummary').textContent = text;
+}
 
 // ---------- windows ----------
 const mLabel = i => { const [y, m] = S.MS[i].split('-'); return MN[m - 1] + ' ' + y; };
@@ -925,10 +1012,10 @@ const LABEL_FONT = {family: 'Inter, sans-serif', weight: 400, atlasSize: 64, lin
 const labelMeasure = document.createElement('canvas').getContext('2d');
 const zf = () => VS ? Math.pow(2, VS.zoom - Z0) : 1;
 // F43.1 step 9: the fit keeps the floating composer's strip (and the legend strip on top) free of points
-function fitPad() { const c = $('composer'), ch = c && c.offsetHeight ? c.offsetHeight : 60; return {t: 44, b: Math.max(96, ch + 16 + 20), x: 20}; }
+function fitPad() { const c = $('composer'), ch = c && c.offsetHeight ? c.offsetHeight : 60; return {t: Math.max(80, $('legendBox').offsetHeight + 36), b: Math.max(96, ch + 16 + 20), x: 20}; }
 function fitBox(x0, y0, x1, y1, k, maxZoom = Infinity) {
   const c = $('map'), w = c.clientWidth || 968, h = c.clientHeight || 676, p = fitPad();
-  const s = Math.pow(2, Math.min(maxZoom, Math.log2(Math.min((w - 2 * p.x) / Math.max(x1 - x0, 1e-3), (h - p.t - p.b) / Math.max(y1 - y0, 1e-3)) * k)));
+  const s = Math.pow(2, Math.min(maxZoom, Math.log2(Math.min(Math.max(1, w - 2 * p.x) / Math.max(x1 - x0, 1e-3), Math.max(1, h - p.t - p.b) / Math.max(y1 - y0, 1e-3)) * k)));
   // flipY false: world y points up, so moving the target down lifts the content above the composer
   return {target: [(x0 + x1) / 2, (y0 + y1) / 2 + (p.t - p.b) / (2 * s), 0], zoom: Math.log2(s)};
 }
@@ -989,7 +1076,7 @@ async function loadMapFonts() {
   css.media = 'all';
   await loaded;
   // computeLabels stays gated by overlaysReady until Inter has loaded; points never wait.
-  try { await Promise.all([document.fonts.load('400 14px Inter'), document.fonts.load('600 11px "JetBrains Mono"')]); } catch (e) {}
+  try { await Promise.all([document.fonts.load('400 14px Inter'), document.fonts.load('600 12px "JetBrains Mono"')]); } catch (e) {}
   overlaysReady = true; queueLabels();
 }
 // frame timer for F17.2 / F35.3: rAF deltas, max over the last 2 s
@@ -1027,6 +1114,7 @@ function badgeTopics() {
   return T.topics.filter(t => t.recent >= 200).sort((a, b) => gv(b) - gv(a)).slice(0, 5);
 }
 function render() {
+  updateMapSummary();
   if (!DK || !R.deckReady || !pointsReady || !P.n) return;
   const f = zf(), layers = [], lv = S.level, T = S.topics[lv];
   layers.push(new deck.ScatterplotLayer({
@@ -1063,7 +1151,7 @@ function render() {
     const mids = [];
     for (const e of edges) { const mid = [(e.src[0] + e.dst[0]) / 2, (e.src[1] + e.dst[1]) / 2]; if (e.rank) mids.push({...e, mid}); if (e.status === 'new') mids.push({...e, mid, rank: 0}); }
     layers.push(new deck.ScatterplotLayer({id: 'edgebadges', data: mids.filter(m => m.rank), getPosition: d => d.mid, radiusUnits: 'pixels', getRadius: 8, getFillColor: [255, 255, 255, 255], stroked: true, getLineColor: [230, 229, 225, 255], lineWidthUnits: 'pixels', getLineWidth: 1, pickable: true}));
-    layers.push(new deck.TextLayer({id: 'edgebadgetext', data: mids, getPosition: d => d.mid, getText: d => d.rank ? String(d.rank) : 'new', getPixelOffset: d => d.rank ? [0, 0] : [0, 14], getSize: 11, fontWeight: 400, fontFamily: 'Inter, sans-serif',
+    layers.push(new deck.TextLayer({id: 'edgebadgetext', data: mids, getPosition: d => d.mid, getText: d => d.rank ? String(d.rank) : 'new', getPixelOffset: d => d.rank ? [0, 0] : [0, 14], getSize: 12, fontWeight: 400, fontFamily: 'Inter, sans-serif',
       getColor: d => d.rank ? [28, 28, 28, 255] : hex2rgb(GT[6]), background: true, getBackgroundColor: d => d.rank ? [0, 0, 0, 0] : [243, 243, 241, 255], backgroundPadding: [3, 1], characterSet: 'auto'}));
   }
   if (S.phrases && S.links) {
@@ -1095,7 +1183,7 @@ function render() {
   if (S.colour === 'growth' && !S.grey && lv === 1) {
     const bt = badgeTopics().map((t, i) => ({c: t.c, rank: i + 1, pos: centroid(1, t.c)}));
     layers.push(new deck.ScatterplotLayer({id: 'badges', data: bt, getPosition: d => d.pos, radiusUnits: 'pixels', getRadius: 9, getFillColor: [255, 255, 255, 255], stroked: true, getLineColor: [230, 229, 225, 255], lineWidthUnits: 'pixels', getLineWidth: 1, pickable: true, opacity: badgeFade.o}));
-    layers.push(new deck.TextLayer({id: 'badgenums', data: bt, getPosition: d => d.pos, getText: d => String(d.rank), getSize: 11, fontWeight: 600, getColor: [28, 28, 28, 255], fontFamily: 'JetBrains Mono, monospace', characterSet: '12345', opacity: badgeFade.o}));
+    layers.push(new deck.TextLayer({id: 'badgenums', data: bt, getPosition: d => d.pos, getText: d => String(d.rank), getSize: 12, fontWeight: 600, getColor: [28, 28, 28, 255], fontFamily: 'JetBrains Mono, monospace', characterSet: '12345', opacity: badgeFade.o}));
   }
   const lbl = LBL, big = lbl.filter(l => l.weight === 600), rest = lbl.filter(l => l.weight !== 600);
   const tl = (id, data) => new deck.TextLayer({id, data, getPosition: d => d.pos, getText: d => d.text, getSize: d => d.size, getColor: d => d.col, getTextAnchor: d => d.anchor, getPixelOffset: d => d.off,
@@ -1123,7 +1211,7 @@ function computeLabels() {
     if (innerWidth >= 600 && S.colour === 'growth' && !S.grey && S.level === 1) badgeTopics().forEach(t => { const g = t.is_new ? ' new' : ` ×${t.growth.toFixed(1)}`; cand.push({pos: centroid(1, t.c), text: t.label + g, size: 12, col: [28, 28, 28, 255], anchor: 'start', off: [13, 0], prio: 1e12, weight: 500, fixed: true}); });
     for (const l of Object.values(S.labels[2])) cand.push({pos: [l.cx, l.cy], text: wrapText(l.label, 20), size: 14, col: [28, 28, 28, 255], anchor: 'middle', off: [0, 0], prio: l.n, weight: 600});
   } else {
-    const lv = f <= 5 ? 1 : 0, rc = recent(lv), size = lv === 1 ? 12 : 11;
+    const lv = f <= 5 ? 1 : 0, rc = recent(lv), size = 12;
     for (const l of Object.values(S.labels[lv])) cand.push({pos: [l.cx, l.cy], text: l.label, size, col: [28, 28, 28, 255], anchor: 'middle', off: [0, 0], prio: (selC.has(lv + ':' + l.c) ? 1e12 : 0) + (rc[l.c] ?? l.n), weight: 500});
   }
   const atFit = f <= 1.2;
@@ -1228,7 +1316,7 @@ function finishLasso(px) {
   const vp = DK.getViewports()[0], poly = px.map(p => vp.unproject(p).slice(0, 2));
   const t0 = performance.now(), rows = lassoRows(poly);
   R.lastLassoMs = Math.round(performance.now() - t0);
-  if (rows.length < 20) { S.view = 'msg'; S.msg = `Only ${rows.length} papers: too few for growth or phrases. Drag a larger area.`; renderInspector(); return; }
+  if (rows.length < 20) { S.view = 'msg'; S.msg = `Only ${rows.length} papers: too few for growth or phrases. Drag a larger area.`; announce(`Lasso: ${fmt(rows.length)} papers. ${S.msg}`); renderInspector(); return; }
   makeSel({rows}, {kind: 'lasso', rows: Int32Array.from(rows), poly, label: `Lasso, ${fmt(rows.length)} papers`});
 }
 function lassoRows(poly) {  // point-in-polygon over all papers, world coordinates
@@ -1258,7 +1346,7 @@ function makeSel(spec, sel, opts = {}) {
   if (opts.slot === 'A') S.A = sel; else if (opts.slot === 'B') S.B = sel;
   else if (S.cmp === 'second' && S.A && S.A !== sel) { S.B = sel; S.cmp = null; }  // guided compare: the second pick becomes B
   else if (!S.A) {
-    S.A = sel; sel.flash = true; setTimeout(() => { sel.flash = false; render(); }, 250);
+    S.A = sel; sel.flash = !RM.matches; setTimeout(() => { sel.flash = false; render(); }, 250);
     if (S.cmp === 'first') S.cmp = 'second';
     else if (!S.firstNoted) { S.firstNoted = true; note('Selected. It is also A, ready to compare.'); }
   }
@@ -1302,12 +1390,14 @@ function selTo(who, to) {
   if (who === to) return;
   if (who === 'cur') { const old = S[to]; S[to] = s; S.cur = old && old !== S.A && old !== S.B ? old : null; }
   else { const x = S.A; S.A = S.B; S.B = x; }  // A <-> B
+  announce(`Set ${s.label} as ${to}.`);
   S.focus = s; if (S.cmp === 'second' && S.A && S.B) S.cmp = null;
   if (S.colour === 'dist') { S.A ? loadDist() : setColour('growth'); }
   $('insp').scrollTop = 0;
   updateMask(); recolour(); computeLabels(); renderSlots(); renderInspector(); renderTopicsHL(); loadAB(); renderHint();
 }
 function overview() {
+  announce('Overview. Selections cleared.');
   S.cmp = null; if (S.mode === 'lasso') setLasso(false);
   S.ev = null; S.cur = S.B = S.A = null; S.dist = null; S.focus = null; S.view = 'summary'; S.ideasUI = null;
   if (S.colour === 'dist') S.colour = 'growth';
@@ -1368,6 +1458,7 @@ async function fetchSel(sel) {
     }
     else sel.err = e.message;
   } finally { sel.loading = false; clearTimeout(slow); body.classList.remove('busy'); }
+  announceSelection(sel);
   renderSlots(); if (S.focus === sel || sel === S.A || sel === S.B) renderInspector(); loadAB();
   if (sel.kind === 'saved' && sel.data && S.focus === sel && S.view === 'sel') {}
 }
@@ -1375,12 +1466,14 @@ function setSlot(slot) {  // A / B keys and buttons: put the current selection i
   const s = S.cur || (slot === 'B' && S.focus !== S.A ? S.focus : null); if (!s) return;
   if (slot === 'A') S.A = s; else { if (s === S.A) return; S.B = s; }
   if (S.cur === s) S.cur = null; S.focus = s;
+  announce(`Set ${s.label} as ${slot}.`);
   if (S.cmp && S.A && S.B) S.cmp = null;
   if (S.colour === 'dist' && slot === 'A') loadDist();
   $('insp').scrollTop = 0;
   updateMask(); recolour(); renderSlots(); renderInspector(); loadAB(); renderHint();
 }
 function clearSlot(slot) {
+  announce(`Cleared ${slot === 'cur' ? 'current selection' : slot}.`);
   if (slot === 'A') S.A = null; else if (slot === 'B') S.B = null; else S.cur = null;
   S.dist = null; if (S.focus && ![S.A, S.B, S.cur].includes(S.focus)) S.focus = S.cur || S.B || S.A;
   if (!S.focus) S.view = 'summary';
@@ -1394,6 +1487,7 @@ async function loadAB() {
   const key = S.A.sel_id + ':' + S.B.sel_id; if (S.dist && S.dist.key === key) return renderAB();
   try { S.dist = {...await api(`/distance?a=${S.A.sel_id}&b=${S.B.sel_id}`), key}; } catch (e) { S.dist = null; }
   renderAB();
+  if (S.dist && S.A && S.B) announce(`Compared ${S.A.label} and ${S.B.label}: cosine distance ${S.dist.cos_dist.toFixed(3)}, ${S.dist.n_bridges == null ? 'bridge papers available in the local version' : fmt(S.dist.n_bridges) + ' bridge papers'}`);
 }
 async function loadDist() {
   if (!S.A || !S.A.sel_id) return;
@@ -1648,7 +1742,7 @@ function renderSlots() {
     const name = k === 'cur' ? 'current' : k;
     const mk = to => `<button class="nu" data-act="selTo" data-who="${k}" data-to="${to}" aria-label="Make ${esc(s.label)} ${to}" title="${to === k ? 'This is ' + to : 'Make it ' + to}"${to === k ? ' aria-pressed="true"' : ''}>${to}</button>`;
     el.title = `${name}: ${s.label}${n != null ? ' · ' + fmt(n) + ' papers' : ''}`;
-    el.innerHTML = `${tag}<span class="sn" tabindex="0" data-act="selFocus" data-who="${k}">${k === 'cur' ? '<span class="sk">current</span> ' : ''}${esc(s.label)}</span><span class="sc">${n != null ? fmt(n) : '…'}</span><span class="sbtns">${mk('A')}${mk('B')}</span><button class="sx nu" data-act="clear" data-slot="${k}" aria-label="Clear ${name}">×</button>`;
+    el.innerHTML = `${tag}<span class="sn" role="button" aria-label="${esc(name + ': ' + s.label)}" tabindex="0" data-act="selFocus" data-who="${k}">${k === 'cur' ? '<span class="sk">current</span> ' : ''}${esc(s.label)}</span><span class="sc">${n != null ? fmt(n) : '…'}</span><span class="sbtns">${mk('A')}${mk('B')}</span><button class="sx nu" data-act="clear" data-slot="${k}" aria-label="Clear ${name}">×</button>`;
   }
   $('selEmpty').hidden = !!(S.A || S.B || S.cur);
   $('swapBtn').hidden = !(S.A && S.B);
@@ -1677,7 +1771,7 @@ function selHeader(s) {
 }
 function selView(s) {
   const j = s.data, v = (j && j.growth && j.growth.window && j.growth.window.vol_ratio) || volOf() || 1;
-  let h = `<h3 style="margin:0 0 2px;font-size:16px">${esc(s.label)}</h3><div class="sub2">${selHeader(s)}</div>`;
+  let h = `<h2 style="margin:0 0 2px;font-size:16px">${esc(s.label)}</h2><div class="sub2">${selHeader(s)}</div>`;
   if (s.saveOpen) h += `<div style="margin:6px 0"><input type="text" id="saveName" aria-label="Name for the saved selection" value="${esc(s.label)}"><div id="saveMsg" class="tiny muted"></div></div>`;
   if (s.kind === 'saved' && s.savedWin) h += `<div class="small muted">saved with window ${esc(textOfWin(s.savedWin))}</div>`;
   if (s.note) h += `<div class="def">${esc(s.note)}</div>`;
@@ -1703,11 +1797,11 @@ function selView(s) {
   else { const raw = (r + 1) / (p + 1); h += `<div><b style="--gc:${growthTextHex(g.growth)}" class="num gr">×${g.growth.toFixed(1)}</b> after correction (raw ×${raw.toFixed(1)}; all CS grew ×${v.toFixed(2)})</div>`; }
   h += `<div class="tiny muted">${winText()}</div>${bars(j.months || [], s)}`;
   const T = s.kind === 'topic' && S.topics[s.level] && S.topics[s.level].topics.find(t => t.c === s.c);
-  if (T && T.arriving && T.arriving.length) h += `<h4 data-i="trend">Arriving sub-topics</h4>${T.arriving.map(chip).join('')}`;
-  h += `<h4 data-i="hash">Distinctive phrases</h4>` + (j.n >= 30 && j.terms && j.terms.length ? j.terms.slice(0, 20).map(t => `<button class="chip" data-act="phrase" data-ph="${esc(t.term)}" title="share in selection ${(100 * t.share_sel).toFixed(0)}% vs ${(100 * t.share_all).toFixed(1)}% in all papers (z ${(+t.z).toFixed(1)})">${esc(t.term)} <span class="muted">${t.k}</span></button>`).join('') : j.terms_local ? '<div class="muted small">Distinctive phrases are in the local version</div>' : '<div class="muted small">too few papers for distinctive phrases</div>');
-  h += `<h4 data-i="file">Top cited</h4>${plist(j.top_cited || [])}<h4 data-i="clock">Newest</h4>${plist(j.newest || [])}`;
+  if (T && T.arriving && T.arriving.length) h += `<h3 data-i="trend">Arriving sub-topics</h3>${T.arriving.map(chip).join('')}`;
+  h += `<h3 data-i="hash">Distinctive phrases</h3>` + (j.n >= 30 && j.terms && j.terms.length ? j.terms.slice(0, 20).map(t => `<button class="chip" data-act="phrase" data-ph="${esc(t.term)}" title="share in selection ${(100 * t.share_sel).toFixed(0)}% vs ${(100 * t.share_all).toFixed(1)}% in all papers (z ${(+t.z).toFixed(1)})">${esc(t.term)} <span class="muted">${t.k}</span></button>`).join('') : j.terms_local ? '<div class="muted small">Distinctive phrases are in the local version</div>' : '<div class="muted small">too few papers for distinctive phrases</div>');
+  h += `<h3 data-i="file">Top cited</h3>${plist(j.top_cited || [])}<h3 data-i="clock">Newest</h3>${plist(j.newest || [])}`;
   const nb = (j.topics || []).filter(t => t.level === 1 && !(s.kind === 'topic' && s.level === 1 && t.c === s.c)).slice(0, 10);
-  if (nb.length) h += `<h4 data-i="merge">Links to other topics</h4><div class="small">${nb.map(t => `<div><a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> · ${Math.round(100 * t.nbr_share)}% of neighbours</div>`).join('')}</div>`;
+  if (nb.length) h += `<h3 data-i="merge">Links to other topics</h3><div class="small">${nb.map(t => `<div><a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> · ${Math.round(100 * t.nbr_share)}% of neighbours</div>`).join('')}</div>`;
   return h;
 }
 function selButtons(s) {
@@ -1723,19 +1817,19 @@ function selButtons(s) {
 }
 function summaryView() {
   const T1 = S.topics[1], w = T1 && T1.window;
-  let h = `<h4 style="margin-top:0" data-i="calendar">This window</h4><h3 style="margin:0 0 4px;font-size:16px">This window: ${S.MS.length ? winText() : '…'}</h3>`;
+  let h = `<div class="section-label" style="margin-top:0" data-i="calendar">This window</div><h2 style="margin:0 0 4px;font-size:16px">This window: ${S.MS.length ? winText() : '…'}</h2>`;
   if (!w) return h + '<p class="muted small">Loading…</p>';
   h += `<p class="small winsum" style="margin:2px 0">CS papers in window <span class="hlnum">${fmt(w.vol_recent)}</span> · prior ${fmt(w.vol_prior)} (all CS ×${w.vol_ratio.toFixed(2)})</p>`;
-  h += '<div id="fastList"><h4 data-i="trend">Fastest-growing topics</h4>' + badgeTopics().map((t, i) => `<div style="line-height:1.9"><span class="rank">${i + 1}</span> <a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> ${gCell(t)}</div>`).join('') + '</div>';
+  h += '<div id="fastList"><h3 data-i="trend">Fastest-growing topics</h3>' + badgeTopics().map((t, i) => `<div style="line-height:1.9"><span class="rank">${i + 1}</span> <a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> ${gCell(t)}</div>`).join('') + '</div>';
   const arr = []; for (const t of T1.topics) for (const a of t.arriving || []) arr.push({...a, parent: t.label});
   arr.sort((a, b) => (b.is_new - a.is_new) || (b.growth || 0) - (a.growth || 0));
-  h += '<h4 data-i="trend">Arriving sub-topics, all CS</h4>' + (arr.length ? arr.slice(0, 10).map(a => `<div class="small" style="padding:2px 0"><a href="#" data-act="sub" data-c="${a.c}">${esc(a.label)}</a> · ${esc(a.parent)} · ${fmt(a.recent)} papers in window · ${a.is_new ? '<span class="new">new</span>' : '×' + a.growth.toFixed(1)}</div>`).join('') : '<div class="muted small">none in this window</div>');
+  h += '<h3 data-i="trend">Arriving sub-topics, all CS</h3>' + (arr.length ? arr.slice(0, 10).map(a => `<div class="small" style="padding:2px 0"><a href="#" data-act="sub" data-c="${a.c}">${esc(a.label)}</a> · ${esc(a.parent)} · ${fmt(a.recent)} papers in window · ${a.is_new ? '<span class="new">new</span>' : '×' + a.growth.toFixed(1)}</div>`).join('') : '<div class="muted small">none in this window</div>');
   return h + '<p class="tiny muted" style="margin-top:14px">Click a topic, press L to lasso, or / to search.</p>';
 }
 function evidenceView() {
   const ev = S.ev, e = ev.link, lv = ev.level, n1 = lblOf(lv, e.c1), n2 = lblOf(lv, e.c2), d = ev.data, T = (S.meta && S.meta.bridge_T) || 4;
   const st = statusOf(e);
-  let h = `<a href="#" data-act="back" class="small">← back</a><h4 data-i="merge">Link evidence</h4><h3 style="margin:0 0 4px;font-size:16px">${esc(n1)} ↔ ${esc(n2)}</h3>`;
+  let h = `<a href="#" data-act="back" class="small">← back</a><div class="section-label" data-i="merge">Link evidence</div><h2 style="margin:0 0 4px;font-size:16px">${esc(n1)} ↔ ${esc(n2)}</h2>`;
   if (st) h += `<span class="pill" data-status="${st}">${st}</span>`;
   if (e.status === 'low') h += `<p>${fmt(e.n_bridge)} bridge papers in this window: too few to compute link growth. Strength is shown.</p><div class="kv"><span>strength</span><span class="num">${e.strength.toFixed(3)}</span></div>`;
   else h += `<div class="kv"><span>bridge papers in window:</span><span class="num">${fmt(e.n_bridge)}</span><span>in prior window:</span><span class="num">${fmt(e.n_prior ?? e.n_bridge_prior ?? (d && (d.n_prior ?? d.n_bridge_prior)) ?? NaN)}</span><span>share now</span><span class="num">${pct(e.share_now)}</span><span>share before</span><span class="num">${pct(e.share_prior)}</span><span>link growth</span><span class="num">${e.status === 'new' ? 'new' : '×' + e.growth.toFixed(2)}</span><span>strength</span><span class="num">${e.strength.toFixed(3)}</span></div>`;
@@ -1744,12 +1838,12 @@ function evidenceView() {
   const bs = [...d.bridges].sort(ev.newest ? (a, b) => String(b.month).localeCompare(String(a.month)) : (a, b) => (b.citations || 0) - (a.citations || 0)).slice(0, 30);
   const pg = bs.slice(ev.page * 10, ev.page * 10 + 10);
   const split = b => { const own = b.row != null ? P.lvl[lv][b.row] : null; return own === e.c2 ? `${b.k1} of 14 neighbours in ${n1}` : `${b.k2} of 14 neighbours in ${n2}`; };
-  h += `<h4 data-i="file">Bridge papers · ${ev.newest ? 'newest first' : 'most cited'} · ${bs.length ? ev.page * 10 + 1 : 0}–${ev.page * 10 + pg.length} of ${fmt(d.n_bridge ?? bs.length)}</h4>
+  h += `<h3 data-i="file">Bridge papers · ${ev.newest ? 'newest first' : 'most cited'} · ${bs.length ? ev.page * 10 + 1 : 0}–${ev.page * 10 + pg.length} of ${fmt(d.n_bridge ?? bs.length)}</h3>
     <div style="display:flex;gap:6px;margin-bottom:4px"><button data-act="evSort" aria-pressed="${!!ev.newest}">newest first</button><button data-act="evPage" data-d="-1" ${ev.page ? '' : 'disabled'}>prev</button><button data-act="evPage" data-d="1" ${(ev.page + 1) * 10 < bs.length ? '' : 'disabled'}>next</button></div>
     <div class="plist">${pg.map(b => `<div><a href="${ARXIV}${esc(b.id)}" target="_blank" rel="noopener">${esc(b.title)}</a><small>arXiv:${esc(b.id)} · ${monthName(b.month)} · ${split(b)}</small></div>`).join('') || '<div class="muted">no bridge papers in this window</div>'}</div>`;
-  h += `<h4 data-i="hash">Shared rising phrases · all 36 months</h4>` + (d.phrases && d.phrases.length ? d.phrases.map(p => `<button class="chip" data-act="phrase" data-ph="${esc(p.phrase)}">${esc(p.phrase)} <span class="muted">${p.n1} / ${p.n2} papers</span></button>`).join('') + ' <span class="tiny muted">all 36 months</span>' : '<div class="muted small">no shared rising phrases</div>');
+  h += `<h3 data-i="hash">Shared rising phrases · all 36 months</h3>` + (d.phrases && d.phrases.length ? d.phrases.map(p => `<button class="chip" data-act="phrase" data-ph="${esc(p.phrase)}">${esc(p.phrase)} <span class="muted">${p.n1} / ${p.n2} papers</span></button>`).join('') + ' <span class="tiny muted">all 36 months</span>' : '<div class="muted small">no shared rising phrases</div>');
   const pre = ST && SX.ideas.find(g => g.level === lv && g.window === curWin() && g.c1 === Math.min(e.c1, e.c2) && g.c2 === Math.max(e.c1, e.c2));
-  if (pre) h += `<h4 data-i="bulb">Ideas for this pair (precomputed)</h4>` + ideasHTML({ideas: pre.ideas, created: pre.created, window: SX.meta.windows[pre.window], shown: pre.shown});
+  if (pre) h += `<h3 data-i="bulb">Ideas for this pair (precomputed)</h3>` + ideasHTML({ideas: pre.ideas, created: pre.created, window: SX.meta.windows[pre.window], shown: pre.shown});
   h += `<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap"><button data-act="evAB" class="pri">Set as A and B</button><button data-act="evMap" aria-pressed="${!!ev.onMap}">${ev.onMap ? 'Hide bridge papers' : 'Show bridge papers on map'}</button></div>`;
   return h;
 }
@@ -1775,7 +1869,7 @@ function renderAB() {
   const el = $('abBlock');
   if (!(S.A && S.B)) { el.innerHTML = S.ideasWait ? ideasArea() : ''; return; }
   const d = S.dist;
-  let h = `<h4 style="margin-top:0" data-i="compare">A vs B</h4><div class="small"><span style="color:var(--color-a);font-weight:700">A</span> ${esc(S.A.label)}<br><span style="color:var(--color-b);font-weight:700">B</span> ${esc(S.B.label)}</div>`;
+  let h = `<h2 class="sech" style="margin-top:0" data-i="compare">A vs B</h2><div class="small"><span style="color:var(--color-a);font-weight:700">A</span> ${esc(S.A.label)}<br><span style="color:var(--color-b);font-weight:700">B</span> ${esc(S.B.label)}</div>`;
   h += d ? `<div class="kv"><span>cosine distance</span><span class="num">${d.cos_dist.toFixed(3)}</span><span>overlap</span><span class="num">${fmt(d.overlap)} papers</span><span>bridge papers between them:</span><span class="num">${d.n_bridges == null ? 'local only' : fmt(d.n_bridges)}</span></div><div class="plist small">${(d.bridges || []).slice(0, 5).map(p => `<div><a href="${ARXIV}${esc(p.id)}" target="_blank" rel="noopener">${esc(p.title)}</a></div>`).join('')}</div>` : '<p class="muted small">computing distance…</p>';
   h += (ST ? `<div style="margin-top:8px"><span title="Ideas between A and B are ${LOCAL_ONLY}"><button data-act="ideas" class="pri" disabled>Ideas between A and B</button></span></div>`
     : `<div style="margin-top:8px"><button data-act="ideas" class="pri">Ideas between A and B</button></div>`) + ideasArea();
@@ -1925,7 +2019,8 @@ function toggleView(open) {
   if (!open) return;
   const r = b.getBoundingClientRect(), rail = document.body.classList.contains('rail');
   p.style.left = Math.max(8, Math.min(innerWidth - 276, rail ? r.right + 10 : r.left)) + 'px';
-  p.style.bottom = Math.max(8, innerHeight - (rail ? r.bottom : r.top - 8)) + 'px'; p.style.top = 'auto';
+  const bottom = Math.max(8, innerHeight - (rail ? r.bottom : r.top - 8));
+  p.style.bottom = bottom + 'px'; p.style.top = 'auto'; p.style.maxHeight = Math.max(80, innerHeight - bottom - 8) + 'px';
 }
 
 // sheet resize handle: 120 px .. map height - 40; double-click closes
@@ -1947,7 +2042,7 @@ document.addEventListener('click', e => {
     const lr = e.target.closest('tr[data-li]'); if (lr) return openEvidence(S.linkRows[+lr.dataset.li]);
     const sg = e.target.closest('#sugg li[role=option]'); if (sg) return pickSugg(sg);
     const pr = e.target.closest('tr[data-ph]'); if (pr) { $('q').value = pr.dataset.ph; return runSearch(pr.dataset.ph, 'phrase'); }
-    const ir = e.target.closest('tr[data-ig]'); if (ir) { const g = ideaGroups().find(x => x.key === ir.dataset.ig); if (g) { S.view = 'ideas'; $('inspBody').innerHTML = `<h4 style="margin-top:0" data-i="bulb">Ideas: ${esc(g.a || 'A')} ↔ ${esc(g.b || 'B')}</h4>` + ideasHTML({ideas: g.ideas, created: g.created, window: g.window, shown: []}); if (NARROW.matches) document.body.classList.add('drawer'); } }
+    const ir = e.target.closest('tr[data-ig]'); if (ir) { const g = ideaGroups().find(x => x.key === ir.dataset.ig); if (g) { S.view = 'ideas'; $('inspBody').innerHTML = `<h2 style="margin-top:0" data-i="bulb">Ideas: ${esc(g.a || 'A')} ↔ ${esc(g.b || 'B')}</h2>` + ideasHTML({ideas: g.ideas, created: g.created, window: g.window, shown: []}); if (NARROW.matches) document.body.classList.add('drawer'); } }
     return;
   }
   const a = t.dataset.act, d = t.dataset;
@@ -1969,7 +2064,7 @@ document.addEventListener('click', e => {
     case 'drawerClose': document.body.classList.remove('drawer'); break;
     case 'winChip': { const w = $('winDD'); w.open = !w.open; if (w.open) w.querySelector('summary').focus(); break; }
     case 'selTo': selTo(d.who, d.to); break;
-    case 'selFocus': { const s2 = d.who === 'cur' ? S.cur : S[d.who]; if (s2) { S.focus = s2; S.view = 'sel'; S.ev = null; $('insp').scrollTop = 0; if (NARROW.matches) document.body.classList.add('drawer'); renderInspector(); } break; }
+    case 'selFocus': { const s2 = d.who === 'cur' ? S.cur : S[d.who]; if (s2) { S.focus = s2; announceSelection(s2); S.view = 'sel'; S.ev = null; $('insp').scrollTop = 0; if (NARROW.matches) document.body.classList.add('drawer'); renderInspector(); } break; }
     case 'recent': runRecent(+d.i, d.slot); break;
     case 'recentX': RECENT.splice(+d.i, 1); lsSet('uc.recent', JSON.stringify(RECENT)); renderRecent(); break;
     case 'win': if (d.n === 'custom') { $('customBox').hidden = false; } else { $('winDD').open = false; setWindow({n: +d.n}); } break;
@@ -2038,7 +2133,7 @@ function openInfo() {
   <p><b>Track record.</b> ${esc(m.backtest_line || '')}</p>
   <p><b>kNN precision.</b> recall@14 ${m.knn_recall14 != null ? m.knn_recall14 : '–'}${m.knn_bridge_agree != null ? `, bridge agreement ${m.knn_bridge_agree}%` : ''} against an exact search.</p>
   <p class="muted">Colour mode resets to growth on reload.</p>`;
-  pop.style.left = Math.max(8, Math.min(innerWidth - 368, r.left - 170)) + 'px'; pop.style.top = (r.bottom + 6) + 'px'; pop.hidden = false; $('infoBtn').setAttribute('aria-expanded', 'true');
+  pop.style.left = Math.max(8, Math.min(innerWidth - 368, r.left - 170)) + 'px'; pop.style.top = (r.bottom + 6) + 'px'; pop.style.maxHeight = Math.max(80, innerHeight - r.bottom - 14) + 'px'; pop.hidden = false; $('infoBtn').setAttribute('aria-expanded', 'true');
 }
 function closeInfo() { $('infoPop').hidden = true; $('infoBtn').setAttribute('aria-expanded', 'false'); }
 function escLayer() {  // innermost first; F43.5: sheet -> lasso/compare -> current -> B -> A -> overview preset
@@ -2070,6 +2165,7 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (inText) { if (e.key === 'Escape') t.blur(); return; }
+  if (t.matches('[data-act=selFocus]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); t.click(); return; }
   // table row navigation
   const tr = t.closest && t.closest('tbody tr[tabindex]'), th = t.closest && t.closest('thead');
   if ((tr || th) && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
@@ -2100,7 +2196,7 @@ document.addEventListener('keydown', e => {
 $('mapwrap').addEventListener('pointerdown', () => { S.down = true; });
 addEventListener('pointerup', () => { S.down = false; });
 $('mapwrap').addEventListener('pointerleave', () => { $('tip').style.display = 'none'; });
-if (params.get('bench')) { const b = document.createElement('div'); b.id = 'bench'; document.body.append(b); setInterval(render, 1000); }
+if (params.get('bench')) { const b = document.createElement('div'); b.id = 'bench'; $('mapwrap').append(b); setInterval(render, 1000); }
 
 // ---------- F42 cue cards (guided tours) ----------
 // A step: t title, b body (string or fn, read after run), el () => element | [elements] | null (null = centred card),
@@ -2146,7 +2242,7 @@ const TOURS = {
       el: () => document.querySelector('#linksTable tr[data-li="0"]'), clip: () => $('tabbody'),
       run: () => { openSheet('links', true); $('tabbody').scrollTop = 0; const e = S.linkRows && S.linkRows[0]; if (e && !(S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2)) openEvidence(e); }},
     {t: 'Bridge papers', b: 'Papers whose nearest neighbours sit in both topics. Sort them, or show them on the map.', insp: true,
-      el: () => { const b = $('inspBody'), h = [...b.querySelectorAll('h4')].find(x => x.textContent.startsWith('Bridge papers')), pl = h && b.querySelector('h4 ~ .plist'); return h && pl ? [h, pl] : $('insp'); }},
+      el: () => { const b = $('inspBody'), h = [...b.querySelectorAll('h3')].find(x => x.textContent.startsWith('Bridge papers')), pl = h && b.querySelector('h3 ~ .plist'); return h && pl ? [h, pl] : $('insp'); }},
     {t: "That's it", b: '"Set as A and B" under the bridge papers compares the pair. The Tour row starts the full guide.', el: null},
   ],
   compare: [
