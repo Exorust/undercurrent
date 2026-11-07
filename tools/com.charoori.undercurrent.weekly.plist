@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- Install: cp tools/com.charoori.undercurrent.weekly.plist ~/Library/LaunchAgents/ &&
+     launchctl bootstrap gui/$(id -u) ~/Library/LaunchAgents/com.charoori.undercurrent.weekly.plist
+     Fires daily at 04:00 (or at the next wake if asleep); tools/weekly.sh itself works only weekly. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.charoori.undercurrent.weekly</string>
+  <key>ProgramArguments</key>
+  <array><string>/bin/sh</string><string>/Users/chandu/myproj/field-radar/tools/weekly.sh</string></array>
+  <key>StartCalendarInterval</key>
+  <dict><key>Hour</key><integer>4</integer><key>Minute</key><integer>0</integer></dict>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/opt/homebrew/bin:/Users/chandu/.local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+    <key>HOME</key><string>/Users/chandu</string>
+  </dict>
+  <key>StandardOutPath</key><string>/Users/chandu/myproj/field-radar/data/log/launchd.log</string>
+  <key>StandardErrorPath</key><string>/Users/chandu/myproj/field-radar/data/log/launchd.log</string>
+  <key>LowPriorityIO</key><true/>
+  <key>Nice</key><integer>10</integer>
+</dict>
+</plist>
