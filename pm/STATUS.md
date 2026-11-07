@@ -152,3 +152,14 @@ Vocabulary: **solved** = walked against the running software, every step matched
 | F39 weekly job | see the weekly test row below | data/log/weekly-2026-11-07.log |
 | F39 weekly test (forced, deploy off) | solved for the weekly path: harvest 8,668 upserts in 53 s (461,838 papers); embed 1,253 new papers in 18 min including one Semantic Scholar batch failure retried; month check 2026-10 = published 2026-10 → no rebuild; stamp written, lock removed. The month-roll path (run_all → export → deploy) is not yet exercised by the job itself; its parts were run by hand this session. First automatic rebuild expected on the first run after 2026-12-01 (the job needs papers harvested in December before November counts as complete). | data/log/weekly-2026-11-07.log |
 | launchd agent | installed: ~/Library/LaunchAgents/com.charoori.undercurrent.weekly.plist, loaded, daily 04:00 | launchctl print |
+
+## Run 2026-11-07 (afternoon): front page, QM layout, cue cards, light style — live
+
+| item | status | evidence |
+|---|---|---|
+| F41 front page | solved: live at https://charoori.com/undercurrent/ ; no errors at 1600/1280/390; live numbers and "Right now" lists filled; charoori.com + GitHub links | 2026-11-07-landing/, 2026-11-07-light/light-landing-*.png |
+| F42 cue cards | solved: 4 tours (first 8, arriving 5, connect 6, compare 6); first visit auto-starts live (`tour: {active: true, id: first, step: 1, n: 8}`), not under automation | 2026-11-07-tours/, 2026-11-07-light/live-first-visit.png |
+| F43 QM layout | solved: all F43.1–F43.5 steps pass in local and static modes (builder walk; PM spot checks) | 2026-11-07-qmlayout/ |
+| F44 light style | solved after one contrast fix round (connect view background, growth text palette, selection dimming); colour-blind check on the light scale: min adjacent ΔE 14.5 (tritanopia), 14.7 (deuteranopia), 15.9 (protanopia) | 2026-11-07-light/ |
+| UX review | done; user chose alternative B (QM) over the reviewer's A | 2026-11-07-ux/review.md |
+| Deploy | undercurrent redeployed; charoori.com: /undercurrent/map/ trailing-slash rewrite fixed (commit 34fb4a0), undercurrent listed under projects; production promoted manually because Vercel had stopped auto-assigning production after the earlier manual promote | curl checks |
