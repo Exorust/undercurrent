@@ -14,7 +14,7 @@ Use the snapshot's last complete month when reporting dates.
 ## Prefer MCP
 
 If connected, use the read-only server at
-https://charoori.com/undercurrent/api/mcp . Inspect tool schemas before calling:
+https://charoori.com/undercurrent/api/mcp/ . Inspect tool schemas before calling:
 
 - `list_topics`: find the two areas and their topic identifiers.
 - `get_topic`: read topic statistics, phrases and paper evidence.
@@ -28,7 +28,7 @@ https://charoori.com/undercurrent/api/mcp . Inspect tool schemas before calling:
 For Claude Code, connect with:
 
 ```sh
-claude mcp add --transport http undercurrent https://charoori.com/undercurrent/api/mcp
+claude mcp add --transport http undercurrent https://charoori.com/undercurrent/api/mcp/
 ```
 
 ## Public data fallback

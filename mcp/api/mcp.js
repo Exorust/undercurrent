@@ -73,9 +73,28 @@ const clean = s => s.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, '$1').replace(/<[^>]
     return n <= 0x10ffff ? String.fromCodePoint(n) : m;
   }).replace(/\s+/g, ' ').trim();
 const tag = (xml, name) => clean(xml.match(new RegExp(`<${name}\\b[^>]*>([\\s\\S]*?)</${name}>`, 'i'))?.[1] || '');
+// ponytail: cache, spacing and the rate limit below are per warm instance. Fine for a free tier;
+// move them to a shared store (e.g. Upstash) for a paid tier.
+const arxivCache = new Map(), ARXIV_TTL = 3_600_000, ARXIV_MAX = 500, MAX_WAIT = 20_000;
+let arxivNext = 0;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+async function arxivSlot() {
+  const env = Number(process.env.UC_ARXIV_SPACING_MS);
+  const spacing = process.env.UC_ARXIV_SPACING_MS !== undefined && Number.isFinite(env) && env >= 0 ? env : 3000;
+  const now = Date.now(), at = Math.max(now, arxivNext);
+  if (at - now > MAX_WAIT) throw new Error('arXiv is busy, try again shortly');
+  arxivNext = at + spacing; // reservations are taken synchronously, so requests leave in call order
+  while (Date.now() < at) await sleep(at - Date.now());
+}
 async function arxiv(params) {
   const url = new URL('https://export.arxiv.org/api/query');
   url.search = new URLSearchParams(params).toString();
+  const key = String(url), hit = arxivCache.get(key);
+  if (hit) {
+    arxivCache.delete(key);
+    if (hit.until > Date.now()) { arxivCache.set(key, hit); return hit.value; }
+  }
+  await arxivSlot();
   try {
     const r = await fetch(url, { headers: { 'User-Agent': 'undercurrent-mcp/0.1 (+https://charoori.com/undercurrent/)' },
       signal: AbortSignal.timeout(8000) });
@@ -89,6 +108,8 @@ async function arxiv(params) {
       abstract: tag(entry, 'summary'), published: tag(entry, 'published')
     }));
     if (entries.some(p => /api\/errors|#errors/.test(p.id))) throw new Error(entries[0].abstract || 'API error');
+    arxivCache.set(key, { value: entries, until: Date.now() + ARXIV_TTL });
+    while (arxivCache.size > ARXIV_MAX) arxivCache.delete(arxivCache.keys().next().value);
     return entries;
   } catch (e) { throw new Error(`arXiv API unavailable: ${e.message}. Retry later.`); }
 }
@@ -99,7 +120,7 @@ const ref = z.object({ level, id });
 const text = value => ({ content: [{ type: 'text', text: JSON.stringify(value) }] });
 function makeServer() {
   const server = new McpServer({ name: 'undercurrent', version: '0.1.0' }, {
-    instructions: 'Undercurrent maps 459,249 arXiv CS papers and exposes snapshot topics, links, and live arXiv evidence. Windows 3m, 6m, and 12m cover complete months, with levels 0 sub-topic, 1 topic, and 2 area. Topic growth is corrected for overall CS growth.'
+    instructions: 'Undercurrent maps 459,249 arXiv CS papers and exposes snapshot topics, links, and live arXiv evidence. Windows 3m, 6m, and 12m cover complete months, with levels 0 sub-topic, 1 topic, and 2 area. Topic growth is corrected for overall CS growth. Endpoint: https://charoori.com/undercurrent/api/mcp/ (use the trailing slash). Limits: 60 requests per 10 minutes per IP; arXiv calls are spaced and cached for an hour.'
   });
   const tool = (name, description, inputSchema, fn) => server.registerTool(name, {
     description, inputSchema, annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: true }
@@ -156,13 +177,21 @@ function makeServer() {
     idea: z.string().trim().min(1).max(10000), key_terms: z.array(z.string().trim().min(1).max(200)).min(2).max(6).optional(),
     max_results: z.number().int().min(1).max(30).default(8)
   }, async ({ idea, key_terms, max_results }) => {
-    const terms = key_terms || [...new Set((idea.toLowerCase().match(/[\p{L}\p{N}]+/gu) || []))]
-      .sort((a, b) => b.length - a.length).slice(0, 5);
-    if (!terms.length) throw new Error('Provide words or key_terms to search');
-    const query = terms.map(t => `all:"${t.replace(/["\\]/g, ' ')}"`).join(' AND ');
-    const results = await arxiv({ search_query: query, max_results: String(max_results), sortBy: 'relevance' });
-    return { query, papers: results.map(({ id, title, published, abstract }) => ({ id, title, published, abstract: abstract.slice(0, 300) })),
-      note: 'These are arXiv relevance results, not a novelty score. Judge overlap yourself: novel / partial / done. No results does not prove novelty.' };
+    const phrases = [...new Set((key_terms || [...new Set((idea.toLowerCase().match(/[\p{L}\p{N}]+/gu) || []))]
+      .sort((a, b) => b.length - a.length).slice(0, 4)).map(t => t.replace(/["\\]/g, ' ').trim()).filter(Boolean))];
+    if (!phrases.length) throw new Error('Provide words or key_terms to search');
+    const q = (list, op) => list.map(t => `all:"${t}"`).join(` ${op} `);
+    const longest = [...phrases].sort((a, b) => b.length - a.length).slice(0, 2);
+    // Strict first, then relax: AND of up to 4, AND of the 2 longest, OR of all. Stop at the first hit.
+    const queries = [...new Set([q(phrases.slice(0, 4), 'AND'), q(longest, 'AND'), q(phrases, 'OR')])];
+    let query_used, results = [];
+    for (query_used of queries) {
+      results = await arxiv({ search_query: query_used, max_results: String(max_results), sortBy: 'relevance' });
+      if (results.length) break;
+    }
+    return { query_used, relaxed: query_used !== queries[0], queries_tried: queries.slice(0, queries.indexOf(query_used) + 1),
+      papers: results.map(({ id, title, published, abstract }) => ({ id, title, published, abstract: abstract.slice(0, 300) })),
+      note: 'These are arXiv relevance results, not a novelty score. Judge overlap yourself: novel / partial / done. relaxed=true means the strict AND search found nothing and a looser query was used, so results may only partly overlap. No results does not prove novelty.' };
   });
   const facet = z.enum(['purpose', 'mechanism', 'evaluation']).optional();
   server.registerPrompt('ideas_between', { description: 'Generate evidence-based ideas by recombining two topics.',
@@ -172,15 +201,29 @@ function makeServer() {
   } }] }));
   return server;
 }
+const hits = new Map(), RATE_MAX = 60, RATE_WINDOW = 600_000;
+function clientIp(req) {
+  const h = name => { const v = req.headers?.[name]; return (Array.isArray(v) ? v[0] : v) || ''; };
+  return h('x-forwarded-for').split(',')[0].trim() || h('x-real-ip').trim() || 'unknown';
+}
+function rateLimited(ip) {
+  const now = Date.now();
+  if (hits.size > 5000) for (const [k, v] of hits) if (v.until <= now) hits.delete(k);
+  let w = hits.get(ip);
+  if (!w || w.until <= now) hits.set(ip, w = { count: 0, until: now + RATE_WINDOW });
+  return ++w.count > RATE_MAX ? Math.ceil((w.until - now) / 1000) : 0;
+}
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Headers', 'content-type, mcp-session-id, mcp-protocol-version, authorization');
   res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
   if (req.method === 'OPTIONS') { res.writeHead(204).end(); return; }
-  const error = (status, code, message) => {
-    res.writeHead(status, { 'Content-Type': 'application/json' });
+  const error = (status, code, message, headers = {}) => {
+    res.writeHead(status, { 'Content-Type': 'application/json', ...headers });
     res.end(JSON.stringify({ jsonrpc: '2.0', error: { code, message }, id: null }));
   };
+  const retry = rateLimited(clientIp(req));
+  if (retry) { error(429, -32029, 'Rate limit: 60 requests per 10 minutes. Try again later.', { 'Retry-After': String(retry) }); return; }
   if (req.method !== 'POST') { error(405, -32000, 'Method not allowed.'); return; }
   const server = makeServer();
   const transport = new StreamableHTTPServerTransport({ sessionIdGenerator: undefined, enableJsonResponse: true });

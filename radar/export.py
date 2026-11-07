@@ -92,10 +92,10 @@ Windows W = 3m, 6m, 12m cover complete months. Levels L = 0 sub-topic, 1 topic, 
 Map: https://charoori.com/undercurrent/map/
 Project: https://charoori.com/undercurrent/
 Source: https://github.com/Exorust/undercurrent
-MCP: https://charoori.com/undercurrent/api/mcp
+MCP: https://charoori.com/undercurrent/api/mcp/
 Free, read-only Streamable HTTP; no authentication. Rate limits may apply.
 Claude Code setup:
-claude mcp add --transport http undercurrent https://charoori.com/undercurrent/api/mcp
+claude mcp add --transport http undercurrent https://charoori.com/undercurrent/api/mcp/
 Tools: list_topics, get_topic, arriving, links, compare, get_papers, novelty_check.
 Prompt: ideas_between. Abstracts and novelty searches use the live arXiv API.
 
