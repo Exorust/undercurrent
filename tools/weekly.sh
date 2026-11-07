@@ -53,6 +53,14 @@ timeout 10800 ./run_all.sh || fail "run_all.sh"
 say "export"
 timeout 3600 $PY -m radar.export --out site --ideas 20 || fail "export"
 
+# front-page preview: photograph the exported map (best effort; the page has a placeholder if this fails)
+say "preview"
+( cd site && python3 -m http.server 8797 >/dev/null 2>&1 & echo $! > ../data/preview-http.pid )
+sleep 2
+PUPPETEER_CORE="${PUPPETEER_CORE:-$HOME/.claude/skills/gstack/node_modules/puppeteer-core}" \
+  timeout 180 node tools/shot.cjs http://localhost:8797/map/ site/preview.png --no-measure --wait 4000 >/dev/null 2>&1 || say "preview failed (placeholder will show)"
+kill "$(cat data/preview-http.pid)" 2>/dev/null; rm -f data/preview-http.pid
+
 # sanity: point count and size before anything goes public
 $PY - <<'EOF' || fail "snapshot checks"
 import json, sys

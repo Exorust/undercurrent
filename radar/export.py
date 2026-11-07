@@ -7,6 +7,8 @@ Loads the same state as radar.serve (radar.duckdb read-only) and calls serve.py'
 JSON file equals what the live endpoint returns. serve.py's workbench, pid, lock and log paths are pointed
 at a temp dir: the export never touches data/workbench.duckdb, data/serve.pid or data/run.lock and never
 binds a port. Writes <out>.tmp, then swaps it into <out>. All paths in the site are relative.
+Layout: index.html = radar/landing.html (front page), map/index.html = radar/app.html reading ../data/,
+data/ = the JSON and binary files, preview.png carried over from the previous <out> when present.
 """
 import argparse, gzip, json, pathlib, shutil, sys, tempfile, time
 from datetime import datetime
@@ -33,6 +35,14 @@ def slim(p, url=False):
 # ---------- pure helpers (checked by --selftest) ----------
 
 def shard_of(row): return row // SHARD, row % SHARD
+
+
+LANDING = pathlib.Path(__file__).with_name("landing.html")
+
+
+def static_app(html):
+    """app.html as served from site/map/: data lives one level up."""
+    return html.replace("<head>", '<head>\n<script>window.UC_STATIC={base:"../data/"}</script>', 1)
 
 
 def cit_bytes(cit):
@@ -94,7 +104,10 @@ def export(out, n_ideas):
 
     html = P["app"].read_text()
     assert "<head>" in html, "radar/app.html has no <head>"
-    w.put("index.html", html.replace("<head>", '<head>\n<script>window.UC_STATIC={base:"data/"}</script>', 1))
+    w.put("index.html", LANDING.read_bytes())
+    w.put("map/index.html", static_app(html))
+    if (pathlib.Path(out) / "preview.png").exists():   # written by the weekly job; keep it until the next one
+        w.put("preview.png", (pathlib.Path(out) / "preview.png").read_bytes())
     wins = {k: serve.window(win_q(n))["obj"] for k, n in WINDOWS.items()}
     w.put("data/meta.json", dumps({**call(serve.h_meta), "static": True, "generated": gen, "windows": wins}))
     w.put("data/points.bin", P["points"].read_bytes())
@@ -190,6 +203,10 @@ def selftest():
     assert np.allclose(C[0], V[:2].mean(0)) and not C[1].any() and np.allclose(C[2], V[[2, 4]].mean(0))
     assert len(C.tobytes()) == 3 * 768 * 4
     assert majority(np.array([0, 0, 0, 1, -1]), np.array([2, 2, 1, -1, 0]), 3).tolist() == [2, -1, -1]
+    assert static_app("<html><head><title>x</title><head>") == '<html><head>\n<script>window.UC_STATIC={base:"../data/"}</script><title>x</title><head>'
+    lp = LANDING.read_text()
+    assert LANDING.exists() and 'href="map/"' in lp and "fetch('data/'" in lp and 'src="preview.png"' in lp
+    assert not any(s in lp for s in ('href="/', 'src="/', "'/data", '"/data')), "landing.html must use relative URLs only"
     d = pathlib.Path(tempfile.mkdtemp(prefix="radar-export-selftest-")); out = d / "site"
     out.mkdir(); (out / "old.txt").write_text("old")
     tmp = d / "site.tmp"; tmp.mkdir(); (tmp / "new.txt").write_text("new")
