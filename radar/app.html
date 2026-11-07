@@ -378,7 +378,23 @@ body.side-over #scrim{display:block;position:fixed;inset:0;z-index:45;background
   #caption{display:none}
   #tabs{height:var(--sheet-h,60%)}
 }
-@media (prefers-reduced-motion: reduce){.prog{animation:none;background:var(--color-orange)}}
+/* ---------- F42 cue cards: blocker eats clicks, spotlight cut-out via box-shadow, glass card with a pointer ---------- */
+#tourBlock{position:fixed;inset:0;z-index:1000;background:transparent;cursor:default}
+#tourSpot{position:fixed;z-index:1001;pointer-events:none;border-radius:12px;box-shadow:0 0 0 1px rgba(224,118,60,.7),0 0 0 200vmax rgba(0,0,0,.55);transition:left .25s ease,top .25s ease,width .25s ease,height .25s ease}
+#tourSpot.none{left:50%!important;top:50%!important;width:0!important;height:0!important;box-shadow:0 0 0 200vmax rgba(0,0,0,.55)}
+#tourCard{position:fixed;z-index:1002;width:320px;padding:14px 16px 12px;border-radius:16px;background:rgba(34,34,34,.96);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1),inset 0 1px 0 rgba(255,255,255,.08),0 18px 48px rgba(0,0,0,.6);color:var(--color-text);transition:left .25s ease,top .25s ease}
+#tourCard:focus{outline:none}
+#tourCard .tstep{font:500 11px/1 "JetBrains Mono",ui-monospace,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--color-muted)}
+#tourCard h2{margin:8px 0 6px;font:500 17px/1.25 "Inter",system-ui,sans-serif;letter-spacing:-.01em;color:var(--color-text)}
+#tourCard p{margin:0;font-size:13px;line-height:1.45;color:#cfcfcf}
+#tourCard .trow{display:flex;align-items:center;gap:6px;margin-top:14px}
+#tourCard .tskip{margin-right:auto;border:0!important;background:transparent;padding:3px 0;color:var(--color-muted);text-transform:none!important;letter-spacing:0!important;text-decoration:underline;text-underline-offset:3px}
+#tourCard .tskip:hover{background:transparent!important;color:var(--color-text)}
+#tourCard .tptr{position:absolute;width:12px;height:12px;background:rgba(34,34,34,.96);transform:rotate(45deg);box-shadow:inset 0 0 0 1px rgba(255,255,255,.1)}
+#tourCard.dock{left:0!important;right:0;bottom:0;top:auto!important;width:auto;border-radius:16px 16px 0 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom))}
+#tourCard.dock.top{top:0!important;bottom:auto;border-radius:0 0 16px 16px}
+#tourCard.dock .tptr,#tourCard.center .tptr{display:none}
+@media (prefers-reduced-motion: reduce){.prog{animation:none;background:var(--color-orange)} #tourCard,#tourSpot{transition:none}}
 </style>
 </head>
 <body>
@@ -1591,8 +1607,9 @@ function selButtons(s) {
   if (s === S.cur) b += S.A ? `<button data-act="setB">Set as B</button> <button data-act="replaceA">Replace A</button> ` : `<button data-act="setA">Set as A</button> `;
   else if (s === S.A && !S.B) b += `<button data-act="compare">Compare A·B</button> `;
   else if (s === S.B && S.A && S.B) b += `<button data-act="compare">Show A vs B</button> `;
-  b += ST ? `<span title="Ideas between A and B are ${LOCAL_ONLY}"><button data-act="ideas" disabled>Ideas between A and B</button></span>`
-    : `<span title="${both ? '' : 'Set A and B first'}"><button data-act="ideas" ${both ? '' : 'disabled'}>Ideas between A and B</button></span>`;
+  // with A and B both set the ideas button lives in the A vs B block only (it showed twice before)
+  if (!both) b += ST ? `<span title="Ideas between A and B are ${LOCAL_ONLY}"><button data-act="ideas" disabled>Ideas between A and B</button></span>`
+    : `<span title="Set A and B first"><button data-act="ideas" disabled>Ideas between A and B</button></span>`;
   return `<div id="selBar">${b}</div>`;
 }
 function summaryView() {
@@ -1600,7 +1617,7 @@ function summaryView() {
   let h = `<h4 style="margin-top:0" data-i="calendar">This window</h4><h3 style="margin:0 0 4px;font-size:16px">This window: ${S.MS.length ? winText() : '…'}</h3>`;
   if (!w) return h + '<p class="muted small">Loading…</p>';
   h += `<p class="small winsum" style="margin:2px 0">CS papers in window <span class="hlnum">${fmt(w.vol_recent)}</span> · prior ${fmt(w.vol_prior)} (all CS ×${w.vol_ratio.toFixed(2)})</p>`;
-  h += '<h4 data-i="trend">Fastest-growing topics</h4>' + badgeTopics().map((t, i) => `<div style="line-height:1.9"><span class="rank">${i + 1}</span> <a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> ${gCell(t)}</div>`).join('');
+  h += '<div id="fastList"><h4 data-i="trend">Fastest-growing topics</h4>' + badgeTopics().map((t, i) => `<div style="line-height:1.9"><span class="rank">${i + 1}</span> <a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> ${gCell(t)}</div>`).join('') + '</div>';
   const arr = []; for (const t of T1.topics) for (const a of t.arriving || []) arr.push({...a, parent: t.label});
   arr.sort((a, b) => (b.is_new - a.is_new) || (b.growth || 0) - (a.growth || 0));
   h += '<h4 data-i="trend">Arriving sub-topics, all CS</h4>' + (arr.length ? arr.slice(0, 10).map(a => `<div class="small" style="padding:2px 0"><a href="#" data-act="sub" data-c="${a.c}">${esc(a.label)}</a> · ${esc(a.parent)} · onset ${monthName(a.onset)} · ${a.is_new ? '<span class="new">new</span>' : '×' + a.growth.toFixed(1)}</div>`).join('') : '<div class="muted small">none in this window</div>');
@@ -1975,6 +1992,196 @@ $('mapwrap').addEventListener('pointerdown', () => { S.down = true; });
 addEventListener('pointerup', () => { S.down = false; });
 $('mapwrap').addEventListener('pointerleave', () => { $('tip').style.display = 'none'; });
 if (params.get('bench')) { const b = document.createElement('div'); b.id = 'bench'; document.body.append(b); setInterval(render, 1000); }
+
+// ---------- F42 cue cards (guided tours) ----------
+// A step: t title, b body (string or fn, read after run), el () => element | [elements] | null (null = centred card),
+// run() uses the page's own functions, side: needs the sidebar (opened as the menu sheet on a phone), insp: needs the inspector (drawer below 1200 px).
+const TOUR = {active: false, id: null, step: 0, steps: null, prevFocus: null, sheetBefore: false, iv: null, pick: null};
+R.tour = {active: false, id: null, step: 0, n: 0};
+const top1 = () => badgeTopics()[0] || null;
+const onScreen = el => el && el.getClientRects().length > 0;
+function partnerOf(c) {  // the topic with the most bridge papers to c (Links data), else the second badge
+  const L = S.links && S.links.bridge_links.filter(e => e.status !== 'low' && (e.c1 === c || e.c2 === c)).sort((a, b) => b.n_bridge - a.n_bridge)[0];
+  if (L) return L.c1 === c ? L.c2 : L.c1;
+  const b = badgeTopics(); return (b[1] || b[0]).c;
+}
+function tourSummary() { if (S.view !== 'summary') { S.ev = null; S.view = 'summary'; renderInspector(); } $('insp').scrollTop = 0; }
+function tourPreset(p) { if ($(p === 2 ? 'q2' : 'q1').getAttribute('aria-pressed') !== 'true') applyPreset(p, {sheet: false}); }
+const TOURS = {
+  first: [
+    {t: 'Colour shows growth', b: () => `Each of the ${fmt(P.n)} dots is a paper. Orange topics grew faster than CS; blue ones shrank.`, el: () => $('legendBox'), run: () => { closeSheet(); tourPreset(1); }},
+    {t: 'The five fastest-growing topics', b: 'Badges 1 to 5 mark them on the map. Only topics with 200+ papers in the window rank.', el: () => $('fastList') || $('inspBody'), insp: true, run: tourSummary},
+    {t: 'Click a topic', b: () => `Picked: ${top1() ? top1().label : 'the top topic'}. Its growth and top papers show here.`, el: () => $('insp'), insp: true,
+      run: () => { const t = top1(); if (!t) return; const f = S.focus; if (f && f.kind === 'topic' && f.level === 1 && f.c === t.c) { S.view = 'sel'; S.ev = null; renderInspector(); } else selectTopic(1, t.c); }},
+    {t: 'Search anything', b: 'Type a phrase, topic or paper title and pick a suggestion. Press / from anywhere.', el: () => $('composer'), run: () => closeSheet()},
+    {t: 'Lasso an area', b: 'Draw around any patch of dots to select the papers inside. Press L to start.', el: () => $('lassoBtn'), side: true},
+    {t: 'Compare two things', b: 'Pick two selections, A and B, to see distance, overlap and bridge papers.', el: () => $('vCompare'), side: true},
+    {t: 'Tables and connections', b: 'Topics, Links, Phrases and Ideas open over the map. Press 2 for connections.', el: () => $('tbar')},
+    {t: "That's it", b: 'Your selections stay in the sidebar. The Tour row reopens this guide any time.', el: null},
+  ],
+  arriving: [
+    {t: 'What is arriving', b: () => `${winText()}: orange grew faster than CS, blue slower.`, el: () => $('legendBox'), run: () => { closeSheet(); tourPreset(1); }},
+    {t: 'Fastest-growing topics', b: () => { const v = volOf(); return `Ranked after dividing out all-CS growth (×${v ? v.toFixed(2) : '…'} this window). Click one to select it.`; }, el: () => $('fastList') || $('inspBody'), insp: true, run: tourSummary},
+    {t: 'Growth and arriving sub-topics', b: 'Growth vs CS for each topic. The chips are sub-topics whose onset falls in the window.',
+      el: () => { const tb = $('topicsTable'); if (!tb) return $('tabs'); const ths = [...tb.querySelectorAll('thead th')], rows = [...tb.querySelectorAll('tbody tr')].slice(0, 4); return [ths[5], ths[6], ...rows.flatMap(r => [r.cells[5], r.cells[6]])]; },
+      clip: () => $('tabbody'), run: () => { openSheet('topics', true); $('tabbody').scrollTop = 0; }},
+    {t: 'Open an arriving sub-topic', b: () => `Picked: ${TOUR.pick != null ? lblOf(0, TOUR.pick) : 'the first chip'}. The map zooms to it; its growth and newest papers show here.`, el: () => $('insp'), insp: true,
+      run: () => { const ch = document.querySelector('#topicsTable .chip[data-act=sub]'); if (ch) TOUR.pick = +ch.dataset.c; closeSheet(); const f = S.focus; if (TOUR.pick != null && !(f && f.kind === 'topic' && f.level === 0 && f.c === TOUR.pick)) selectTopic(0, TOUR.pick, {zoom: true}); else if (f) { S.view = 'sel'; renderInspector(); } }},
+    {t: "That's it", b: 'The inspector overview lists arriving sub-topics across all of CS. Tour row: full guide.', el: null},
+  ],
+  connect: [
+    {t: 'How topics connect', b: 'The dots turn grey; lines join topics that share bridge papers.', el: () => $('qswitch'), run: () => { tourPreset(2); closeSheet(); }},
+    {t: 'Thicker line, more bridges', b: () => `Width = bridge papers; ${drawnEdges().edges.length} strongest pairs shown. Badges 1 to 5 = top Links rows.`, el: () => $('mapwrap'), run: () => closeSheet()},
+    {t: 'The Links table', b: () => `${$('cLinks').textContent} topic pairs with 10+ bridge papers: share now, share before, link growth.`, el: () => $('tabs'), run: () => { if (S.view === 'evidence') closeEvidence(); openSheet('links', true); $('tabbody').scrollTop = 0; }},
+    {t: 'Open a link', b: () => { const e = S.linkRows && S.linkRows[0]; return e ? `Row 1: ${lblOf(S.level, e.c1)} ↔ ${lblOf(S.level, e.c2)}.` : 'Click any row to open its evidence.'; },
+      el: () => document.querySelector('#linksTable tr[data-li="0"]'), clip: () => $('tabbody'),
+      run: () => { openSheet('links', true); $('tabbody').scrollTop = 0; const e = S.linkRows && S.linkRows[0]; if (e && !(S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2)) openEvidence(e); }},
+    {t: 'Bridge papers', b: 'Papers whose nearest neighbours sit in both topics. Sort them, or show them on the map.', insp: true,
+      el: () => { const b = $('inspBody'), h = [...b.querySelectorAll('h4')].find(x => x.textContent.startsWith('Bridge papers')), pl = h && b.querySelector('h4 ~ .plist'); return h && pl ? [h, pl] : $('insp'); }},
+    {t: "That's it", b: '"Set as A and B" under the bridge papers compares the pair. Tour row: full guide.', el: null},
+  ],
+  compare: [
+    {t: 'Compare A and B', b: 'Compare any two selections: topics, searches or lasso areas. Press C.', el: () => $('vCompare'), side: true, run: () => { closeSheet(); }},
+    {t: 'Guided compare', b: 'The bar on the map says what to pick. The first pick is A, the second B.', el: () => $('hint'),
+      run: () => { if (S.A || S.B || S.cur) overview(); if (!S.cmp) startCompare(); }},
+    {t: 'Pick A', b: () => `Picked A: ${S.A ? S.A.label : 'a topic'}, the fastest-growing topic.`, el: () => $('slotA'), side: true,
+      run: () => { if (S.B) { clearSlot('B'); S.cmp = 'second'; renderHint(); } if (!S.A) { if (!S.cmp) startCompare(); const t = top1(); if (t) selectTopic(1, t.c); } }},
+    {t: 'Pick B', b: () => `Picked B: ${S.B ? S.B.label : 'a second topic'}, the topic with most bridge papers to A.`, el: () => $('slotB'), side: true,
+      run: () => { if (!S.A) { const t = top1(); if (t) selectTopic(1, t.c, {slot: 'A'}); } if (!S.B && S.A && S.A.kind === 'topic') { S.cmp = 'second'; selectTopic(1, partnerOf(S.A.c)); } }},
+    {t: 'A vs B', b: () => ST ? 'Distance, overlap and bridge papers between A and B. Ideas need the local version.' : 'Distance, overlap and bridge papers between A and B, then a button for ideas.',
+      el: () => $('abBlock').innerHTML ? $('abBlock') : $('insp'), insp: true, run: () => { if (S.A && S.B) { S.view = 'sel'; S.ev = null; S.focus = S.focus || S.A; renderInspector(); showAB(); } }},
+    {t: "That's it", b: 'Press C to compare again; clear A or B with the × in Selections.', el: null},
+  ],
+};
+function tourDom() {
+  if ($('tourCard')) return;
+  const blk = document.createElement('div'); blk.id = 'tourBlock'; blk.hidden = true;
+  const spot = document.createElement('div'); spot.id = 'tourSpot'; spot.hidden = true; spot.setAttribute('aria-hidden', 'true');
+  const card = document.createElement('div'); card.id = 'tourCard'; card.hidden = true;
+  card.setAttribute('role', 'dialog'); card.setAttribute('aria-modal', 'true'); card.setAttribute('aria-labelledby', 'tourTitle'); card.setAttribute('aria-describedby', 'tourBody'); card.tabIndex = -1;
+  card.innerHTML = '<span class="tptr" aria-hidden="true"></span><div class="tstep" id="tourStep"></div><h2 id="tourTitle"></h2><p id="tourBody"></p><div class="trow"><button type="button" class="tskip nu" id="tourSkip">Skip tour</button><button type="button" id="tourBack">Back</button><button type="button" class="pri" id="tourNext">Next</button></div>';
+  document.body.append(blk, spot, card);
+  // the dim area swallows clicks and wheels: no accidental exits, no map pans under the card
+  for (const ev of ['click', 'pointerdown', 'wheel', 'dblclick', 'contextmenu']) blk.addEventListener(ev, e => { e.preventDefault(); e.stopPropagation(); }, {passive: false});
+  $('tourSkip').addEventListener('click', e => { e.stopPropagation(); tourEnd(false); });
+  $('tourBack').addEventListener('click', e => { e.stopPropagation(); tourGo(TOUR.step - 1); });
+  $('tourNext').addEventListener('click', e => { e.stopPropagation(); tourGo(TOUR.step + 1); });
+}
+function tourStart(id) {
+  if (!TOURS[id] || !R.ready) return;
+  if (TOUR.active) tourEnd(false);
+  tourDom(); lsSet('uc.toured', '1');
+  if (params.has('tour')) { params.delete('tour'); const qs = params.toString(); try { history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {} }
+  hideSugg(); closeInfo(); if (!$('viewPop').hidden) toggleView(false); const dd = document.querySelector('details.dd[open]'); if (dd) dd.open = false;
+  if (S.mode === 'lasso') setLasso(false);
+  Object.assign(TOUR, {active: true, id, steps: TOURS[id], step: 0, prevFocus: document.activeElement, sheetBefore: !!S.sheet, pick: null});
+  for (const k of ['tourBlock', 'tourSpot', 'tourCard']) $(k).hidden = false;
+  clearInterval(TOUR.iv); TOUR.iv = setInterval(() => tourPlace(false), 400);  // targets that load late (bridge papers, A vs B) or animate in
+  tourGo(0);
+}
+function tourGo(i) {
+  if (!TOUR.active || i < 0) return;
+  const st = TOUR.steps; if (i >= st.length) return tourEnd(true);
+  TOUR.step = i; const s = st[i];
+  try { if (s.run) s.run(); } catch (e) { console.warn('tour step', i, e); }
+  if (PHONE.matches && !!s.side !== sideOpen) { sideOpen = !!s.side; layout(); }
+  if (NARROW.matches) document.body.classList.toggle('drawer', !!s.insp);
+  const txt = v => typeof v === 'function' ? v() : v;
+  $('tourStep').textContent = `STEP ${i + 1} OF ${st.length}`; $('tourTitle').textContent = txt(s.t); $('tourBody').textContent = txt(s.b);
+  $('tourBack').hidden = i === 0; $('tourNext').textContent = i === st.length - 1 ? 'Done' : 'Next';
+  Object.assign(R.tour, {active: true, id: TOUR.id, step: i + 1, n: st.length});
+  tourPlace(true); for (const ms of [80, 300, 700]) setTimeout(() => { if (TOUR.active && TOUR.step === i) tourPlace(true); }, ms);
+  $('tourNext').focus({preventScroll: true});
+}
+function tourRect(s, scroll) {
+  let els = s.el ? s.el() : null; if (!els) return null;
+  els = (Array.isArray(els) ? els : [els]).filter(onScreen); if (!els.length) return null;
+  const insp = $('insp');
+  if (scroll && els[0] !== insp && insp.contains(els[0])) {  // bring an inspector target into its scroll box by hand (scrollIntoView would also move overflow:hidden ancestors)
+    const ir = insp.getBoundingClientRect(), er = els[0].getBoundingClientRect(), top = ir.top + 8;
+    if (er.top < top || er.bottom > ir.bottom - 8) insp.scrollTop += er.top - top;
+  }
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const e of els) { const r = e.getBoundingClientRect(); x0 = Math.min(x0, r.left); y0 = Math.min(y0, r.top); x1 = Math.max(x1, r.right); y1 = Math.max(y1, r.bottom); }
+  const clip = s.clip && s.clip(); if (clip && onScreen(clip)) { const c = clip.getBoundingClientRect(); x0 = Math.max(x0, c.left); y0 = Math.max(y0, c.top); x1 = Math.min(x1, c.right); y1 = Math.min(y1, c.bottom); }
+  if (insp.contains(els[0]) && els[0] !== insp) { const c = insp.getBoundingClientRect(); y0 = Math.max(y0, c.top); y1 = Math.min(y1, c.bottom); }
+  x0 = Math.max(x0, 6); y0 = Math.max(y0, 6); x1 = Math.min(x1, innerWidth - 6); y1 = Math.min(y1, innerHeight - 6);
+  return x1 - x0 < 4 || y1 - y0 < 4 ? null : {x: x0, y: y0, w: x1 - x0, h: y1 - y0};
+}
+function tourPlace(scroll) {
+  if (!TOUR.active) return;
+  const s = TOUR.steps[TOUR.step], r = tourRect(s, scroll), spot = $('tourSpot'), card = $('tourCard'), ptr = card.querySelector('.tptr'), W = innerWidth, H = innerHeight, pad = 6;
+  spot.classList.toggle('none', !r);
+  if (r) Object.assign(spot.style, {left: r.x - pad + 'px', top: r.y - pad + 'px', width: r.w + 2 * pad + 'px', height: r.h + 2 * pad + 'px'});
+  card.classList.remove('top', 'center'); Object.assign(ptr.style, {left: '', right: '', top: '', bottom: ''});
+  const dock = W < 1200; card.classList.toggle('dock', dock);
+  if (dock) {  // bottom sheet; flips to the top when the target sits in the lower half (the phone inspector, the composer)
+    card.style.left = card.style.top = ''; const ch = card.offsetHeight;
+    if (r && r.y + r.h + pad > H - ch && r.y + r.h / 2 > H / 2) card.classList.add('top');
+    return;
+  }
+  const cw = card.offsetWidth || 320, ch = card.offsetHeight, g = 12 + pad;
+  if (!r) { card.classList.add('center'); card.style.left = (W - cw) / 2 + 'px'; card.style.top = (H - ch) / 2 + 'px'; return; }
+  const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+  const C = {
+    right: [r.x + r.w + g, cy - ch / 2, W - (r.x + r.w + g) >= cw + 8],
+    left: [r.x - g - cw, cy - ch / 2, r.x - g - cw >= 8],
+    bottom: [cx - cw / 2, r.y + r.h + g, H - (r.y + r.h + g) >= ch + 8],
+    top: [cx - cw / 2, r.y - g - ch, r.y - g - ch >= 8],
+  };
+  // sidebar rows sit at the left edge: the card goes beside them, not over the rows below; other wide strips get it above or below
+  const order = r.x + r.w < 0.25 * W ? ['right', 'bottom', 'top', 'left'] : r.w > 2.5 * r.h ? ['bottom', 'top', 'right', 'left'] : ['right', 'left', 'bottom', 'top'];
+  const side = order.find(k => C[k][2]);
+  let x, y;
+  if (side) [x, y] = C[side]; else { card.classList.add('center'); x = cx - cw / 2; y = cy - ch / 2; }  // target fills the screen (the map): card sits inside it
+  x = Math.max(8, Math.min(W - cw - 8, x)); y = Math.max(8, Math.min(H - ch - 8, y));
+  card.style.left = x + 'px'; card.style.top = y + 'px';
+  const cl = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  if (side === 'right') Object.assign(ptr.style, {left: '-6px', top: cl(cy - y - 6, 14, ch - 26) + 'px'});
+  else if (side === 'left') Object.assign(ptr.style, {right: '-6px', top: cl(cy - y - 6, 14, ch - 26) + 'px'});
+  else if (side === 'bottom') Object.assign(ptr.style, {top: '-6px', left: cl(cx - x - 6, 14, cw - 26) + 'px'});
+  else if (side === 'top') Object.assign(ptr.style, {bottom: '-6px', left: cl(cx - x - 6, 14, cw - 26) + 'px'});
+}
+function tourEnd(done) {
+  if (!TOUR.active) return;
+  TOUR.active = false; clearInterval(TOUR.iv);
+  for (const k of ['tourBlock', 'tourSpot', 'tourCard']) $(k).hidden = true;
+  if (sideOpen) { sideOpen = false; layout(); }
+  if (!done) {  // Skip / Esc: undo what would confuse; selections the tour made stay
+    if (S.sheet && !TOUR.sheetBefore) closeSheet();
+    if (S.mode === 'lasso') setLasso(false);
+    if (S.cmp) { S.cmp = null; renderHint(); }
+  }
+  Object.assign(R.tour, {active: false, step: 0});
+  const f = TOUR.prevFocus;
+  if (f && f !== document.body && document.contains(f) && onScreen(f)) f.focus({preventScroll: true});
+  else if (f === $('tourBtn') && PHONE.matches) $('menuBtn').focus();
+}
+addEventListener('keydown', e => {  // capture: while a card is up, page shortcuts do not fire
+  if (!TOUR.active) return;
+  const k = e.key, card = $('tourCard');
+  if (k === 'Escape') { e.preventDefault(); tourEnd(false); }
+  else if (k === 'ArrowRight') { e.preventDefault(); tourGo(TOUR.step + 1); }
+  else if (k === 'ArrowLeft') { e.preventDefault(); tourGo(TOUR.step - 1); }
+  else if (k === 'Tab') {  // focus stays in the card
+    e.preventDefault(); const f = [...card.querySelectorAll('button')].filter(b => !b.hidden), i = f.indexOf(document.activeElement);
+    f[(i + (e.shiftKey ? -1 : 1) + f.length) % f.length].focus();
+  }
+  else if (!((k === 'Enter' || k === ' ') && card.contains(e.target))) e.preventDefault();
+  e.stopPropagation();
+}, true);
+addEventListener('resize', () => tourPlace(false));
+document.addEventListener('uc:tour', e => tourStart((e.detail && e.detail.tour) || 'first'));
+(() => {  // ?tour=first|arriving|connect|compare starts that tour once the map has drawn; otherwise the first visit gets `first`
+  const want = params.get('tour');
+  // automated browsers (navigator.webdriver) skip the first-visit auto start so screenshot tools see the plain map; ?tour= still works
+  const id = want ? (TOURS[want] ? want : null) : (!lsGet('uc.toured') && !navigator.webdriver ? 'first' : null);
+  if (!id) return;
+  const t0 = performance.now(), iv = setInterval(() => {
+    if (R.ready) { clearInterval(iv); setTimeout(() => tourStart(id), 400); }
+    else if (performance.now() - t0 > 90000) clearInterval(iv);
+  }, 150);
+})();
 boot();
 </script>
 </body></html>

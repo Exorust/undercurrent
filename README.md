@@ -5,7 +5,7 @@ A map of every computer-science paper on arXiv since November 2023 (459,249 pape
 1. **What is arriving?** Which topics and sub-topics are growing faster than computer science as a whole over the last 3, 6 or 12 complete months.
 2. **How do topics connect?** Which pairs of topics share papers whose nearest neighbours sit in both, and what those bridge papers are.
 
-Public snapshot: <https://charoori.com/undercurrent> (refreshed when a month completes).
+Public snapshot: <https://charoori.com/undercurrent/> — a front page that explains the tool, with the map itself at <https://charoori.com/undercurrent/map/>. Refreshed when a month completes. The map has guided tours (the Tour row in the sidebar; `map/?tour=arriving|connect|compare`).
 
 ## How it works
 
@@ -32,17 +32,17 @@ The local workbench adds what the static snapshot cannot: ideas between two sele
 ## Static snapshot and the weekly job
 
 ```sh
-.venv/bin/python -m radar.export   # writes site/ (the page plus pre-computed JSON for every view)
+.venv/bin/python -m radar.export   # writes site/: index.html (front page, radar/landing.html), map/ (radar/app.html in static mode), data/ (pre-computed JSON)
 tools/weekly.sh                    # harvest + embed; on a new complete month: map, links, export, deploy
 ```
 
-`tools/weekly.sh` runs from a macOS launchd agent every Sunday at 04:00 (see `tools/com.charoori.undercurrent.weekly.plist`).
+`tools/weekly.sh` runs from a macOS launchd agent (see `tools/com.charoori.undercurrent.weekly.plist`). The agent fires daily at 04:00; the script does work only when its last success is 6 or more days old, and skips on battery or while the local server runs.
 
 ## Repository map
 
 | path | what |
 |---|---|
-| `radar/` | pipeline stages, the server (`serve.py`), the page (`app.html`), the static export |
+| `radar/` | pipeline stages, the server (`serve.py`), the map page (`app.html`), the front page (`landing.html`), the static export (`export.py`) |
 | `tools/` | dev database builder, headless-Chrome check (`shot.cjs`), weekly job |
 | `docs/designs/` | design, architecture and UI plans |
 | `pm/` | features, acceptance flows and journeys used to build and check the tool |
