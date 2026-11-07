@@ -1,0 +1,50 @@
+<!doctype html>
+<meta charset="utf-8"><title>field-radar: merge view</title>
+<style>
+  body{margin:0;background:#111;color:#ddd;font:14px/1.45 system-ui,sans-serif}
+  header{padding:12px 16px 4px}h1{font-size:20px;margin:0}header p{margin:4px 0;color:#999}
+  .panels{display:flex;flex-wrap:wrap;gap:8px;padding:0 8px}
+  .panels svg{flex:1 1 480px;height:520px;background:#181818;border-radius:6px}
+  svg text{fill:#bbb;font-size:11px;pointer-events:none}
+  circle.t{cursor:pointer;stroke:#000;stroke-width:.5}circle.t.chosen{stroke:#fff;stroke-width:2}circle.t.sel{stroke:#4af;stroke-width:3}
+  line.link{stroke:#fff;stroke-opacity:.35;stroke-width:1}
+  #detail{padding:12px 16px;max-width:1100px}#detail h2{margin:8px 0 2px;font-size:17px}#detail .idea{white-space:pre-wrap;background:#1d1d1d;padding:10px;border-radius:6px}
+  #detail ul{padding-left:18px}#detail a{color:#7bf}
+  .legend{color:#999;padding:0 16px;font-size:12px}
+</style>
+<header><h1>field-radar: merge view</h1><p id="sub"></p></header>
+<div class="panels"><svg id="map" viewBox="0 0 600 520"></svg><svg id="scatter" viewBox="0 0 600 520"></svg></div>
+<p class="legend">Circle size = papers in the topic. Colour = growth of the last <span id="m"></span> months against the <span id="m2"></span> before (blue shrinking, grey flat, orange growing). White ring = a merge idea was written. Click a topic.</p>
+<div id="detail"><em>Click a topic.</em></div>
+<script>
+const D = /*DATA*/;
+const T = D.topics, S = (sel, h) => { const e = document.querySelector(sel); e.innerHTML = h; return e; };
+document.getElementById("sub").textContent = `home field: "${D.home}"; ${T.length} topics; distance band ${D.lo.toFixed(3)} to ${D.hi.toFixed(3)} (25th to 75th percentile)`;
+document.getElementById("m").textContent = D.months; document.getElementById("m2").textContent = D.months;
+const color = g => { const t = Math.max(-1, Math.min(1, Math.log2(g))); return t < 0 ? `hsl(220 60% ${45 + 25 * t}%)` : `hsl(${40 - 10 * t} ${20 + 70 * t}% 55%)`; };
+const r = t => 2 + Math.sqrt(t.n) / 6;
+const scale = (vals, lo, hi) => { const a = Math.min(...vals), b = Math.max(...vals); return v => lo + (v - a) / (b - a || 1) * (hi - lo); };
+const circles = (X, Y) => T.map(t => `<circle class="t${t.idea ? " chosen" : ""}" data-c="${t.cluster}" cx="${X(t)}" cy="${Y(t)}" r="${r(t)}" fill="${color(t.growth)}"><title>${t.label}: ${t.recent}/${t.prior} papers, x${t.growth.toFixed(1)}, dist ${t.dist.toFixed(3)}</title></circle>`).join("");
+// Left: map coordinates (UMAP), home field marker, lines to chosen topics.
+const mx = scale(T.map(t => t.x), 30, 570), my = scale(T.map(t => -t.y), 30, 490);
+const hx = mx(D.home_xy[0]), hy = my(-D.home_xy[1]);
+S("#map", `<text x="10" y="18">map position (same layout as map.html)</text>` +
+  T.filter(t => t.idea).map(t => `<line class="link" x1="${hx}" y1="${hy}" x2="${mx(t.x)}" y2="${my(-t.y)}"/>`).join("") +
+  circles(t => mx(t.x), t => my(-t.y)) +
+  `<path d="M${hx},${hy - 9} l3,6 l7,1 l-5,5 l1,7 l-6,-3 l-6,3 l1,-7 l-5,-5 l7,-1z" fill="#fff"/><text x="${hx + 10}" y="${hy + 4}" style="fill:#fff">home field</text>`);
+// Right: 768-d distance to home vs growth, band shaded.
+const sx = scale(T.map(t => t.dist), 50, 580), sy = scale(T.map(t => Math.log2(t.growth)), 480, 30);
+S("#scatter", `<rect x="${sx(D.lo)}" y="20" width="${sx(D.hi) - sx(D.lo)}" height="470" fill="#fff" fill-opacity=".06"/>` +
+  `<line x1="50" y1="${sy(0)}" x2="580" y2="${sy(0)}" stroke="#444"/>` +
+  `<text x="10" y="18">growth (log) vs cosine distance to home field (768-d); shaded = band used for ideas</text>` +
+  `<text x="${sx(D.lo) + 4}" y="500">too close ◂ band ▸ too far</text><text x="55" y="${sy(0) - 4}">x1.0</text>` +
+  circles(t => sx(t.dist), t => sy(Math.log2(t.growth))));
+document.querySelectorAll("circle.t").forEach(c => c.onclick = () => {
+  const t = T.find(x => x.cluster == c.dataset.c);
+  document.querySelectorAll("circle.t").forEach(o => o.classList.toggle("sel", o.dataset.c == c.dataset.c));
+  S("#detail", `<h2>${t.label}</h2><p>${t.n.toLocaleString()} papers; ${t.recent} in the last ${D.months} months vs ${t.prior} before (x${t.growth.toFixed(2)}); distance to home ${t.dist.toFixed(3)}${t.idea ? "" : "; no idea written (outside the band or not in the top " + T.filter(x => x.idea).length + ")"}</p>` +
+    (t.idea ? `<div class="idea">${t.idea}</div>` : "") +
+    `<ul>${t.papers.map(([i, ti, s]) => `<li><a href="https://arxiv.org/abs/${i}" target="_blank">${i}</a> ${ti}<br><span style="color:#999">${s || ""}</span></li>`).join("")}</ul>`);
+  document.getElementById("detail").scrollIntoView({behavior: "smooth"});
+});
+</script>
