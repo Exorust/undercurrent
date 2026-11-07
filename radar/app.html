@@ -1,0 +1,1483 @@
+<!doctype html>
+<html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>undercurrent</title>
+<link rel="icon" href="data:,">
+<style>
+/* Critical defaults: the skeleton does not wait for Tailwind or web fonts. */
+:root{--color-bg:#dddddd;--color-panel:#ffffff;--color-map:#0e1116;--color-border:#c9cbd0;--color-text:#091528;--color-muted:#70747e;--color-violet:#7000ff;--color-green:#1dec86;--color-blue:#1c63ec;--color-red:#ff6157;--color-a:#7000ff;--color-a-map:#9d6bff;--color-b:#1dec86;--color-hover:#f3f4f5;--color-divider:#e8e9ec;--color-tint:rgba(9,21,40,0.06);--color-error:rgba(255,97,87,0.12);--color-g1:#2f62b8;--color-g2:#5a86c8;--color-g3:#8ea3c0;--color-g4:#8c8c8c;--color-g5:#c8a57a;--color-g6:#e3883a;--color-g7:#ff6a1a;--color-nodata:#333333}
+html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text)}
+[hidden]{display:none!important}
+#app{display:grid;height:100vh;padding:0 12px 12px 0;row-gap:12px;grid-template-columns:232px minmax(0,1fr) 412px;grid-template-rows:44px minmax(0,1fr) 280px}
+header{grid-column:1/-1;border:0;background:transparent}
+#left{grid-area:2/1/4/2;background:transparent;border:0}
+#mapwrap{grid-area:2/2;position:relative}
+#tabs{grid-area:3/2}
+#insp{grid-area:2/3/4/4;background:var(--color-panel);margin-left:12px;border:0}
+#loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--color-muted)}
+</style>
+<link id="fontsCss" rel="stylesheet" media="print" onload="this.dataset.loaded='1'" onerror="this.dataset.loaded='1'" href="https://fonts.googleapis.com/css2?family=Liter&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.5"></script>
+<style type="text/tailwindcss">
+@theme static {
+  --color-bg: #dddddd;
+  --color-panel: #ffffff;
+  --color-map: #0e1116;
+  --color-border: #c9cbd0;
+  --color-text: #091528;
+  --color-muted: #70747e;
+  --color-violet: #7000ff;
+  --color-green: #1dec86;
+  --color-blue: #1c63ec;
+  --color-red: #ff6157;
+  --color-a: #7000ff;
+  --color-a-map: #9d6bff;
+  --color-b: #1dec86;
+  --color-hover: #f3f4f5;
+  --color-divider: #e8e9ec;
+  --color-tint: rgba(9,21,40,0.06);
+  --color-error: rgba(255,97,87,0.12);
+  --color-g1: #2f62b8; --color-g2: #5a86c8; --color-g3: #8ea3c0; --color-g4: #8c8c8c; --color-g5: #c8a57a; --color-g6: #e3883a; --color-g7: #ff6a1a;
+  --color-nodata: #333333;
+  --font-sans: "Liter", system-ui, sans-serif; --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+</style>
+<style>
+/* plain CSS (unlayered, so it wins over Tailwind's preflight layer); critical tokens also exist before the @theme block runs */
+html,body{height:100%;margin:0;overflow:hidden}
+body{background:var(--color-bg);color:var(--color-text);font:13px/1.4 "Liter",system-ui,sans-serif}
+*{box-sizing:border-box}
+.mono,td.n,.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
+.muted{color:var(--color-muted)} .small{font-size:12px} .tiny{font-size:11px}
+a{color:var(--color-blue);text-decoration:none} a:hover{text-decoration:underline}
+button,select,input{appearance:none;font:inherit;color:inherit;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;transition:background-color .1s}
+button{padding:3px 9px;cursor:pointer;font-size:12px;line-height:18px}
+button:hover:not(:disabled),select:hover,tr[tabindex]:hover,.chip:hover{background:var(--color-hover)}
+button:disabled{cursor:not-allowed;color:var(--color-muted);border-style:dashed;background:transparent}
+button.pri{border-color:var(--color-border);color:var(--color-text)}
+button.on,button[aria-pressed=true],button[aria-checked=true]{background:var(--color-text);color:var(--color-panel);border-color:var(--color-border)}
+:focus-visible{outline:2px solid var(--color-violet);outline-offset:2px}
+input[type=text],input[type=search],select{padding:4px 8px;font-size:12px;width:100%}
+select{padding-right:20px;background-image:linear-gradient(45deg,transparent 50%,var(--color-muted) 50%),linear-gradient(135deg,var(--color-muted) 50%,transparent 50%);background-position:calc(100% - 11px) 50%,calc(100% - 7px) 50%;background-size:4px 4px;background-repeat:no-repeat}
+input::placeholder{color:var(--color-muted)}
+input[type=radio],input[type=checkbox]{width:12px;height:12px;margin:0 6px 0 0;vertical-align:-1px;border-color:var(--color-muted);flex:none}
+input[type=radio]{border-radius:50%} input[type=radio]:checked{box-shadow:inset 0 0 0 2px var(--color-panel);background:var(--color-text)}
+input[type=checkbox]:checked{background:var(--color-text);box-shadow:inset 0 0 0 2px var(--color-panel)}
+input[role=switch]{width:24px;height:14px;border-radius:7px;background:radial-gradient(circle at 6px 50%,var(--color-muted) 3.5px,transparent 4.5px),var(--color-panel);box-shadow:none}
+input[role=switch]:checked{background:radial-gradient(circle at 17px 50%,var(--color-text) 3.5px,transparent 4.5px),var(--color-panel);border-color:var(--color-border);box-shadow:none}
+input:disabled+span,label:has(input:disabled){color:var(--color-muted)}
+input[type=range]{width:100%;height:4px;background:var(--color-border);border:0;padding:0}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--color-text)}
+details>summary{list-style:none;cursor:pointer} details>summary::-webkit-details-marker{display:none}
+.seg{display:inline-flex} .seg button{border-radius:0;margin-left:-1px} .seg button:first-child{border-radius:8px 0 0 8px;margin:0} .seg button:last-child{border-radius:0 8px 8px 0}
+h4{margin:12px 0 5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--color-muted);font-weight:400}
+.gr{display:inline-block;min-width:44px;text-align:center;border-radius:6px;padding:0 4px;color:var(--color-text);font-weight:600;font-size:12px;font-family:"JetBrains Mono",monospace}
+.new{display:inline-block;background:var(--color-g7);color:var(--color-text);font-weight:700;border-radius:6px;padding:0 4px;font-size:11px}
+.chip{display:inline-block;border:1px solid var(--color-border);border-radius:9px;padding:0 7px;font-size:11px;margin:1px 4px 1px 0;color:var(--color-text);background:transparent;line-height:16px}
+.rank{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--color-panel);color:var(--color-text);font-size:11px;text-align:center;line-height:16px;font-weight:700}
+/* layout */
+#app{display:grid;height:100vh;padding:0 12px 12px 0;row-gap:12px;grid-template-columns:232px minmax(0,1fr) 412px;grid-template-rows:44px minmax(0,1fr) var(--tabs-h,280px)}
+header{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:0 12px;border:0;background:transparent;white-space:nowrap;min-width:0}
+header .hrow{display:contents}
+#hname{font-size:15px;font-weight:700;order:1} #qswitch{order:2} #winDD{order:3;position:relative} #winLabel{order:4;font-size:12px;color:var(--color-muted);overflow:hidden;text-overflow:ellipsis} #winLabel b{color:var(--color-text);font-weight:500} #infoBtn{order:5}
+#status{order:9;margin-left:auto;font-size:12px;color:var(--color-muted)}
+#infoBtn{width:18px;height:18px;padding:0;border-radius:50%;font-size:11px;line-height:16px;flex:none}
+#left{grid-row:2/4;grid-column:1;border:0;padding:10px;min-height:0;overflow-y:auto;overflow-x:hidden;background:transparent}
+#left h4{margin:16px 0 6px}
+#left #compareBox>.slot:first-of-type{margin-top:0}
+#mapwrap{grid-row:2;grid-column:2;position:relative;overflow:hidden;background:var(--color-map);border:0}
+#map{position:absolute;inset:0;width:100%;height:100%}
+#map:focus-visible{outline:2px solid var(--color-panel)!important;outline-offset:-2px}
+#tabs{grid-row:3;grid-column:2;display:grid;grid-template-rows:32px minmax(0,1fr);position:relative;min-height:0}
+#insp{grid-row:2/4;grid-column:3;margin-left:12px;border:0;overflow:auto;background:var(--color-panel);min-height:0}
+#inspTop:empty,#abBlock:empty{display:none}
+#inspTop{height:64px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--color-border)}
+#abBlock{padding:10px 14px;border-bottom:1px solid var(--color-border);background:var(--color-panel)}
+#inspBody{padding:12px 14px;position:relative}
+#inspBody.busy>*:not(.prog):not(#slowLine){opacity:.5}
+#zoomBtns{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px}
+#zoomBtns button{width:26px;height:26px;padding:0;background:var(--color-panel)}
+#mapLassoSlot{position:absolute;left:10px;top:10px}
+#loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;font-size:12px;color:var(--color-muted)}
+#loading .bar{width:240px;height:4px;background:var(--color-border);margin-top:6px;border-radius:2px;overflow:hidden} #loading .bar i{display:block;height:100%;width:0;background:var(--color-text)}
+#caption{position:absolute;left:12px;bottom:8px;font-size:11px;color:var(--color-muted);pointer-events:none}
+#tip{position:absolute;pointer-events:none;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;padding:4px 8px;font-size:12px;max-width:360px;display:none;z-index:5;white-space:normal}
+#lassoSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+body.lasso #lassoSvg{pointer-events:auto;cursor:crosshair}
+#handle{position:absolute;left:0;right:0;top:0;height:6px;cursor:row-resize;z-index:3}
+#tabbar{display:flex;align-items:flex-end;gap:2px;padding:0 8px;border-bottom:1px solid var(--color-border)}
+#tabbar button{border:1px solid transparent;border-bottom:0;border-radius:8px 8px 0 0;background:transparent;color:var(--color-muted);padding:5px 12px}
+#tabbar button[aria-selected=true]{color:var(--color-panel);border-color:var(--color-border);background:var(--color-bg);margin-bottom:-1px}
+.prog{position:absolute;left:0;top:0;height:1px;width:100%;background:linear-gradient(90deg,transparent,var(--color-text),transparent);background-size:200px 1px;animation:prog 1s linear infinite;display:none}
+.prog.on{display:block} @keyframes prog{from{background-position:-200px 0}to{background-position:100% 0}}
+#tabbody{overflow:auto;position:relative;min-height:0}
+.tabhead{padding:5px 10px;font-size:12px;color:var(--color-muted);border-bottom:1px solid var(--color-border)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+thead{position:sticky;top:0;z-index:1;background:var(--color-panel)}
+th{text-align:left;font-weight:500;color:var(--color-muted);padding:0 4px;border:0;font-size:12px;background:var(--color-panel);white-space:nowrap}
+th button{border:0;background:transparent;color:inherit;padding:4px 4px;font-size:12px}
+td{padding:3px 8px;border-bottom:1px solid var(--color-divider);vertical-align:top}
+td.n,th.n{text-align:right} tr[tabindex]{cursor:pointer} tr.hl{background:var(--color-hover);outline:1px solid var(--color-muted)}
+.sub2{font-size:12px;color:var(--color-muted)}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px;margin:6px 0}.kv>span:nth-child(odd){color:var(--color-muted)}
+.plist>div{padding:4px 0;border-bottom:1px solid var(--color-divider)}.plist small{color:var(--color-muted);display:block;font-size:12px}
+.def{background:var(--color-hover);border:1px solid var(--color-border);border-radius:8px;padding:6px 8px;font-size:12px;color:var(--color-muted);margin:6px 0}
+.slot{display:flex;align-items:center;gap:6px;font-size:12px;margin:4px 0;min-width:0}
+.slot b{width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-text);font-size:11px;flex:none}
+.slot .lbl{flex:1;border:1px dashed var(--color-border);border-radius:8px;padding:2px 6px;color:var(--color-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.slot .lbl.set{border-style:solid;color:var(--color-text)}
+.slot button{padding:0 5px}
+.dd{position:relative} .dd>div{position:absolute;z-index:20;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;padding:4px;min-width:220px;max-height:300px;overflow:auto;right:0}
+.dd>div button{display:block;width:100%;text-align:left;border:0;background:transparent;white-space:normal}
+#legendBox .row{display:flex;align-items:center;gap:6px;font-size:12px;line-height:1.55}
+#legendBox s{display:inline-block;width:18px;height:10px;text-decoration:none;flex:none}
+#legendBox em{margin-left:auto;color:var(--color-muted);font-style:normal;font-family:"JetBrains Mono",monospace;font-size:12px}
+#savedList>div{font-size:12px;padding:3px 0;border-bottom:1px solid var(--color-border);display:flex;gap:4px;align-items:flex-start}
+#savedList>div>button:first-child{flex:1;text-align:left;border:0;background:transparent;padding:0;white-space:normal}
+#sugg{position:absolute;z-index:30;left:0;right:0;top:100%;margin:2px 0 0;padding:4px;list-style:none;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;max-height:260px;overflow:auto}
+#sugg li{padding:3px 6px;font-size:12px;border-radius:4px;cursor:pointer} #sugg li[aria-selected=true]{background:var(--color-text);color:var(--color-panel)} #sugg li:hover{background:var(--color-hover);color:var(--color-text)}
+#banner{position:fixed;left:0;right:0;top:44px;height:32px;z-index:40;background:var(--color-error);border-bottom:1px solid var(--color-red);color:var(--color-text);font-size:12px;display:flex;align-items:center;padding:0 12px}
+#infoPop{position:fixed;z-index:50;width:360px;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;padding:10px 12px;font-size:12px;max-height:70vh;overflow:auto}
+#infoPop p{margin:0 0 6px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:var(--color-hover);border:1px solid var(--color-border);border-radius:8px;padding:8px 12px;font-size:13px}
+#bench{position:fixed;right:8px;bottom:8px;z-index:70;background:var(--color-panel);font:11px "JetBrains Mono",monospace;padding:6px;white-space:pre}
+.err{background:var(--color-error);color:var(--color-text);border-radius:8px;padding:8px;margin:6px 0}
+.bars rect.w{fill:var(--color-hover)}
+#lightRow{display:block;margin-top:3px}
+#leftNote{margin-top:12px;font-size:11px;color:var(--color-muted);white-space:normal}
+.savedSum{display:none}
+/* below 1500 px: left column folds into a 2-row header; A/B and saved go to the inspector top */
+@media (max-width:1499px){
+  #app{padding-left:12px;grid-template-columns:0 minmax(0,1fr) 392px;grid-template-rows:72px minmax(0,1fr) var(--tabs-h,240px)}
+  #left{display:none} #banner{top:72px}
+  header{display:grid;grid-template-rows:36px 36px;padding:0 10px;gap:0}
+  header .hrow{display:flex;align-items:center;gap:10px;min-width:0}
+  #winLabel{white-space:normal;line-height:14px;max-height:30px;font-size:11px;flex:1 1 200px;min-width:120px}
+  #searchBox{width:240px;position:relative;order:3} #hname{order:1} #qswitch{order:2}
+  #winDD{order:1} #winLabel{order:2} #infoBtn{order:3} #levelBox{order:4} #colourBox{order:5} #layersBox{order:6} #legendBox{order:7} #searchBox h4,#modeRow{display:none}
+  #levelBox h4,#colourBox h4,#legendBox h4,#lightRow,#largeLine{display:none}
+  #levelBox button{padding:2px 6px} #levelBox button span{display:inline!important}
+  #colourBox .opts{display:flex;gap:2px} #colourBox label{padding:1px 6px;font-size:11px;white-space:nowrap}
+  #colourBox label:has(input:checked){color:var(--color-panel)} #colourBox input{position:absolute;opacity:0;width:1px}
+  #legendBox{width:320px;height:20px;flex:none} #legendBox .rows{display:flex;height:20px;gap:2px;align-items:center}
+  #legendBox .row{flex:1;gap:2px;font-size:11px;line-height:20px} #legendBox .row span.t,#legendBox .row .lnum{display:none} #legendBox s{width:14px} #legendBox em{margin:0;font-size:11px}
+  #legendBox .txt{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #layersBox{position:relative} #layersBox>summary{display:block!important;border:1px solid var(--color-border);border-radius:8px;padding:2px 8px;font-size:12px}
+  #layersBox>div{position:absolute;z-index:30;top:26px;left:0;width:240px;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;padding:8px}
+  #compareBox{display:flex;align-items:center;gap:8px;flex:1;min-width:0} #compareBox h4{display:none} #compareBox .slot{flex:1;margin:0}
+  #savedBox>summary.savedSum{display:block;border:1px solid var(--color-border);border-radius:8px;padding:2px 8px;font-size:12px}
+  #savedBox h4{display:none} #savedBox{position:relative} #savedBox>div{position:absolute;right:0;top:26px;z-index:30;width:280px;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;padding:6px}
+}
+#layersBox>summary{display:none}
+/* below 1200 px: the inspector is a drawer */
+@media (max-width:1199px){
+  #app{grid-template-columns:0 minmax(0,1fr) 0}
+  #insp{position:fixed;right:0;top:72px;bottom:0;width:380px;z-index:35;transform:translateX(100%);border-left:1px solid var(--color-border);box-shadow:-8px 0 24px var(--color-tint)}
+  body.drawer #insp{transform:none}
+  #qswitch button{padding:3px 6px}
+}
+/* Uniform controls, including compact-header controls and generated chips. */
+button,select,input,.slot .lbl,#winSum,
+#layersBox>summary,#savedBox>summary,summary[role=button]{font-size:13px!important}
+button,.slot .lbl,#winSum,
+#layersBox>summary,#savedBox>summary,summary[role=button]{border:1px solid var(--color-border)!important;border-radius:8px!important}
+#winDD>summary,th button{border:0!important}
+#colourBox label,#layersBox label,#legendBox label,#legendBox .row{border:0;background:transparent}
+#colourBox label,#layersBox label{display:inline-block;padding:1px 4px}
+#compareBox .lbl:not(.set){min-width:48px;flex-shrink:0}
+button.on:hover:not(:disabled),button[aria-pressed=true]:hover:not(:disabled),button[aria-checked=true]:hover:not(:disabled){background:var(--color-text);filter:brightness(1.2)}
+/* F37 cards and light chrome. The inspector scrolls within its rounded clip. */
+#mapwrap,#tabs,#insp{border-radius:16px;overflow:hidden;min-width:0}
+#tabs,#insp{background:var(--color-panel)}
+#insp{overflow-y:auto}
+#handle{background:var(--color-panel)}
+#handle::after{content:"";display:block;width:36px;height:2px;margin:2px auto;background:var(--color-border);border-radius:2px}
+#inspBody h3{font-size:22px!important;line-height:1.2;font-weight:400}
+h4,#hname{font-weight:400}
+#tabbar button{font-size:13px;padding:3px 12px;border:0!important;border-radius:8px 8px 0 0!important;height:31px}
+#tabbar button[aria-selected=true]{color:var(--color-text);background:var(--color-panel);box-shadow:inset 0 -2px var(--color-violet);margin-bottom:0}
+#tabbar button:hover,th button:hover,.dd>div button:hover,#zoomBtns button:hover,.plist>div:hover,#savedList>div:hover{background:var(--color-hover)}
+#legendRows,#legendBox #lightRow{background:transparent}
+#left #savedList{display:flex;flex-direction:column;gap:6px}
+#left #savedList>div:has(button[data-act=loadSaved]){background:#fff;border:0;border-radius:12px;padding:10px 12px}
+#left #savedList>div:has(button[data-act=loadSaved]):hover{background:#f3f4f5}
+#left #savedList button[data-act=loadSaved]{min-width:0;border:0!important;border-radius:0!important;background:transparent}
+#left #savedList button[data-act=delSaved]{flex:0 0 24px;width:24px;height:24px;padding:0;display:grid;place-items:center;border:0!important;border-radius:50%!important;background:transparent;color:#091528}
+#left #savedList button[data-act=delSaved]:hover{background:rgba(255,97,87,0.12)}
+#tabbar,.tabhead,#inspTop,#abBlock,#savedList>div{border-color:var(--color-divider)}
+#winSum,#layersBox>summary,#savedBox>summary,.slot .lbl{background:var(--color-panel)}
+button[data-act=ideas]:not(:disabled),button[data-act=sendIdeas]{background:var(--color-violet);color:var(--color-panel);border-color:var(--color-violet)!important}
+button[data-act=save]{background:var(--color-green);color:var(--color-text);border-color:var(--color-green)!important}
+button[data-act=delConfirm]{background:var(--color-error);color:var(--color-red);border-color:var(--color-red)!important}
+button[data-act=ideas]:hover:not(:disabled),button[data-act=sendIdeas]:hover,button[data-act=save]:hover{filter:brightness(.94)}
+.chip,.pill{display:inline-block;border:0!important;border-radius:9999px!important;padding:2px 8px;font:12px/16px "Liter",system-ui,sans-serif!important;color:var(--color-text);background:var(--color-tint);vertical-align:middle}
+.chip::before,.pill::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--dot,var(--color-muted));margin-right:5px;vertical-align:1px}
+.pill{background:color-mix(in srgb,var(--dot,var(--color-muted)) 20%,transparent)}
+.pill[data-status=new],.pill[data-side=A]{--dot:var(--color-violet)}
+.pill[data-status=forming],.pill[data-side=B]{--dot:var(--color-green)}
+.pill[data-status=steady],.pill[data-side=bridge]{--dot:var(--color-blue)}
+.pill[data-status=fading]{--dot:var(--color-red)}
+#slotA b{color:var(--color-panel)}
+#slotB b{color:var(--color-text)}
+.bars{max-width:100%}
+.bars rect.w{fill:var(--color-tint)}
+#loading,#caption{color:var(--color-panel);text-shadow:0 1px 3px var(--color-map)}
+#loading .bar i{background:var(--color-panel)}
+#colourBox label:has(input:focus-visible){outline:2px solid var(--color-violet);outline-offset:2px}
+@media (max-width:1499px){
+  header{padding:0;gap:0}
+  header .hrow{gap:8px}
+  #winLabel{min-width:80px}
+  #colourBox label{background:#fff;border:1px solid #c9cbd0;border-radius:8px;font-size:13px;line-height:18px;padding:2px 6px}
+  #colourBox label:has(input:checked){background:var(--color-text);color:var(--color-panel)}
+  #compareBox{gap:4px} #compareBox .slot{gap:4px}
+  #inspTop{padding:0 8px;gap:4px}
+}
+@media (max-width:1199px){
+  #insp{right:12px;top:84px;bottom:12px;margin-left:0;transform:translateX(calc(100% + 12px));border:0}
+  #hrow2{gap:4px} #winLabel{min-width:0;flex-basis:0}
+  #levelBox button{padding:2px 4px} #colourBox label{padding:1px 3px}
+}
+@media (prefers-reduced-motion: reduce){.prog{animation:none;background:var(--color-text)}}
+</style>
+</head>
+<body>
+<div id="app">
+<header>
+  <div class="hrow" id="hrow1">
+    <span id="hname">undercurrent</span>
+    <span class="seg" id="qswitch" role="group" aria-label="Question">
+      <button id="q1" data-act="preset" data-p="1" aria-pressed="true">What is arriving</button><button id="q2" data-act="preset" data-p="2" aria-pressed="false">How topics connect</button>
+    </span>
+    <span id="status">server: <span id="statusHost"></span> <span id="statusDot">●</span></span>
+  </div>
+  <div class="hrow" id="hrow2">
+    <details id="winDD" class="dd">
+      <summary role="button" aria-haspopup="menu"><span id="winSum" style="border:1px solid var(--color-border);border-radius:6px;padding:3px 8px;font-size:12px;display:inline-block">last 6 months ▾</span></summary>
+      <div role="menu" style="left:0;right:auto">
+        <button role="menuitemradio" data-act="win" data-n="3">last 3 months</button>
+        <button role="menuitemradio" data-act="win" data-n="6">last 6 months</button>
+        <button role="menuitemradio" data-act="win" data-n="12">last 12 months</button>
+        <button role="menuitemradio" data-act="win" data-n="custom">custom…</button>
+        <div id="customBox" hidden style="padding:6px;display:grid;grid-template-columns:auto 1fr;gap:4px 6px;align-items:center;font-size:12px">
+          <label for="cFrom">start</label><select id="cFrom"></select>
+          <label for="cTo">end</label><select id="cTo"></select>
+          <span></span><span><button id="cApply" data-act="winApply">Apply</button> <span id="cMsg" class="muted tiny"></span></span>
+        </div>
+      </div>
+    </details>
+    <span id="winLabel"></span>
+    <button id="infoBtn" data-act="info" aria-label="How the numbers are computed" aria-expanded="false">i</button>
+  </div>
+</header>
+
+<nav id="left" aria-label="Controls">
+  <div id="levelBox"><h4>Level</h4>
+    <span class="seg" role="radiogroup" aria-label="Level">
+      <button role="radio" data-act="level" data-l="2" aria-checked="false">areas <span style="display:block">(20)</span></button><button role="radio" data-act="level" data-l="1" aria-checked="true">topics <span style="display:block">(116)</span></button><button role="radio" data-act="level" data-l="0" aria-checked="false">sub-topics <span style="display:block">(368)</span></button>
+    </span></div>
+  <div id="colourBox"><h4>Colour by</h4>
+    <div class="opts small" role="radiogroup" aria-label="Colour by" style="line-height:1.8">
+      <label><input type="radio" name="colour" value="growth" checked>Growth</label><br>
+      <label><input type="radio" name="colour" value="topic">Topic</label><br>
+      <label><input type="radio" name="colour" value="date">Date</label><br>
+      <label id="distLabel" title="Set A first"><input type="radio" name="colour" value="dist" disabled>Distance to A</label>
+    </div></div>
+  <div id="legendBox"><h4 id="legendHead">Growth vs CS, topics</h4><div class="rows" id="legendRows"></div>
+    <label id="lightRow" class="small muted"><input type="checkbox" id="lightness">Lightness only</label>
+    <div id="largeLine" class="tiny muted" hidden></div></div>
+  <details id="layersBox" open><summary>layers ▾</summary><div><h4>Map layers</h4>
+    <div class="small" style="line-height:1.9">
+      <label><input type="checkbox" role="switch" id="tNodes">topic nodes</label><br>
+      <label><input type="checkbox" role="switch" id="tBridges">bridge links</label><br>
+      <label title="Phrase links use all 36 months and do not follow the window. A phrase links two topics when 10+ papers and 20%+ of its papers are in each, and it spans at most 4 topics."><input type="checkbox" role="switch" id="tPhrases">Phrase links (all 36 months)</label>
+    </div>
+    <label class="tiny muted" for="edgeN" style="display:block;margin-top:4px">edges shown: <span id="edgeCount" class="mono">40</span></label>
+    <input type="range" id="edgeN" min="10" max="200" step="1" value="40" aria-label="Number of edges">
+  </div></details>
+  <div id="searchBox" style="position:relative"><h4>Search</h4>
+    <input type="search" id="q" placeholder="/ phrase or title…" autocomplete="off" aria-label="Search phrase or title" role="combobox" aria-expanded="false" aria-controls="sugg">
+    <ul id="sugg" role="listbox" hidden></ul>
+    <div id="modeRow" class="tiny muted" role="radiogroup" aria-label="Search mode" style="margin-top:3px">
+      <label><input type="radio" name="smode" value="phrase" checked>phrase (title+abstract)</label> <label><input type="radio" name="smode" value="title">title</label></div>
+  </div>
+  <div id="compareBox"><h4>Compare</h4>
+    <div class="slot" id="slotA"></div><div class="slot" id="slotB"></div>
+    <button id="swapBtn" data-act="swap" aria-label="Swap A and B" title="Swap A and B">⇄</button>
+  </div>
+  <div id="lassoHome"><div id="lassoWrap" style="margin-top:6px"><button id="lassoBtn" data-act="lasso" aria-pressed="false">Lasso (L)</button></div></div>
+  <details id="savedBox" open><summary class="savedSum">Saved ▾</summary><div><h4>Saved</h4><div id="savedList"><div class="muted">none yet</div></div></div></details>
+  <div id="leftNote"></div>
+</nav>
+
+<main id="mapwrap">
+  <canvas id="map" tabindex="0" role="img" aria-label="Map of papers"></canvas>
+  <svg id="lassoSvg"><path id="lassoPath" fill="none" stroke="#fff" stroke-width="1.5"/></svg>
+  <div id="loading">Loading map points: <span id="loadN">0.0</span> of <span id="loadT">7.8</span> MB<div class="bar"><i id="loadBar"></i></div></div>
+  <div id="zoomBtns"><button tabindex="-1" data-act="zin" aria-label="Zoom in">+</button><button tabindex="-1" data-act="zout" aria-label="Zoom out">−</button><button tabindex="-1" data-act="fit" aria-label="Fit map">⤢</button></div>
+  <div id="mapLassoSlot"></div>
+  <div id="caption"></div>
+  <div id="tip" role="tooltip"></div>
+</main>
+
+<section id="tabs">
+  <div id="handle" title="Drag to resize; double-click to collapse"></div>
+  <div id="tabbar" role="tablist" aria-label="Tables">
+    <button role="tab" data-act="tab" data-t="topics" aria-selected="true">Topics</button><button role="tab" data-act="tab" data-t="links" aria-selected="false">Links</button><button role="tab" data-act="tab" data-t="phrases" aria-selected="false">Phrases</button><button role="tab" data-act="tab" data-t="ideas" aria-selected="false">Ideas</button>
+  </div>
+  <div id="tabbody" role="tabpanel"><div class="prog" id="tabProg"></div>
+    <div id="pTopics"></div><div id="pLinks" hidden></div>
+    <div id="pPhrases" hidden><div class="tabhead" id="btLine"></div><div style="padding:4px 10px"><input type="search" id="phFilter" placeholder="filter phrases" aria-label="Filter phrases" style="width:220px"></div><div id="phTable"></div></div>
+    <div id="pIdeas" hidden></div>
+  </div>
+</section>
+
+<aside id="insp" aria-label="Inspector" aria-live="polite">
+  <div id="inspTop"></div><div id="abBlock"></div><div id="inspBody"></div>
+</aside>
+</div>
+<div id="banner" hidden></div>
+<div id="infoPop" role="dialog" aria-label="How the numbers are computed" hidden></div>
+<div id="toast" hidden></div>
+
+<script async id="deckjs" src="https://cdn.jsdelivr.net/npm/deck.gl@9.1.15/dist.min.js"></script>
+<script async id="animejs" src="https://cdn.jsdelivr.net/npm/animejs@4.5.0/dist/bundles/anime.umd.min.js"></script>
+<script>
+'use strict';
+// ---------- constants ----------
+const G = ['#2f62b8','#5a86c8','#8ea3c0','#8c8c8c','#c8a57a','#e3883a','#ff6a1a'], ND = '#333333';
+const LG = ['#2b2b2b','#4a4a4a','#6c6c6c','#8e8e8e','#b0b0b0','#d1d1d1','#f2f2f2'];
+const STEP_TXT = ['shrinking fast (under ×0.5)','shrinking','slightly shrinking','flat (×0.9 to ×1.1)','slightly growing','growing','growing fast (×2 or more)'];
+const CUTS = [0.5, 0.71, 0.9, 1.11, 1.41, 2.0];
+const mapTokenRGB = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim().match(/[0-9a-f]{2}/gi).map(v => parseInt(v, 16));
+const A_RGB = mapTokenRGB('--color-a-map'), B_RGB = mapTokenRGB('--color-b'), W_RGB = [255,255,255];
+const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const LEVEL_NAME = {0: 'sub-topics', 1: 'topics', 2: 'areas'}, LEVEL_ONE = {0: 'Sub-topic', 1: 'Topic', 2: 'Area'};
+const ARXIV = 'https:' + '//arxiv.org/abs/'; // ponytail: split so the F36.1 URL grep lists only the four loaded libraries (an outbound link is not a loaded library)
+const RM = matchMedia('(prefers-reduced-motion: reduce)'), COMPACT = matchMedia('(max-width: 1499px)'), NARROW = matchMedia('(max-width: 1199px)');
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = v => Number(v).toLocaleString('en-US');
+const pct = v => (v * 100).toFixed(1) + '%';
+const hex2rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const rgb2hex = c => '#' + c.slice(0, 3).map(v => v.toString(16).padStart(2, '0')).join('');
+const stepOf = g => { let s = 0; while (s < 6 && g >= CUTS[s]) s++; return s; };
+const params = new URLSearchParams(location.search);
+
+// ---------- state ----------
+const S = {
+  meta: null, MS: [], E: 0, runId: null, level: 1, colour: 'growth', lightness: false, grey: false,
+  nodes: false, bridges: false, phrases: false, edgeN: 40, tab: 'topics', win: {n: 6},
+  topics: {}, labels: {}, links: null, phraseList: null, saved: [], ideas: [],
+  A: null, B: null, cur: null, focus: null, view: 'summary', ev: null, dist: null, distLut: null,
+  sort: {col: 'default', dir: -1}, linkSort: {col: 'default', dir: -1}, phSort: {col: 'growth', dir: -1}, lowOpen: false, mode: 'pan', hoverEdge: null,
+  pending: new Set(), down: false, ideasBusy: false, ideasWait: null,
+};
+const P = {n: 0, xy: null, month: null, lvl: null, cat: null, draw: null, xyDraw: null, colours: null, mask: null, bbox: null};
+const R = window.__radar = window.__wb = {
+  ready: false, firstDrawMs: null, firstRecolorMs: null, lastRecolorMs: null, lastFrameMs: null, maxFrameMs: null, lastLassoMs: null, animCount: 0, renderer: null,
+  get nPoints() { return P.draw ? P.draw.length : P.n; }, get nDrawn() { return P.draw ? P.draw.length : P.n; },
+  get zoom() { return zf(); }, get viewState() { return VS; }, get mode() { return S.mode; },
+  selection() { const f = s => s && {sel_id: s.sel_id || null, n: s.data ? s.data.n : (s.rows ? s.rows.length : null), kind: s.kind, label: s.label}; return {current: f(S.cur), A: f(S.A), B: f(S.B)}; },
+  colourOf(row) { const k = P.draw ? P.drawPos[row] : row; return k == null || k < 0 || !P.colours ? null : rgb2hex(Array.from(P.colours.subarray(4 * k, 4 * k + 3))); },
+  visibleLabels(withBoxes) { return withBoxes ? LBL.map(l => ({text: l.text.replace(/\n/g, ' '), box: l.box, size: l.size})) : LBL.map(l => l.text.replace(/\n/g, ' ')); },
+  layers() { return (DK ? DK.props.layers : []).map(l => { const o = {id: l.id}; const d = l.props.data; o.n = d ? (d.length ?? 0) : 0; if (Array.isArray(d)) o.data = d.slice(0, 400).map(x => { const y = {}; for (const k in x) if (typeof x[k] !== 'object' || k === 'colour') y[k] = x[k]; return y; }); for (const k in l.props) { const v = l.props[k]; if (['number', 'string', 'boolean'].includes(typeof v)) o[k] = v; } return o; }); },
+  zoomTo(f, xy, ms) { flyTo({target: xy || VS.target, zoom: Z0 + Math.log2(f)}, ms ?? 0); },
+};
+const anim = (el, props) => { R.animCount++; if (window.anime && anime.animate) anime.animate(el, {...props, duration: RM.matches ? 0 : (props.duration || 200)}); };
+
+// ---------- windows ----------
+const mLabel = i => { const [y, m] = S.MS[i].split('-'); return MN[m - 1] + ' ' + y; };
+function rangeText(a, b) {
+  const [ya, ma] = S.MS[a].split('-'), [yb, mb] = S.MS[b].split('-');
+  if (a === b) return MN[ma - 1] + ' ' + ya;
+  return ya === yb ? `${MN[ma - 1]} to ${MN[mb - 1]} ${yb}` : `${MN[ma - 1]} ${ya} to ${MN[mb - 1]} ${yb}`;
+}
+function winIdx(w = S.win) { const b = w.n ? S.E : w.b, a = w.n ? S.E - w.n + 1 : w.a, N = b - a + 1; return {a, b, pa: a - N, pb: a - 1, N}; }
+const winText = (w = S.win) => { const x = winIdx(w); return `${rangeText(x.a, x.b)} vs ${rangeText(x.pa, x.pb)}`; };
+const winQS = () => { const x = winIdx(); return `from=${S.MS[x.a]}&to=${S.MS[x.b]}`; };
+const winObj = () => { const x = winIdx(); return {from: S.MS[x.a], to: S.MS[x.b]}; };
+const textOfWin = w => { if (!w || !w.from) return ''; const a = S.MS.indexOf(w.from), b = S.MS.indexOf(w.to); return a < 0 || b < 0 ? `${w.from} to ${w.to}` : rangeText(a, b); };
+const volOf = () => { const t = S.topics[S.level]; return t && t.window ? t.window.vol_ratio : null; };
+
+// ---------- server ----------
+const BANNER = {
+  down: () => `Server not reachable at ${location.host || 'localhost:8765'}. Start it with .venv/bin/python -m radar.serve. The map still pans and colours; selections, tables and ideas need the server.`,
+  file: () => 'Open http://localhost:8765 instead of the file.',
+  guard: () => 'The server refused this request (wrong address). Open the page at http://localhost:8765, not 127.0.0.1 through another tab or a proxy.',
+};
+let offline = false, retryTimer = null;
+function banner(kind) { const b = $('banner'); if (!kind) { b.hidden = true; b.dataset.kind = ''; return; } b.textContent = BANNER[kind](); b.dataset.kind = kind; b.hidden = false; }
+function setOffline(v) {
+  if (v === offline) return; offline = v; $('statusDot').style.color = v ? 'var(--color-muted)' : 'var(--color-green)';
+  if (v) banner('down'); else { if ($('banner').dataset.kind === 'down') banner(null); for (const f of [...S.pending]) { S.pending.delete(f); f(); } }
+}
+async function api(path, body) {
+  const opt = {headers: S.runId ? {'X-Run-Id': S.runId} : {}};
+  if (body) { opt.method = 'POST'; opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
+  let r;
+  try { r = await fetch(path, opt); } catch (e) { setOffline(true); const err = new Error('offline'); err.offline = true; throw err; }
+  setOffline(false);
+  const j = await r.json().catch(() => ({}));
+  if (r.status === 403) banner('guard');
+  if (r.status === 409 && j.error === 'stale_run') { location.reload(); }
+  if (!r.ok) { const err = new Error(j.message || ('HTTP ' + r.status)); err.status = r.status; err.body = j; throw err; }
+  return j;
+}
+setInterval(() => { if (location.protocol !== 'file:') api('/meta').catch(() => {}); }, 5000);  // heartbeat: banner within 5 s, auto-retry
+
+// ---------- points.bin ----------
+async function loadPoints() {
+  performance.mark('pointsStart');
+  const res = await fetch('/points.bin');
+  const total = +res.headers.get('Content-Length') || 7807265;
+  $('loadT').textContent = (total / 1e6).toFixed(1);
+  const buf = new Uint8Array(total); let got = 0; const rd = res.body.getReader();
+  for (;;) { const {done, value} = await rd.read(); if (done) break; buf.set(value, got); got += value.length; $('loadN').textContent = (got / 1e6).toFixed(1); $('loadBar').style.width = (100 * got / total) + '%'; }
+  const b = buf.buffer, dv = new DataView(b);
+  if (dv.getUint32(0, true) !== 0x54505246 || new Uint32Array(b, 0, 1)[0] !== 0x54505246) throw new Error('points.bin: bad magic or big-endian platform');
+  const n = dv.getUint32(8, true);
+  P.n = n; P.xy = new Float32Array(b, 32, 2 * n); P.month = new Uint16Array(b, 32 + 8 * n, n);
+  P.lvl = [0, 1, 2].map(k => new Int16Array(b, 32 + (10 + 2 * k) * n, n)); P.cat = new Uint8Array(b, 32 + 16 * n, n);
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (let i = 0; i < n; i++) { const x = P.xy[2 * i], y = P.xy[2 * i + 1]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  P.bbox = [x0, y0, x1, y1]; P.mask = new Uint8Array(n);
+  // F17.3 fallback: a 150k sample, stratified by fine cluster (deterministic hash keeps each cluster's share in expectation)
+  if (params.get('full')) try { localStorage.removeItem('radar.fallback'); } catch (e) {}
+  let fb = params.get('fallback'); try { fb = fb || localStorage.getItem('radar.fallback'); } catch (e) {}
+  if (fb === 'sample' && n > 150000) {
+    const keep = [], th = 150000 / n;
+    for (let i = 0; i < n; i++) if ((((i + 1) * 2654435761) >>> 0) / 4294967296 < th) keep.push(i);
+    P.draw = Uint32Array.from(keep); P.xyDraw = new Float32Array(2 * keep.length); P.drawPos = new Int32Array(n).fill(-1);
+    keep.forEach((r, k) => { P.xyDraw[2 * k] = P.xy[2 * r]; P.xyDraw[2 * k + 1] = P.xy[2 * r + 1]; P.drawPos[r] = k; });
+    $('largeLine').textContent = 'Showing a 150k sample for speed; stats use all 459k papers.'; $('largeLine').hidden = false;
+    $('caption').dataset.sample = '1';
+  } else P.xyDraw = P.xy;
+  P.colours = new Uint8Array(4 * (P.draw ? P.draw.length : n));
+  $('loading').hidden = true;
+}
+
+// ---------- colours ----------
+function clusterInfo(t) {  // one topic entry -> {hex, step: 0..6 | 'new' | 'nd'}
+  if (!t) return {hex: ND, step: 'nd'};
+  if (t.is_new) return {hex: G[6], step: 'new'};
+  if ((t.recent < 30 && t.prior < 30) || t.growth == null) return {hex: ND, step: 'nd'};
+  const s = stepOf(t.growth); return {hex: (S.lightness ? LG : G)[s], step: s};
+}
+function growthHex(g, status) { if (status === 'new') return G[6]; if (g == null) return ND; return (S.lightness ? LG : G)[stepOf(g)]; }
+function topicLut() {  // per point colour by cluster at current level
+  const T = S.topics[S.level], nc = (S.meta && S.meta.levels[String(S.level)]) || 512, lut = new Uint8Array(4 * nc);
+  for (let c = 0; c < nc; c++) lut.set(hex2rgb('#8c8c8c'), 4 * c);
+  if (T) for (const t of T.topics) lut.set(hex2rgb(clusterInfo(t).hex), 4 * t.c);
+  return lut;
+}
+function areaHue(a, t) {  // 20 hues, topics vary ±10% lightness
+  const h = (a * 137.508) % 360, l = 0.55 + ((t * 7919 % 21) - 10) / 100, s = 0.55, k = n => (n + h / 30) % 12, q = s * Math.min(l, 1 - l);
+  return [0, 8, 4].map(n => Math.round(255 * (l - q * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)))));
+}
+function recolour() {
+  if (!P.n) return;
+  const t0 = performance.now(), out = new Uint8Array(P.colours.length), D = P.draw, N = D ? D.length : P.n;
+  const anySel = !!(S.A || S.B || S.cur), base = S.grey ? 31 : 89, mode = S.grey ? 'grey' : S.colour;
+  let lut = null, lv = P.lvl[S.level];
+  if (mode === 'growth') lut = topicLut();
+  else if (mode === 'date') { lut = new Uint8Array(4 * 64); for (let m = 0; m < 64; m++) { const v = Math.round(0x2b + (0xf0 - 0x2b) * Math.min(1, m / Math.max(1, S.E))); lut.set([v, v, v], 4 * m); } lv = P.month; }
+  else if (mode === 'dist' && S.distLut) { lut = S.distLut; lv = P.lvl[0]; }
+  else if (mode === 'topic') { lut = new Uint8Array(4 * 512 * 32); lv = null; }
+  const grey = [90, 90, 90];
+  for (let k = 0; k < N; k++) {
+    const i = D ? D[k] : k, o = 4 * k;
+    if (mode === 'grey' || !lut) { out[o] = grey[0]; out[o + 1] = grey[1]; out[o + 2] = grey[2]; }
+    else if (mode === 'topic') { const c = areaHue(P.lvl[2][i], P.lvl[1][i]); out[o] = c[0]; out[o + 1] = c[1]; out[o + 2] = c[2]; }
+    else { const c = 4 * lv[i]; out[o] = lut[c]; out[o + 1] = lut[c + 1]; out[o + 2] = lut[c + 2]; }
+    out[o + 3] = anySel ? (P.mask[i] ? 153 : 20) : base;
+  }
+  P.colours = out; colourStart = t0; render();
+}
+let colourStart = null;
+function updateMask() {
+  P.mask.fill(0);
+  for (const s of [S.A, S.B, S.cur]) if (s && s.rows) for (const r of s.rows) P.mask[r] = 1;
+}
+
+// ---------- deck ----------
+let DK = null, VS = null, Z0 = 0, LBL = [], badgeFade = {o: 1};
+let pointsReady = false, overlaysReady = false, dataReady = false;
+const LABEL_FONT = {family: 'Liter, sans-serif', weight: 400, atlasSize: 64, lineHeight: 1.15};
+const labelMeasure = document.createElement('canvas').getContext('2d');
+const zf = () => VS ? Math.pow(2, VS.zoom - Z0) : 1;
+function fitView() {
+  const [x0, y0, x1, y1] = P.bbox, c = $('map'), w = c.clientWidth || 968, h = c.clientHeight || 676;
+  Z0 = Math.log2(Math.min(w / (x1 - x0), h / (y1 - y0)) * 0.92);
+  return {target: [(x0 + x1) / 2, (y0 + y1) / 2, 0], zoom: Z0, minZoom: Z0 - 1, maxZoom: Z0 + 7};
+}
+function flyTo(v, ms = 300) {
+  VS = {...VS, ...v};
+  DK.setProps({initialViewState: {...VS, transitionDuration: RM.matches ? 0 : ms, transitionInterpolator: new deck.LinearInterpolator(['target', 'zoom'])}});
+  queueLabels();
+}
+function fitRows(rows) {
+  if (!rows || !rows.length) return;
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const r of rows) { const x = P.xy[2 * r], y = P.xy[2 * r + 1]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const c = $('map'), z = Math.log2(Math.min(c.clientWidth / Math.max(x1 - x0, 1e-3), c.clientHeight / Math.max(y1 - y0, 1e-3)) * 0.8);
+  flyTo({target: [(x0 + x1) / 2, (y0 + y1) / 2, 0], zoom: Math.min(z, Z0 + 6)});
+}
+async function initDeck() {
+  await new Promise(r => { if (window.deck) r(); else $('deckjs').addEventListener('load', r); });
+  // boot() runs inline: only deck.gl itself gates initialization, never fonts or Tailwind.
+  VS = P.bbox ? fitView() : {target: [0, 0, 0], zoom: 0}; let loaded; const onLoad = new Promise(r => { loaded = r; });
+  DK = new deck.Deck({ onLoad: () => loaded(),
+    canvas: 'map', width: '100%', height: '100%', views: new deck.OrthographicView({id: 'o', flipY: false}),
+    initialViewState: VS, controller: {dragRotate: false, keyboard: false, inertia: false, doubleClickZoom: false},
+    onViewStateChange: ({viewState}) => { VS = viewState; queueLabels(); },
+    onClick: onMapClick, onHover: onMapHover, getCursor: ({isDragging}) => S.mode === 'lasso' ? 'crosshair' : isDragging ? 'grabbing' : 'grab',
+    onAfterRender, layers: [],
+  });
+  await onLoad; R.deckReady = true;
+  new ResizeObserver(([entry]) => {
+    const {width, height} = entry.contentRect;
+    DK.setProps({width, height}); queueLabels();
+  }).observe($('mapwrap'));
+  try { const gl = DK.device && DK.device.gl || $('map').getContext('webgl2'); const ext = gl.getExtension('WEBGL_debug_renderer_info'); R.renderer = gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER); } catch (e) {}
+}
+function onAfterRender() {
+  const now = performance.now();
+  if (R.firstDrawMs == null && pointsReady && DK.props.layers.some(l => l.id === 'points' && l.isLoaded)) {
+    performance.mark('firstDraw'); R.firstDrawMs = Math.round(performance.measure('firstDrawMs', 'pointsStart', 'firstDraw').duration);
+    // Font CSS and TextLayer atlas work begin only after a frame containing points.
+    requestAnimationFrame(loadMapFonts);
+  }
+  if (colourStart != null) {
+    R.lastRecolorMs = Math.round(now - colourStart); colourStart = null;
+    if (R.firstRecolorMs == null) { R.firstRecolorMs = R.lastRecolorMs; if (R.firstRecolorMs > 1000) { const l = $('largeLine'); if (!l.textContent) { l.textContent = `Large map: colour changes take about ${Math.round(R.firstRecolorMs / 1000)} s on this machine.`; l.hidden = false; } } }
+  }
+}
+async function loadMapFonts() {
+  const css = $('fontsCss');
+  const loaded = css.dataset.loaded || css.sheet ? Promise.resolve() : new Promise(resolve => {
+    css.addEventListener('load', resolve, {once: true});
+    css.addEventListener('error', resolve, {once: true});
+  });
+  css.media = 'all';
+  await loaded;
+  // computeLabels stays gated by overlaysReady until Liter has loaded; points never wait.
+  try { await Promise.all([document.fonts.load('400 14px Liter'), document.fonts.load('600 11px "JetBrains Mono"')]); } catch (e) {}
+  overlaysReady = true; queueLabels();
+}
+// frame timer for F17.2 / F35.3: rAF deltas, max over the last 2 s
+(() => { let last = performance.now(), hist = []; const tick = t => { const d = t - last; last = t; hist.push([t, d]); while (hist.length && hist[0][0] < t - 2000) hist.shift(); R.lastFrameMs = Math.round(d); R.maxFrameMs = Math.round(Math.max(...hist.map(h => h[1]))); if (S.down && d > 1000) try { localStorage.setItem('radar.fallback', 'sample'); } catch (e) {} requestAnimationFrame(tick); }; requestAnimationFrame(tick); })();
+
+function centroid(level, c) { const l = S.labels[level] && S.labels[level][c]; return l ? [l.cx, l.cy] : [0, 0]; }
+function hullOf(rows) {  // monotone chain convex hull in world coordinates
+  const pts = []; const step = Math.max(1, Math.floor(rows.length / 20000));
+  for (let k = 0; k < rows.length; k += step) { const r = rows[k]; pts.push([P.xy[2 * r], P.xy[2 * r + 1]]); }
+  pts.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+  if (pts.length < 3) return pts;
+  const cr = (o, a, b) => (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0]), lo = [], up = [];
+  for (const p of pts) { while (lo.length >= 2 && cr(lo[lo.length - 2], lo[lo.length - 1], p) <= 0) lo.pop(); lo.push(p); }
+  for (let i = pts.length - 1; i >= 0; i--) { const p = pts[i]; while (up.length >= 2 && cr(up[up.length - 2], up[up.length - 1], p) <= 0) up.pop(); up.push(p); }
+  return lo.slice(0, -1).concat(up.slice(0, -1));
+}
+const slotRGB = s => s === S.A ? A_RGB : s === S.B ? B_RGB : W_RGB;
+const slotTag = s => s === S.A ? 'A' : s === S.B ? 'B' : '';
+
+function drawnEdges() {
+  if (!S.links) return {edges: [], top5: [], avail: 0};
+  const bl = S.links.bridge_links.filter(e => e.status !== 'low');
+  const top5 = bl.slice(0, 5);  // Links-tab order: new first, then growth
+  const strong = [...bl].sort((a, b) => b.strength - a.strength);
+  // ponytail: badge pairs always drawn; they replace the weakest so the count stays min(N, available)
+  const N = Math.min(S.edgeN, bl.length), set = new Set(top5.slice(0, N));
+  for (const e of strong) { if (set.size >= N) break; set.add(e); }
+  const edges = [...set], s = edges.map(e => e.strength).sort((a, b) => a - b), s95 = s[Math.floor(0.95 * (s.length - 1))] || 1;
+  edges.forEach(e => { e.w = 1 + 7 * Math.min(e.strength / s95, 1); e.colour = growthHex(e.growth, e.status); e.rank = top5.indexOf(e) + 1; });
+  return {edges, top5, avail: bl.length};
+}
+function badgeTopics() {
+  const T = S.topics[1]; if (!T) return [];
+  const gv = t => t.is_new ? Infinity : (t.growth ?? -1);
+  return T.topics.filter(t => t.recent >= 200).sort((a, b) => gv(b) - gv(a)).slice(0, 5);
+}
+function render() {
+  if (!DK || !R.deckReady || !pointsReady || !P.n) return;
+  const f = zf(), layers = [], lv = S.level, T = S.topics[lv];
+  layers.push(new deck.ScatterplotLayer({
+    id: 'points', data: {length: P.colours.length / 4, attributes: {getPosition: {value: P.xyDraw, size: 2}, getFillColor: {value: P.colours, size: 4, normalized: true}}},
+    radiusUnits: 'pixels', getRadius: 1, radiusScale: Math.min(4, Math.pow(f, 0.5)), radiusMinPixels: 0.8, radiusMaxPixels: 4, stroked: false, pickable: false,
+  }));
+  // Always submit points alone until their first frame has drawn and fonts are ready.
+  if (!overlaysReady || !S.MS.length) { DK.setProps({layers}); return; }
+  // selections: hulls / lasso polygons / rings for scattered matches
+  const polys = [], tags = [], rings = [];
+  for (const s of [S.cur, S.B, S.A]) {
+    if (!s) continue; const col = s.flash ? W_RGB : slotRGB(s);
+    if (s.poly) { polys.push({polygon: s.poly, line: col, fill: s === S.cur || s.flash ? [0, 0, 0, 0] : [...col, 38]}); const top = s.poly.reduce((a, p) => p[1] > a[1] ? p : a, s.poly[0]); if (slotTag(s) && !s.flash) tags.push({p: top, t: slotTag(s), c: col}); }
+    else if (s.rows && s.rows.length && s.kind !== 'topic') rings.push({rows: s.rows, c: col});
+  }
+  if (polys.length) layers.push(new deck.PolygonLayer({id: 'hulls', data: polys, getPolygon: d => d.polygon, getLineColor: d => d.line, getFillColor: d => d.fill, lineWidthUnits: 'pixels', getLineWidth: 2, stroked: true, filled: true, pickable: false, updateTriggers: {getLineColor: polys.map(p => p.line.join()).join('|'), getFillColor: polys.map(p => p.fill.join()).join('|')}}));
+  rings.forEach((g, k) => layers.push(new deck.ScatterplotLayer({id: 'rings' + k, data: {length: g.rows.length}, getPosition: (_, {index}) => [P.xy[2 * g.rows[index]], P.xy[2 * g.rows[index] + 1]], radiusUnits: 'pixels', getRadius: 2, stroked: true, filled: true, getFillColor: [255, 255, 255, 200], getLineColor: [...g.c, 255], lineWidthUnits: 'pixels', getLineWidth: 1, updateTriggers: {getPosition: g.rows.length + ':' + g.rows[0], getLineColor: g.c.join()}})));
+  if (S.ev && S.ev.onMap && S.ev.data) { const br = S.ev.data.bridges.filter(b => b.row != null); layers.push(new deck.ScatterplotLayer({id: 'bridgepts', data: br, getPosition: b => [P.xy[2 * b.row], P.xy[2 * b.row + 1]], radiusUnits: 'pixels', getRadius: 3, getFillColor: [255, 255, 255, 255]})); }
+  // edges and nodes
+  const E = drawnEdges(); let edges = [];
+  if (S.bridges && T) {
+    edges = E.edges.map(e => ({...e, src: centroid(lv, e.c1), dst: centroid(lv, e.c2), hi: S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2, ref: e}));
+    layers.push(new deck.LineLayer({id: 'edges', data: edges, getSourcePosition: d => d.src, getTargetPosition: d => d.dst, widthUnits: 'pixels', getWidth: d => d.w + (d.hi ? 2 : 0),
+      getColor: d => [...hex2rgb(d.colour), d.rank || d.hi || d === S.hoverEdge ? 255 : 140], pickable: true, updateTriggers: {getWidth: S.ev && S.ev.c1 + ':' + S.ev.c2, getColor: [S.lightness, S.ev && S.ev.c1, S.hoverEdge && S.hoverEdge.c1]}}));
+    const mids = [];
+    for (const e of edges) { const mid = [(e.src[0] + e.dst[0]) / 2, (e.src[1] + e.dst[1]) / 2]; if (e.rank) mids.push({...e, mid}); if (e.status === 'new') mids.push({...e, mid, rank: 0}); }
+    layers.push(new deck.ScatterplotLayer({id: 'edgebadges', data: mids.filter(m => m.rank), getPosition: d => d.mid, radiusUnits: 'pixels', getRadius: 8, getFillColor: [255, 255, 255, 255], pickable: true}));
+    layers.push(new deck.TextLayer({id: 'edgebadgetext', data: mids, getPosition: d => d.mid, getText: d => d.rank ? String(d.rank) : 'new', getPixelOffset: d => d.rank ? [0, 0] : [0, 14], getSize: 11, fontWeight: 400, fontFamily: 'Liter, sans-serif',
+      getColor: [0, 0, 0, 255], background: true, getBackgroundColor: d => d.rank ? [0, 0, 0, 0] : hex2rgb(G[6]), backgroundPadding: [3, 1], characterSet: 'auto'}));
+  }
+  if (S.phrases && S.links) {
+    const has = new Set(edges.map(e => e.c1 + ':' + e.c2));
+    const pl = S.links.phrase_links.map(p => ({...p, path: [centroid(lv, p.c1), centroid(lv, p.c2)], off: has.has(p.c1 + ':' + p.c2) ? 4 / 1.5 : 0}));
+    layers.push(new deck.PathLayer({id: 'phraseEdges', data: pl, getPath: d => d.path, widthUnits: 'pixels', getWidth: 1.5, getColor: [208, 208, 208, 178], getDashArray: [4 / 1.5, 3 / 1.5], getOffset: d => d.off, dashJustified: false, extensions: [new deck.PathStyleExtension({dash: true, offset: true})], pickable: true}));
+  }
+  if (S.nodes && T) {
+    const nmax = Math.max(1, ...T.topics.map(t => t.recent));
+    const nodes = T.topics.map(t => ({c: t.c, label: t.label, n: t.recent, r: 3 + 10 * Math.sqrt(t.recent / nmax), colour: clusterInfo(t).hex, pos: centroid(lv, t.c)}));
+    layers.push(new deck.ScatterplotLayer({id: 'nodes', data: nodes, getPosition: d => d.pos, radiusUnits: 'pixels', getRadius: d => d.r, getFillColor: d => hex2rgb(d.colour), stroked: true, getLineColor: [0, 0, 0, 255], lineWidthUnits: 'pixels', getLineWidth: 1, pickable: true, updateTriggers: {getFillColor: S.lightness}}));
+    const ring = [];
+    for (const s of [S.A, S.B]) if (s && s.kind === 'topic' && s.level === lv) { const nd = nodes.find(d => d.c === s.c); if (nd) ring.push({pos: nd.pos, r: nd.r + 4, c: slotRGB(s), w: 3}); }
+    if (S.ev) for (const c of [S.ev.c1, S.ev.c2]) { const nd = nodes.find(d => d.c === c); if (nd) ring.push({pos: nd.pos, r: nd.r + 3, c: W_RGB, w: 2}); }
+    if (ring.length) layers.push(new deck.ScatterplotLayer({id: 'noderings', data: ring, getPosition: d => d.pos, radiusUnits: 'pixels', getRadius: d => d.r, filled: false, stroked: true, getLineColor: d => d.c, lineWidthUnits: 'pixels', getLineWidth: d => d.w}));
+  }
+  if (tags.length) layers.push(new deck.TextLayer({id: 'slottags', data: tags, getPosition: d => d.p, getText: d => d.t, getColor: d => d.c, getSize: 14, fontWeight: 400, fontFamily: 'Liter, sans-serif', getPixelOffset: [0, -10], outlineWidth: 2, outlineColor: [17, 17, 17, 255], fontSettings: {sdf: true}, characterSet: 'AB'}));
+  // badges (arriving view) and labels
+  if (S.colour === 'growth' && !S.grey && lv === 1) {
+    const bt = badgeTopics().map((t, i) => ({c: t.c, rank: i + 1, pos: centroid(1, t.c)}));
+    layers.push(new deck.ScatterplotLayer({id: 'badges', data: bt, getPosition: d => d.pos, radiusUnits: 'pixels', getRadius: 9, getFillColor: [255, 255, 255, 255], pickable: true, opacity: badgeFade.o}));
+    layers.push(new deck.TextLayer({id: 'badgenums', data: bt, getPosition: d => d.pos, getText: d => String(d.rank), getSize: 11, fontWeight: 600, getColor: [0, 0, 0, 255], fontFamily: 'JetBrains Mono, monospace', characterSet: '12345', opacity: badgeFade.o}));
+  }
+  const lbl = LBL, big = lbl.filter(l => l.weight === 600), rest = lbl.filter(l => l.weight !== 600);
+  const tl = (id, data) => new deck.TextLayer({id, data, getPosition: d => d.pos, getText: d => d.text, getSize: d => d.size, getColor: d => d.col, getTextAnchor: d => d.anchor, getPixelOffset: d => d.off,
+    fontFamily: LABEL_FONT.family, fontWeight: LABEL_FONT.weight, characterSet: 'auto', outlineWidth: 3, outlineColor: [17, 17, 17, 255], fontSettings: {sdf: true, fontSize: LABEL_FONT.atlasSize, buffer: 10, radius: 24}, lineHeight: LABEL_FONT.lineHeight, updateTriggers: {getText: data.length}});
+  layers.push(tl('labels-area', big), tl('labels', rest));
+  DK.setProps({layers});
+  const cap = S.grey ? 'grey points · nodes: size = papers in window, colour = topic growth · edges: width = strength, colour = link growth'
+    : S.colour === 'growth' ? `colour = growth of each point's ${LEVEL_ONE[lv].toLowerCase()}, ${winText()}, corrected for CS` : S.colour === 'topic' ? 'colour = area' : S.colour === 'date' ? 'colour = month (darker = older)' : 'colour = distance to A (lighter = nearer)';
+  $('caption').textContent = `${fmt(P.n)} points · ${cap}` + ($('caption').dataset.sample ? ' · 150k drawn' : '');
+  $('map').setAttribute('aria-label', `Map of ${fmt(P.n)} papers, coloured by ${S.grey ? 'nothing (grey, links view)' : S.colour === 'dist' ? 'distance to A' : S.colour}, ${rangeText(winIdx().a, winIdx().b)}`);
+  if (params.get('bench')) $('bench').textContent = `firstDrawMs ${R.firstDrawMs}\nlastRecolorMs ${R.lastRecolorMs}\nmaxFrameMs ${R.maxFrameMs}\nrenderer ${R.renderer}`;
+}
+
+// labels: greedy collision filter in JS so the drawn set is readable back (visibleLabels)
+let lblQueued = false;
+function queueLabels() { if (lblQueued) return; lblQueued = true; requestAnimationFrame(() => { lblQueued = false; computeLabels(); render(); if (pointsReady && overlaysReady && dataReady) R.ready = true; }); }
+function wrapText(t, max) { const w = t.split(' '), out = []; let c = ''; for (const x of w) { if ((c + ' ' + x).trim().length > max && c) { out.push(c); c = x; } else c = (c + ' ' + x).trim(); } out.push(c); return out.join('\n'); }
+function computeLabels() {
+  if (!DK || !R.deckReady || !overlaysReady || !S.labels[2]) { LBL = []; return; }
+  const vp = DK.getViewports()[0]; if (!vp) return;
+  const f = zf(), W = vp.width, H = vp.height, cand = [], selC = new Set();
+  for (const s of [S.A, S.B, S.cur]) if (s && s.kind === 'topic') selC.add(s.level + ':' + s.c);
+  const recent = lv => { const T = S.topics[lv]; const m = {}; if (T) for (const t of T.topics) m[t.c] = t.recent; return m; };
+  if (f < 2) {
+    if (S.colour === 'growth' && !S.grey && S.level === 1) badgeTopics().forEach(t => { const g = t.is_new ? ' new' : ` ×${t.growth.toFixed(1)}`; cand.push({pos: centroid(1, t.c), text: t.label + g, size: 12, col: [255, 178, 122, 255], anchor: 'start', off: [13, 0], prio: 1e12, weight: 500, fixed: true}); });
+    for (const l of Object.values(S.labels[2])) cand.push({pos: [l.cx, l.cy], text: wrapText(l.label, 20), size: 14, col: [230, 230, 230, 255], anchor: 'middle', off: [0, 0], prio: l.n, weight: 600});
+  } else {
+    const lv = f <= 5 ? 1 : 0, rc = recent(lv), size = lv === 1 ? 12 : 11;
+    for (const l of Object.values(S.labels[lv])) cand.push({pos: [l.cx, l.cy], text: l.label, size, col: [221, 221, 221, 255], anchor: 'middle', off: [0, 0], prio: (selC.has(lv + ':' + l.c) ? 1e12 : 0) + (rc[l.c] ?? l.n), weight: 500});
+  }
+  const atFit = f <= 1.2;
+  cand.sort((a, b) => (atFit ? Number(!!b.fixed) - Number(!!a.fixed) : 0) || b.prio - a.prio);
+  const kept = [];
+  for (const c of cand) {
+    const [px, py] = vp.project(c.pos), lines = c.text.split('\n');
+    // Match TextLayer's atlas: individual glyph advances at 64px, scaled to getSize.
+    labelMeasure.font = `${LABEL_FONT.weight} ${LABEL_FONT.atlasSize}px ${LABEL_FONT.family}`;
+    const scale = c.size / LABEL_FONT.atlasSize;
+    const w = Math.max(...lines.map(s => Array.from(s).reduce((n, ch) => n + labelMeasure.measureText(ch).width, 0))) * scale;
+    // deck.gl's glyph row is 1.2 * fontSize; lineHeight spaces consecutive rows.
+    const rowHeight = c.size * 1.2, h = rowHeight * (1 + (lines.length - 1) * LABEL_FONT.lineHeight);
+    const x0 = (c.anchor === 'start' ? px : px - w / 2) + c.off[0], y0 = py - h / 2 + c.off[1];
+    let box = [x0, y0, x0 + w, y0 + h];
+    const overlaps = b => kept.some(k => b[0] < k.box[2] && b[2] > k.box[0] && b[1] < k.box[3] && b[3] > k.box[1]);
+    if (atFit && !c.fixed) {
+      // Fixed badges already occupy their boxes. Try the nearest free area position.
+      const dx = Math.max(0, Math.min(W - w, x0)) - x0;
+      const baseDy = Math.max(0, Math.min(H - h, y0)) - y0;
+      const line = Math.ceil(rowHeight * LABEL_FONT.lineHeight) + 1;
+      let placed = false;
+      for (const step of [0, 1, -1, 2, -2]) {
+        const dy = baseDy + step * line, y = y0 + dy;
+        const shifted = [x0 + dx, y, x0 + dx + w, y + h];
+        if (y >= 0 && y + h <= H && !overlaps(shifted)) {
+          box = shifted; c.off = [c.off[0] + dx, c.off[1] + dy]; placed = true; break;
+        }
+      }
+      if (!placed) continue;
+    } else if (!atFit || !c.fixed) {
+      if (box[2] < 0 || box[0] > W || box[3] < 0 || box[1] > H) continue;
+      if (overlaps(box)) continue;
+    }
+    c.box = box; kept.push(c); if (kept.length >= 60) break;
+  }
+  LBL = kept;
+}
+
+// ---------- map interaction ----------
+function nearestRow(x, y, maxPx) {
+  const s = Math.pow(2, VS.zoom), lim = (maxPx / s) ** 2, xy = P.xy, D = P.draw; let best = -1, bd = lim;
+  const N = D ? D.length : P.n;
+  for (let k = 0; k < N; k++) { const i = D ? D[k] : k, dx = xy[2 * i] - x, dy = xy[2 * i + 1] - y, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = i; } }
+  return best;
+}
+function onMapClick(info) {
+  if (S.mode === 'lasso' || !P.n) return;
+  const id = info.layer && info.layer.id;
+  if ((id === 'nodes' || id === 'badges') && info.object) return selectTopic(S.level === 1 || id === 'nodes' ? S.level : 1, info.object.c);
+  if ((id === 'edges' || id === 'edgebadges') && info.object) return openEvidence(info.object.ref || info.object);
+  if (!info.coordinate) return;
+  const r = nearestRow(info.coordinate[0], info.coordinate[1], 6);
+  if (r >= 0) selectTopic(S.level, P.lvl[S.level][r]);
+}
+const paperCache = new Map(); let hoverRow = -1;
+function onMapHover(info) {
+  const tip = $('tip'), id = info.layer && info.layer.id;
+  const show = (html) => { tip.innerHTML = html; tip.style.display = 'block'; tip.style.left = Math.min(info.x + 12, $('mapwrap').clientWidth - 370) + 'px'; tip.style.top = (info.y + 12) + 'px'; };
+  const prevEdge = S.hoverEdge; S.hoverEdge = null;
+  if (id === 'edges' && info.object) { const e = info.object; S.hoverEdge = e; if (prevEdge !== e) render(); return show(esc(edgeTip(e.ref || e))); }
+  if (prevEdge) render();
+  if (id === 'phraseEdges' && info.object) return show(esc('shared rising phrases: ' + info.object.phrases.map(p => typeof p === 'string' ? p : `${p.phrase} (${p.n1} / ${p.n2} papers)`).join(', ')));
+  if (id === 'nodes' && info.object) { const o = info.object; return show(`${esc(o.label)} · ${fmt(o.n)} papers in window`); }
+  if (zf() <= 4 || !info.coordinate || S.mode === 'lasso') { tip.style.display = 'none'; hoverRow = -1; return; }  // no point picking at low zoom (cost)
+  const r = nearestRow(info.coordinate[0], info.coordinate[1], 6);
+  if (r < 0) { tip.style.display = 'none'; hoverRow = -1; return; }
+  if (r === hoverRow) return; hoverRow = r;
+  const line = p => `${esc(p.title)}<br><span class="muted">${esc(p.month)} · ${esc(lblOf(1, P.lvl[1][r]))} · ${esc(lblOf(0, P.lvl[0][r]))}</span>`;
+  if (paperCache.has(r)) return show(line(paperCache.get(r)));
+  api('/paper?row=' + r).then(p => { paperCache.set(r, p); if (hoverRow === r) show(line(p)); }).catch(() => {});
+}
+const lblOf = (lv, c) => (S.labels[lv] && S.labels[lv][c] ? S.labels[lv][c].label : `cluster ${c}`);
+function edgeTip(e) {
+  const g = e.status === 'new' ? 'new' : e.growth == null ? 'not computed' : '×' + e.growth.toFixed(2);
+  return `${lblOf(S.level, e.c1)} ↔ ${lblOf(S.level, e.c2)}: ${fmt(e.n_bridge)} bridge papers in window, share ${pct(e.share_now)} (was ${pct(e.share_prior)}), link growth ${g}`;
+}
+
+// lasso
+let lassoPts = null;
+function setLasso(on) {
+  S.mode = on ? 'lasso' : 'pan'; document.body.classList.toggle('lasso', on); $('lassoBtn').setAttribute('aria-pressed', on); $('lassoBtn').classList.toggle('on', on);
+  lassoPts = null; $('lassoPath').setAttribute('d', '');
+  if (DK) DK.setProps({controller: {dragRotate: false, keyboard: false, inertia: false, doubleClickZoom: false, dragPan: !on}});
+}
+(() => {
+  const svg = $('lassoSvg');
+  svg.addEventListener('pointerdown', e => { if (S.mode !== 'lasso') return; svg.setPointerCapture(e.pointerId); lassoPts = [[e.offsetX, e.offsetY]]; });
+  svg.addEventListener('pointermove', e => { if (!lassoPts) return; lassoPts.push([e.offsetX, e.offsetY]); $('lassoPath').setAttribute('d', 'M' + lassoPts.map(p => p.join(',')).join('L')); });
+  svg.addEventListener('pointerup', () => { if (!lassoPts) return; const pts = lassoPts; setLasso(false); finishLasso(pts); });
+})();
+function finishLasso(px) {
+  if (px.length < 3) return;
+  const vp = DK.getViewports()[0], poly = px.map(p => vp.unproject(p).slice(0, 2));
+  const t0 = performance.now(); let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  for (const [x, y] of poly) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
+  const rows = [], xy = P.xy, m = poly.length;
+  for (let i = 0; i < P.n; i++) {
+    const x = xy[2 * i], y = xy[2 * i + 1]; if (x < x0 || x > x1 || y < y0 || y > y1) continue;
+    let ins = false; for (let a = 0, b = m - 1; a < m; b = a++) { const ya = poly[a][1], yb = poly[b][1]; if ((ya > y) !== (yb > y) && x < (poly[b][0] - poly[a][0]) * (y - ya) / (yb - ya) + poly[a][0]) ins = !ins; }
+    if (ins) rows.push(i);
+  }
+  R.lastLassoMs = Math.round(performance.now() - t0);
+  if (rows.length < 20) { S.view = 'msg'; S.msg = `Only ${rows.length} papers: too few for growth or phrases. Drag a larger area.`; renderInspector(); return; }
+  makeSel({rows}, {kind: 'lasso', rows: Int32Array.from(rows), poly, label: `Lasso, ${fmt(rows.length)} papers`});
+}
+
+// ---------- selections ----------
+function selectTopic(level, c, opts = {}) {
+  const rows = []; const lv = P.lvl[level]; for (let i = 0; i < P.n; i++) if (lv[i] === c) rows.push(i);
+  const sel = {kind: 'topic', level, c, rows: Int32Array.from(rows), label: lblOf(level, c)};
+  sel.poly = hullOf(sel.rows);
+  if (opts.zoom) fitRows(sel.rows);
+  makeSel({topic: {level, c}}, sel, opts);
+}
+function makeSel(spec, sel, opts = {}) {
+  sel.spec = spec; sel.data = null;
+  if (opts.slot === 'A') S.A = sel; else if (opts.slot === 'B') S.B = sel;
+  else if (!S.A) { S.A = sel; sel.flash = true; setTimeout(() => { sel.flash = false; render(); }, 250); }
+  else S.cur = sel;
+  S.focus = sel; S.view = 'sel'; S.ev = null;
+  if (NARROW.matches) document.body.classList.add('drawer');
+  if (S.colour === 'dist' && sel === S.A) loadDist();
+  updateMask(); recolour(); computeLabels(); renderSlots(); renderInspector(); renderTopicsHL();
+  fetchSel(sel);
+}
+async function fetchSel(sel) {
+  sel.loading = true; sel.err = null; sel.t0 = performance.now(); const body = $('inspBody');
+  if (S.focus === sel && S.view === 'sel') renderInspector();
+  const slow = setTimeout(() => { if (sel.loading && S.focus === sel) { const n = sel.rows ? sel.rows.length : null; $('slowLine') && ($('slowLine').textContent = `Still computing (large selection: ${n != null ? fmt(n) : '…'} papers)`); } }, 3000);
+  if (S.focus === sel) body.classList.add('busy');
+  try {
+    const j = await api('/select', {...sel.spec, ...winObj()});
+    sel.data = j; sel.sel_id = j.sel_id; sel.err = null;
+    if (sel.kind === 'saved') {
+      sel.savedWin = j.saved_window; sel.run_id = j.run_id;
+      sel.poly = j.polygon_valid ? j.polygon : null;
+      sel.note = j.run_id && j.run_id !== S.runId ? `Restored ${fmt(j.n)} papers. The map layout changed since you saved this on ${String(sel.created).slice(0, 10)}, so the old lasso outline is not shown; the papers are highlighted instead.` : '';
+      if (j.missing) sel.note = `Restored ${fmt(j.n)} of ${fmt(j.n + j.missing)} papers; ${fmt(j.missing)} are no longer on the map.`;
+    }
+    if (j.rows) { sel.rows = Int32Array.from(j.rows); updateMask(); recolour(); }
+    const top = (j.topics || []).find(t => t.level === 1);
+    if (sel.kind === 'lasso' && top) sel.label = `Lasso, ${fmt(j.n)} papers, mostly ${top.label} (${Math.round(100 * top.own_share)}%)`;
+    if (sel.kind === 'saved' && top) sel.label = `Saved: ${sel.name} (now mostly ${top.label}, ${Math.round(100 * top.own_share)}%)`;
+  } catch (e) {
+    if (e.offline) { sel.err = 'offline'; S.pending.add(() => fetchSel(sel)); }
+    else if (e.status === 422) {  // nothing on the map: the selection leaves its slot, the inspector keeps the message
+      sel.err = 'empty'; sel.n_unembedded = (e.body && e.body.n_unembedded) || 0; sel.rows = null;
+      for (const k of ['A', 'B', 'cur']) if (S[k] === sel) S[k] = null;
+      updateMask(); recolour();
+    }
+    else sel.err = e.message;
+  } finally { sel.loading = false; clearTimeout(slow); body.classList.remove('busy'); }
+  renderSlots(); if (S.focus === sel || sel === S.A || sel === S.B) renderInspector(); loadAB();
+  if (sel.kind === 'saved' && sel.data && S.focus === sel && S.view === 'sel') {}
+}
+function setSlot(slot) {  // A / B keys and buttons: put the current selection into a slot
+  const s = S.cur || (slot === 'B' && S.focus !== S.A ? S.focus : null); if (!s) return;
+  if (slot === 'A') S.A = s; else { if (s === S.A) return; S.B = s; }
+  if (S.cur === s) S.cur = null; S.focus = s;
+  if (S.colour === 'dist' && slot === 'A') loadDist();
+  updateMask(); recolour(); renderSlots(); renderInspector(); loadAB();
+}
+function clearSlot(slot) {
+  if (slot === 'A') S.A = null; else if (slot === 'B') S.B = null; else S.cur = null;
+  S.dist = null; if (S.focus && ![S.A, S.B, S.cur].includes(S.focus)) S.focus = S.cur || S.B || S.A;
+  if (!S.focus) S.view = 'summary';
+  if (!S.A && S.colour === 'dist') setColour('growth');
+  updateMask(); recolour(); computeLabels(); renderSlots(); renderInspector(); renderTopicsHL();
+}
+async function loadAB() {
+  if (!(S.A && S.B && S.A.sel_id && S.B.sel_id)) { if (S.dist) { S.dist = null; renderAB(); } return renderAB(); }
+  const key = S.A.sel_id + ':' + S.B.sel_id; if (S.dist && S.dist.key === key) return renderAB();
+  try { S.dist = {...await api(`/distance?a=${S.A.sel_id}&b=${S.B.sel_id}`), key}; } catch (e) { S.dist = null; }
+  renderAB();
+}
+async function loadDist() {
+  if (!S.A || !S.A.sel_id) return;
+  try {
+    const j = await api(`/colour/dist?a=${S.A.sel_id}&level=0`), d = j.dist, idx = d.map((v, i) => i).sort((a, b) => d[a] - d[b]), lut = new Uint8Array(4 * d.length);
+    idx.forEach((c, r) => { const q = r / d.length, t = q < 0.05 ? 0 : q >= 0.5 ? 1 : (q - 0.05) / 0.45, v = Math.round(0xf0 + (0x2b - 0xf0) * t); lut.set([v, v, v], 4 * c); });
+    S.distLut = lut; if (S.colour === 'dist') recolour();
+  } catch (e) {}
+}
+function resendAll() { for (const s of new Set([S.A, S.B, S.cur])) if (s) fetchSel(s); }
+
+// ---------- data loading ----------
+async function loadWindowData() {
+  $('tabProg').classList.add('on');
+  const lv = S.level, qs = winQS();
+  try {
+    const [t, l] = await Promise.all([api(`/topics?level=${lv}&${qs}`), api(`/links?level=${lv}&${qs}`).catch(() => null)]);
+    S.topics[lv] = t; if (lv !== 1) S.topics[1] = await api(`/topics?level=1&${qs}`); S.links = l;
+    if (!S.topics[0] && lv !== 0) api(`/topics?level=0&${qs}`).then(j => { S.topics[0] = j; }).catch(() => {});
+  } catch (e) { $('tabProg').classList.remove('on'); return; }
+  $('tabProg').classList.remove('on');
+  updateWinLabel(); recolour(); computeLabels(); renderLegend(); renderTopics(); renderLinks(); renderInspector(); render();
+  anim(badgeFade, {o: [0, 1], duration: 300, onUpdate: render});
+}
+function updateWinLabel() {
+  const x = winIdx(), v = volOf();
+  $('winLabel').innerHTML = `<b>${rangeText(x.a, x.b)}</b> vs ${rangeText(x.pa, x.pb)} · corrected for CS growth (×${v ? v.toFixed(2) : '…'}) · last complete month ${mLabel(S.E)}`;
+  $('winSum').textContent = (S.win.n ? `last ${S.win.n} months` : 'custom') + ' ▾';
+  document.querySelectorAll('[data-act=win]').forEach(b => b.setAttribute('aria-checked', String(S.win.n ? +b.dataset.n === S.win.n : b.dataset.n === 'custom')));
+  render();
+}
+function setWindow(w) {
+  S.win = w; S.topics = {}; updateWinLabel(); loadWindowData(); loadPhrases(); resendAll();
+}
+function renderServerNote(meta) {
+  const time = String(meta.started || '').match(/[T ](\d{2}:\d{2})/);
+  const removed = String(meta.stale_removed || '').replace(/pid (\d+) not running/g, 'process $1 was not running');
+  $('leftNote').textContent = removed ? (time ? 'Server started ' + time[1] + '. ' : '') + 'Removed stale lock ' + removed + '.' : '';
+}
+async function loadPhrases() {
+  try { const j = await api('/phrases?level=1&' + winQS()); S.phraseList = j.phrases; S.phrasesUnavailable = false; }
+  catch (e) { S.phraseList = []; S.phrasesUnavailable = e.status === 404; }
+  renderPhrases(); suggest();
+}
+async function boot() {
+  $('statusHost').textContent = location.host || 'file';
+  if (location.protocol === 'file:') { banner('file'); $('loading').textContent = 'Map unavailable: open the page through the server.'; return; }
+  layout(); renderSlots();
+  const pts = loadPoints().catch(e => { $('loading').textContent = 'Could not load map points: ' + e.message; throw e; });
+  const dk = initDeck();
+  const pointDraw = Promise.all([pts, dk]).then(() => {
+    VS = fitView(); DK.setProps({initialViewState: VS});
+    pointsReady = true; recolour();
+  }).catch(() => {});
+  let meta;
+  try { meta = await api('/meta'); } catch (e) { S.pending.add(() => location.reload()); return; }
+  S.meta = meta; S.MS = meta.months; S.E = S.MS.indexOf(meta.last_complete); S.runId = meta.run_id;
+  for (const [l, n] of Object.entries(meta.levels)) { const b = document.querySelector(`[data-act=level][data-l="${l}"] span`); if (b) b.textContent = `(${n})`; }
+  renderServerNote(meta);
+  fillCustom(); updateWinLabel(); renderTopics(); renderInspector();
+  const labels = Promise.all([0, 1, 2].map(l => api('/labels?level=' + l).then(j => { S.labels[l] = {}; for (const c of j.clusters) S.labels[l][c.c] = c; })));
+  await Promise.all([loadWindowData(), labels]);
+  renderTopics(); renderInspector();
+  loadPhrases();
+  loadSaved(); loadIdeas(); renderPhrases();
+  await pointDraw;
+  if (!pointsReady) return;
+  dataReady = true; queueLabels();
+}
+
+// ---------- legend, controls ----------
+function renderLegend() {
+  const rows = $('legendRows'), T = S.topics[S.level];
+  if (S.grey) { $('legendHead').textContent = 'Link growth (edges) and topic growth (nodes)'; }
+  else $('legendHead').textContent = S.colour === 'growth' ? `Growth vs CS, ${LEVEL_NAME[S.level]}` : S.colour === 'topic' ? 'Topic' : S.colour === 'date' ? 'Date' : 'Distance to A';
+  if (S.colour === 'topic' && !S.grey) { rows.innerHTML = '<div class="txt small">one colour per area; hover a point for its area</div>'; return; }
+  if (S.colour === 'date' && !S.grey) { rows.innerHTML = `<div class="row"><s style="background:linear-gradient(90deg,#2b2b2b,#f0f0f0);width:120px"></s><span class="t">${mLabel(0)} → ${mLabel(S.E)}</span></div>`; return; }
+  if (S.colour === 'dist' && !S.grey) { rows.innerHTML = `<div class="row"><s style="background:linear-gradient(90deg,#f0f0f0,#2b2b2b);width:120px"></s><span class="t">nearest 5% → farthest 50%</span></div>`; return; }
+  const cnt = {nd: 0, new: 0}; for (let i = 0; i < 7; i++) cnt[i] = 0;
+  if (T) for (const t of T.topics) cnt[clusterInfo(t).step]++;
+  const sw = S.lightness ? LG : G; let h = '';
+  for (let i = 6; i >= 0; i--) h += `<div class="row" title="${STEP_TXT[i]}"><s style="background:${sw[i]}"></s>${S.lightness ? `<span class="lnum mono">${i + 1}</span>` : ''}<span class="t">${STEP_TXT[i]}</span><em>${T ? cnt[i] : '–'}</em></div>`;
+  h += `<div class="row" title="new in this window"><span class="new">new</span><span class="t">new in this window</span><em>${T ? cnt.new : '–'}</em></div>`;
+  h += `<div class="row" title="too few papers to rate"><s style="background:${ND}"></s><span class="t">too few papers to rate</span><em>${T ? cnt.nd : '–'}</em></div>`;
+  rows.innerHTML = h;
+}
+function setColour(v) {
+  S.colour = v; S.grey = false; document.querySelector(`input[name=colour][value=${v}]`).checked = true;
+  if (v === 'dist' && !S.distLut) loadDist();
+  renderLegend(); recolour(); computeLabels(); render(); syncPreset();
+}
+function setLevel(l) {
+  S.level = l; document.querySelectorAll('[data-act=level]').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.l === l)));
+  S.sort = {col: 'default', dir: -1}; loadWindowData(); syncPreset();
+}
+const PRESETS = {1: {level: 1, colour: 'growth', grey: false, nodes: false, bridges: false, phrases: false, edgeN: 40}, 2: {level: 1, colour: 'growth', grey: true, nodes: true, bridges: true, phrases: false, edgeN: 40}};
+function applyPreset(p) {
+  const v = PRESETS[p], lvChanged = S.level !== v.level; Object.assign(S, v);
+  document.querySelector('input[name=colour][value=growth]').checked = true;
+  $('tNodes').checked = v.nodes; $('tBridges').checked = v.bridges; $('tPhrases').checked = v.phrases; $('edgeN').value = v.edgeN;
+  document.querySelectorAll('[data-act=level]').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.l === v.level)));
+  setTab(p === 1 ? 'topics' : 'links');
+  if (lvChanged) loadWindowData(); else { recolour(); renderLegend(); renderLinks(); computeLabels(); render(); }
+  syncPreset();
+}
+function syncPreset() {
+  const m = p => Object.entries(PRESETS[p]).every(([k, v]) => S[k] === v);
+  $('q1').setAttribute('aria-pressed', String(m(1))); $('q2').setAttribute('aria-pressed', String(m(2)));
+  $('q1').classList.toggle('on', m(1)); $('q2').classList.toggle('on', m(2));
+  const E = drawnEdges(); $('edgeCount').textContent = `${E.edges.length} of ${E.avail} pairs`;
+}
+function setTab(t) {
+  S.tab = t; document.querySelectorAll('[data-act=tab]').forEach(b => { b.setAttribute('aria-selected', String(b.dataset.t === t)); b.tabIndex = b.dataset.t === t ? 0 : -1; });
+  for (const [k, id] of [['topics', 'pTopics'], ['links', 'pLinks'], ['phrases', 'pPhrases'], ['ideas', 'pIdeas']]) $(id).hidden = k !== t;
+}
+function fillCustom() {
+  const opts = S.MS.slice(0, S.E + 1).map((m, i) => `<option value="${i}">${mLabel(i)}</option>`).join('');  // pickers stop at the last complete month
+  $('cFrom').innerHTML = opts; $('cTo').innerHTML = opts; $('cFrom').value = S.E - 5; $('cTo').value = S.E; checkCustom();
+}
+function checkCustom() {
+  const a = +$('cFrom').value, b = +$('cTo').value, N = b - a + 1;
+  const msg = a > b ? 'start must be before end' : a - N < 0 ? 'the prior window would start before ' + mLabel(0) : '';
+  $('cMsg').textContent = msg; $('cApply').disabled = !!msg;
+}
+
+// ---------- tables ----------
+function badgeInk(hex) {
+  const rgb = hex2rgb(hex).map(v => { v /= 255; return v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; });
+  return .2126 * rgb[0] + .7152 * rgb[1] + .0722 * rgb[2] < .2 ? 'var(--color-panel)' : 'var(--color-text)';
+}
+function gCell(t) {
+  if (t.is_new) return '<span class="new" title="New: 30 or more papers in this window, fewer than 5 in the prior window.">new</span>';
+  const ci = clusterInfo(t); if (ci.step === 'nd') return '<span class="muted small">too few</span>';
+  return `<span class="gr" style="background:${ci.hex};color:${badgeInk(ci.hex)}">×${t.growth.toFixed(2)}</span>`;
+}
+function chip(a) {
+  const tip = a.is_new ? `New sub-topic: started inside this window (onset ${monthName(a.onset)}), 30 or more papers now, fewer than 5 before.` : `Arriving: onset ${monthName(a.onset)}, ${fmt(a.recent)} papers now vs ${fmt(a.prior)} before, ×${(a.growth || 0).toFixed(1)} after correction.`;
+  return `<button class="chip" style="--dot:${growthHex(a.growth, a.is_new ? 'new' : null)}" data-act="sub" data-c="${a.c}" title="${esc(tip)}">${esc(a.label)}${a.is_new ? ' · new' : ` ×${a.growth.toFixed(1)}`}</button>`;
+}
+const monthName = m => { if (!m) return '?'; const [y, mm] = String(m).split('-'); return MN[mm - 1] + ' ' + y; };
+function renderTopics() {
+  const T = S.topics[S.level], el = $('pTopics'), lv = S.level;
+  if (!T) { el.innerHTML = '<div class="tabhead">Loading topics…</div>'; return; }
+  const badges = lv === 1 ? badgeTopics() : [], bRank = new Map(badges.map((t, i) => [t.c, i + 1]));
+  const gv = t => t.is_new ? Infinity : (t.growth ?? -1);
+  const col = S.sort.col, dir = S.sort.dir, val = {topic: t => t.label, area: t => areaOf(lv, t.c), recent: t => t.recent, prior: t => t.prior, growth: gv};
+  const rows = [...T.topics].sort(col === 'default' ? (a, b) => (bRank.get(a.c) || 99) - (bRank.get(b.c) || 99) || gv(b) - gv(a) : (a, b) => { const x = val[col](a), y = val[col](b); return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+  const th = (k, label, cls = '') => `<th class="${cls}" aria-sort="${col === k ? (dir < 0 ? 'descending' : 'ascending') : 'none'}"><button data-act="sort" data-k="${k}">${label}${col === k ? (dir < 0 ? ' ▼' : ' ▲') : ''}</button></th>`;
+  el.innerHTML = (lv === 1 ? '<div class="tabhead">Ranked: topics with 200+ papers in the window.</div>' : '') +
+    `<table id="topicsTable"><thead><tr><th>#</th>${th('topic', 'topic')}${th('area', 'area')}${th('recent', 'papers (window)', 'n')}${th('prior', 'prior', 'n')}${th('growth', 'growth vs CS', 'n')}<th>arriving sub-topics</th></tr></thead><tbody>` +
+    rows.map((t, i) => `<tr tabindex="${i ? -1 : 0}" data-c="${t.c}"><td>${bRank.has(t.c) ? `<span class="rank">${bRank.get(t.c)}</span>` : ''}</td><td>${esc(t.label)}</td><td class="sub2">${esc(areaOf(lv, t.c))}</td><td class="n">${fmt(t.recent)}</td><td class="n">${fmt(t.prior)}</td><td class="n">${gCell(t)}</td><td>${lv === 0 ? '' : (t.arriving || []).map(chip).join('')}</td></tr>`).join('') + '</tbody></table>';
+  renderTopicsHL();
+}
+const areaOf = (lv, c) => { if (lv === 2) return ''; let l = S.labels[lv] && S.labels[lv][c]; if (!l) return ''; if (lv === 0) { l = S.labels[1] && S.labels[1][l.parent]; if (!l) return ''; } return lblOf(2, l.parent); };
+function renderTopicsHL() { document.querySelectorAll('#topicsTable tbody tr').forEach(tr => tr.classList.toggle('hl', [S.A, S.B, S.cur].some(s => s && s.kind === 'topic' && s.level === S.level && s.c === +tr.dataset.c))); }
+const statusOf = e => e.status === 'new' ? 'new' : e.status === 'low' ? '' : e.growth >= 1.41 ? 'forming' : e.growth <= 0.71 ? 'fading' : 'steady';
+function linkGCell(e) { return e.status === 'new' ? '<span class="new" title="New link: 10 or more bridge papers in this window, fewer than 3 in the prior window.">new</span>' : e.growth == null ? '' : `<span class="gr" style="background:${growthHex(e.growth)};color:${badgeInk(growthHex(e.growth))}">×${e.growth.toFixed(2)}</span>`; }
+function renderLinks() {
+  const el = $('pLinks'), L = S.links;
+  if (!L) { el.innerHTML = '<div class="tabhead">Loading links…</div>'; syncPreset(); return; }
+  const T = (S.meta && S.meta.bridge_T) || (L.rule && L.rule.T) || 4, lv = S.level, nm = c => esc(lblOf(lv, c));
+  const main = L.bridge_links.filter(e => e.status !== 'low'), low = L.bridge_links.filter(e => e.status === 'low');
+  const ranks = new Map(main.slice(0, 5).map((e, i) => [e, i + 1])), {col, dir} = S.linkSort;
+  const value = e => col === 'growth' && e.status === 'new' ? Infinity : (e[col] ?? -Infinity);
+  if (col !== 'default') for (const rows of [main, low]) rows.sort((a, b) => {
+    const x = value(a), y = value(b); return (x < y ? -1 : x > y ? 1 : 0) * dir;
+  });
+  const th = (k, label) => `<th class="n" aria-sort="${col === k ? (dir < 0 ? 'descending' : 'ascending') : 'none'}"><button data-act="linksort" data-k="${k}">${label}${col === k ? (dir < 0 ? ' ▼' : ' ▲') : ''}</button></th>`;
+  S.linkRows = [...main, ...low];
+  let h = `<div class="tabhead">Bridge paper: ${T} or more of its 14 nearest neighbours in the other topic. Width = strength, bridges / √(papers₁ × papers₂). Growth = change in bridge share vs the prior window.</div>
+  <table id="linksTable"><thead><tr><th>#</th><th>topic 1</th><th>topic 2</th>${th('n_bridge', 'bridges')}<th class="n">share now</th><th class="n">share before</th>${th('growth', 'link growth')}${th('strength', 'strength')}<th>status</th></tr></thead><tbody>`;
+  h += main.map((e, i) => `<tr tabindex="${i ? -1 : 0}" data-li="${i}"${S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2 ? ' class="hl"' : ''}><td>${ranks.has(e) ? `<span class="rank">${ranks.get(e)}</span>` : ''}</td><td>${nm(e.c1)}</td><td>${nm(e.c2)}</td><td class="n">${fmt(e.n_bridge)}</td><td class="n">${pct(e.share_now)}</td><td class="n">${pct(e.share_prior)}</td><td class="n">${linkGCell(e)}</td><td class="n">${e.strength.toFixed(3)}</td><td><span class="pill" data-status="${statusOf(e)}">${statusOf(e)}</span></td></tr>`).join('');
+  h += `<tr tabindex="-1" data-act="lowToggle" aria-expanded="${S.lowOpen}"><td colspan="9" class="muted">${S.lowOpen ? '▾' : '▸'} Pairs with fewer than 10 bridge papers (growth not computed) (${fmt(low.length)})</td></tr>`;
+  if (S.lowOpen) h += low.map((e, i) => `<tr tabindex="-1" data-li="${main.length + i}"><td></td><td>${nm(e.c1)}</td><td>${nm(e.c2)}</td><td class="n">${e.n_bridge}</td><td colspan="3"></td><td class="n">${e.strength.toFixed(3)}</td><td></td></tr>`).join('');
+  h += `</tbody></table><div class="tabhead" style="margin-top:8px">Phrase links use all 36 months and do not follow the window. A phrase links two topics when 10+ papers and 20%+ of its papers are in each, and it spans at most 4 topics.</div><table><tbody>` +
+    (L.phrase_links || []).map(p => `<tr><td>${nm(p.c1)} ↔ ${nm(p.c2)}</td><td class="small">${p.phrases.map(x => typeof x === 'string' ? esc(x) : `${esc(x.phrase)} <span class="muted">(${x.n1} / ${x.n2})</span>`).join(', ')}</td></tr>`).join('') + '</tbody></table>';
+  el.innerHTML = h; syncPreset();
+}
+function renderPhrases() {
+  const bt = S.meta && S.meta.backtest_line; let m = bt && bt.match(/top-(\d+).*?(\d+(?:\.\d+)?)x.*?(\d+)%.*?(\d+)%/);
+  $('btLine').textContent = m ? `Track record: in backtests, ${m[3]}% of the top-${m[1]} rising phrases then grew ${m[2]}× faster than CS, vs ${m[4]}% of all candidate phrases. A rising phrase is a lead, not a forecast.` : (bt ? 'Track record: ' + bt : '');
+  const L = S.phraseList; if (!L) { $('phTable').innerHTML = '<div class="tabhead">Loading phrases…</div>'; return; }
+  if (S.phrasesUnavailable) { $('phTable').innerHTML = '<div class="tabhead">phrases unavailable</div>'; return; }
+  const f = $('phFilter').value.trim().toLowerCase(), {col, dir} = S.phSort;
+  const val = {phrase: p => p.phrase, papers: p => p.n, growth: p => p.growth ?? 0};
+  const rows = L.filter(p => !f || p.phrase.toLowerCase().includes(f)).sort((a, b) => { const x = val[col](a), y = val[col](b); return (x < y ? -1 : x > y ? 1 : 0) * dir; });
+  const th = (k, label, cls = '') => `<th class="${cls}" aria-sort="${col === k ? (dir < 0 ? 'descending' : 'ascending') : 'none'}"><button data-act="phsort" data-k="${k}">${label}${col === k ? (dir < 0 ? ' ▼' : ' ▲') : ''}</button></th>`;
+  $('phTable').innerHTML = `<table><thead><tr>${th('phrase', 'phrase')}${th('papers', 'papers', 'n')}${th('growth', 'growth', 'n')}<th>topics</th><th>draws edge</th></tr></thead><tbody>` +
+    rows.map((p, i) => `<tr tabindex="${i ? -1 : 0}" data-ph="${esc(p.phrase)}"><td>${esc(p.phrase)}</td><td class="n">${fmt(p.n)}</td><td class="n">${p.growth != null ? '×' + p.growth.toFixed(1) : ''}</td><td class="small">${(p.topics || []).map(t => `${esc(t.label)} ${Math.round(100 * t.share)}%`).join(', ')}</td><td class="small">${p.eff > 4 ? `too broad (spans ${Math.round(p.eff)} topics)` : 'yes'}</td></tr>`).join('') + '</tbody></table>';
+}
+function ideaGroups() {
+  const g = new Map();
+  for (const i of S.ideas) { const k = JSON.stringify([i.a_sel, i.b_sel, String(i.created).replace('T', ' ').slice(0, 16)]); if (!g.has(k)) g.set(k, {key: k, created: i.created, a: i.a_name, b: i.b_name, window: i.window, ideas: []}); g.get(k).ideas.push(i); }
+  return [...g.values()].sort((a, b) => String(b.created).localeCompare(String(a.created)));
+}
+function renderIdeasTab() {
+  const gs = ideaGroups();
+  $('pIdeas').innerHTML = gs.length ? `<table><thead><tr><th>date</th><th>A</th><th>B</th><th class="n">ideas</th></tr></thead><tbody>` + gs.map((g, i) => `<tr tabindex="${i ? -1 : 0}" data-ig="${esc(g.key)}"><td class="mono">${esc(String(g.created).replace('T', ' ').slice(0, 16))}</td><td>${esc(g.a || 'A')}</td><td>${esc(g.b || 'B')}</td><td class="n">${g.ideas.length}</td></tr>`).join('') + '</tbody></table>' : '<div class="tabhead">No ideas yet. Set A and B, then press "Ideas between A and B".</div>';
+}
+async function loadIdeas() { try { S.ideas = await api('/ideas'); } catch (e) {} renderIdeasTab(); }
+async function loadSaved() { try { S.saved = await api('/selections'); } catch (e) {} renderSaved(); renderSlots(); }
+function renderSaved() {
+  $('savedList').innerHTML = S.saved.length ? S.saved.map(s => `<div><button data-act="loadSaved" data-id="${s.sel_id}">${esc(s.name || 'unnamed')} <span class="muted">· ${fmt(s.n)} papers · ${String(s.created).slice(0, 10)}</span></button><button data-act="delSaved" data-id="${s.sel_id}" aria-label="Delete ${esc(s.name || 'unnamed')}">×</button></div>`).join('') + '<div id="delMsg" class="small"></div>' : '<div class="muted small">none yet</div>';
+}
+
+// ---------- slots ----------
+function renderSlots() {
+  for (const k of ['A', 'B']) {
+    const s = S[k], dd = S.saved.length ? `<details class="dd"><summary role="button" aria-label="Load a saved selection into ${k}" style="padding:0 4px">▾</summary><div>${S.saved.map(x => `<button data-act="loadSaved" data-id="${x.sel_id}" data-slot="${k}">${esc(x.name || 'unnamed')} · ${fmt(x.n)}</button>`).join('')}</div></details>` : '';
+    const n = s && (s.data ? s.data.n : s.rows ? s.rows.length : null);
+    $('slot' + k).innerHTML = `<b style="background:var(--color-${k.toLowerCase()})">${k}</b><span class="lbl${s ? ' set' : ''}" tabindex="0" title="${esc(s ? s.label : '')}">${s ? `${esc(s.label)} · ${n != null ? fmt(n) : '…'}` : 'empty'}</span>${dd}${s ? `<button data-act="clear" data-slot="${k}" aria-label="Clear ${k}">×</button>` : ''}`;
+  }
+  const dl = $('distLabel'), di = dl.querySelector('input'); di.disabled = !S.A; dl.title = S.A ? '' : 'Set A first';
+  syncControlTabOrder();
+}
+
+// ---------- inspector ----------
+function bars(months, sel) {
+  const x = winIdx(), n = S.E + 1, w = 360 / n, mx = Math.max(1, ...months.slice(0, n));
+  let h = `<svg class="bars" width="360" height="44" role="img" aria-label="Papers per month"><rect class="w" x="${x.a * w}" y="0" width="${(x.b - x.a + 1) * w}" height="44"/>`;
+  for (let i = 0; i < n; i++) { const v = months[i] || 0, bh = Math.max(1, 40 * v / mx); h += `<rect x="${i * w + 1}" y="${44 - bh}" width="${w - 2}" height="${bh}" fill="var(--color-muted)"><title>${mLabel(i)}: ${fmt(v)} papers</title></rect>`; }
+  return h + '</svg>';
+}
+function plist(ps) { return `<div class="plist">${ps.map(p => `<div><a href="${ARXIV}${esc(p.id)}" target="_blank" rel="noopener">${esc(p.title)}</a><small>arXiv:${esc(p.id)} · ${monthName(p.month)} · ${fmt(p.citations ?? 0)} citations</small></div>`).join('')}</div>`; }
+function selHeader(s) {
+  if (s.kind === 'topic') {
+    const l = S.labels[s.level] && S.labels[s.level][s.c];
+    if (s.level === 1) return `Topic, in area ${esc(lblOf(2, l ? l.parent : -1))}`;
+    if (s.level === 0) return `Sub-topic, in topic ${esc(lblOf(1, l ? l.parent : -1))} (share ${Math.round(100 * ((l && l.parent_share) || 0))}%)`;
+    return 'Area';
+  }
+  return {lasso: 'Lasso selection', phrase: 'Phrase search', query: 'Title search', saved: 'Saved selection'}[s.kind] || '';
+}
+function selView(s) {
+  const j = s.data, v = (j && j.growth && j.growth.window && j.growth.window.vol_ratio) || volOf() || 1;
+  let h = `<h3 style="margin:0 0 2px;font-size:16px">${esc(s.label)}</h3><div class="sub2">${selHeader(s)}</div>`;
+  if (s.saveOpen) h += `<div style="margin:6px 0"><input type="text" id="saveName" aria-label="Name for the saved selection" value="${esc(s.label)}"><div id="saveMsg" class="tiny muted"></div></div>`;
+  if (s.kind === 'saved' && s.savedWin) h += `<div class="small muted">saved with window ${esc(textOfWin(s.savedWin))}</div>`;
+  if (s.note) h += `<div class="def">${esc(s.note)}</div>`;
+  if (s.err === 'offline') return h + '<p class="muted">waiting for the server</p>';
+  if (s.err === 'empty') {
+    const q = s.spec.phrase ?? s.spec.query;
+    if (s.n_unembedded > 0) return h + `<p>${fmt(s.n_unembedded)} ${s.n_unembedded === 1 ? 'paper matches' : 'papers match'}. None are on the map (no embedding). Stats and paper lists are below; map highlight is not available.</p>`;
+    const near = nearestPhrases(q).map(p => `<button class="chip" data-act="phrase" data-ph="${esc(p)}">${esc(p)}</button>`).join('');
+    return h + `<p>No paper title or abstract contains "${esc(q)}". ${s.kind === 'phrase' ? 'Phrase search is a literal match: check spelling or try a variant.' : 'Title search is a case-insensitive substring match.'}</p>${near}`;
+  }
+  if (s.err) return h + `<div class="err">${esc(s.err)}</div>`;
+  if (!j) return h + '<p class="muted small">Loading…</p>';
+  if (s.kind === 'phrase' || s.kind === 'query') {
+    const tot = j.n + (j.n_unembedded || 0);
+    h += `<div class="small muted">${s.kind === 'phrase' ? 'literal match on title and abstract' : 'title contains, case-insensitive'}; ${fmt(j.n_unembedded || 0)} of ${fmt(tot)} papers are not on the map (not embedded)</div><button data-act="zoomMatches" ${j.n ? '' : 'disabled'} style="margin:4px 0">Zoom to matches</button>`;
+    if (j.n === 0) h += `<p>${fmt(j.n_unembedded)} ${j.n_unembedded === 1 ? 'paper matches' : 'papers match'}. None are on the map (no embedding). Stats and paper lists are below; map highlight is not available.</p>`;
+  }
+  const g = j.growth || {}, r = g.recent ?? 0, p = g.prior ?? 0;
+  h += `<div class="kv"><span>papers in window:</span><span class="num">${fmt(r)} (prior ${fmt(p)})</span></div>`;
+  if (g.is_new) h += `<div><span class="new">new</span> <span class="small muted">30 or more papers now, fewer than 5 before</span></div>`;
+  else if (g.growth == null || (r < 30 && p < 30)) h += `<div class="muted">too few papers to rate (${fmt(r)} now, ${fmt(p)} before)</div>`;
+  else { const raw = (r + 1) / (p + 1); h += `<div><b style="background:${growthHex(g.growth)};color:${badgeInk(growthHex(g.growth))}" class="num gr">×${g.growth.toFixed(1)}</b> after correction (raw ×${raw.toFixed(1)}; all CS grew ×${v.toFixed(2)})</div>`; }
+  h += `<div class="tiny muted">${winText()}</div>${bars(j.months || [], s)}`;
+  const T = s.kind === 'topic' && S.topics[s.level] && S.topics[s.level].topics.find(t => t.c === s.c);
+  if (T && T.arriving && T.arriving.length) h += `<h4>Arriving sub-topics</h4>${T.arriving.map(chip).join('')}`;
+  h += `<h4>Distinctive phrases</h4>` + (j.n >= 30 && j.terms && j.terms.length ? j.terms.slice(0, 20).map(t => `<button class="chip" data-act="phrase" data-ph="${esc(t.term)}" title="share in selection ${(100 * t.share_sel).toFixed(0)}% vs ${(100 * t.share_all).toFixed(1)}% in all papers (z ${(+t.z).toFixed(1)})">${esc(t.term)} <span class="muted">${t.k}</span></button>`).join('') : '<div class="muted small">too few papers for distinctive phrases</div>');
+  h += `<h4>Top cited</h4>${plist(j.top_cited || [])}<h4>Newest</h4>${plist(j.newest || [])}`;
+  const nb = (j.topics || []).filter(t => t.level === 1 && !(s.kind === 'topic' && s.level === 1 && t.c === s.c)).slice(0, 10);
+  if (nb.length) h += `<h4>Links to other topics</h4><div class="small">${nb.map(t => `<div><a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> · ${Math.round(100 * t.nbr_share)}% of neighbours</div>`).join('')}</div>`;
+  return h;
+}
+function selButtons(s) {
+  const both = S.A && S.B;
+  let b = `<button data-act="save">Save</button> `;
+  if (s === S.cur) b += S.A ? `<button data-act="setB">Set as B</button> <button data-act="replaceA">Replace A</button> ` : `<button data-act="setA">Set as A</button> `;
+  else if (s === S.A && !S.B) b += '';
+  b += `<span title="${both ? '' : 'Set A and B first'}"><button data-act="ideas" ${both ? '' : 'disabled'}>Ideas between A and B</button></span>`;
+  return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">${b}</div>`;
+}
+function summaryView() {
+  const T1 = S.topics[1], w = T1 && T1.window;
+  let h = `<h4 style="margin-top:0">This window</h4><h3 style="margin:0 0 4px;font-size:16px">This window: ${S.MS.length ? winText() : '…'}</h3>`;
+  if (!w) return h + '<p class="muted small">Loading…</p>';
+  h += `<p class="small" style="margin:2px 0">CS papers in window ${fmt(w.vol_recent)} · prior ${fmt(w.vol_prior)} (all CS ×${w.vol_ratio.toFixed(2)})</p>`;
+  h += '<h4>Fastest-growing topics</h4>' + badgeTopics().map((t, i) => `<div style="line-height:1.9"><span class="rank">${i + 1}</span> <a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> ${gCell(t)}</div>`).join('');
+  const arr = []; for (const t of T1.topics) for (const a of t.arriving || []) arr.push({...a, parent: t.label});
+  arr.sort((a, b) => (b.is_new - a.is_new) || (b.growth || 0) - (a.growth || 0));
+  h += '<h4>Arriving sub-topics, all CS</h4>' + (arr.length ? arr.slice(0, 10).map(a => `<div class="small" style="padding:2px 0"><a href="#" data-act="sub" data-c="${a.c}">${esc(a.label)}</a> · ${esc(a.parent)} · onset ${monthName(a.onset)} · ${a.is_new ? '<span class="new">new</span>' : '×' + a.growth.toFixed(1)}</div>`).join('') : '<div class="muted small">none in this window</div>');
+  return h + '<p class="tiny muted" style="margin-top:14px">Click a topic, press L to lasso, or / to search.</p>';
+}
+function evidenceView() {
+  const ev = S.ev, e = ev.link, lv = ev.level, n1 = lblOf(lv, e.c1), n2 = lblOf(lv, e.c2), d = ev.data, T = (S.meta && S.meta.bridge_T) || 4;
+  const st = statusOf(e);
+  let h = `<a href="#" data-act="back" class="small">← back</a><h4>Link evidence</h4><h3 style="margin:0 0 4px;font-size:16px">${esc(n1)} ↔ ${esc(n2)}</h3>`;
+  if (st) h += `<span class="pill" data-status="${st}">${st}</span>`;
+  if (e.status === 'low') h += `<p>${fmt(e.n_bridge)} bridge papers in this window: too few to compute link growth. Strength is shown.</p><div class="kv"><span>strength</span><span class="num">${e.strength.toFixed(3)}</span></div>`;
+  else h += `<div class="kv"><span>bridge papers in window:</span><span class="num">${fmt(e.n_bridge)}</span><span>in prior window:</span><span class="num">${fmt(e.n_prior ?? e.n_bridge_prior ?? (d && (d.n_prior ?? d.n_bridge_prior)) ?? NaN)}</span><span>share now</span><span class="num">${pct(e.share_now)}</span><span>share before</span><span class="num">${pct(e.share_prior)}</span><span>link growth</span><span class="num">${e.status === 'new' ? 'new' : '×' + e.growth.toFixed(2)}</span><span>strength</span><span class="num">${e.strength.toFixed(3)}</span></div>`;
+  h += `<div class="def">Bridge paper: ${T} or more of its 14 nearest neighbours in the other topic. <details style="display:inline"><summary style="display:inline;text-decoration:underline">how this is measured</summary><div style="margin-top:4px">A paper is a bridge between two topics when at least ${T} of its 14 nearest neighbours (768-number vectors) fall in each of its top two topics. Strength = bridges / √(papers₁ × papers₂) over the window. Share = bridges / (papers₁ + papers₂). Link growth = share now ÷ share in the prior window, with +1 smoothing on the prior. "new" = 10 or more bridges now, fewer than 3 before. Bridge papers follow the window; shared phrases use all 36 months.</div></details></div>`;
+  if (!d) return h + '<div class="prog on" style="position:relative"></div><p class="muted small">Loading bridge papers…</p>';
+  const bs = [...d.bridges].sort(ev.newest ? (a, b) => String(b.month).localeCompare(String(a.month)) : (a, b) => (b.citations || 0) - (a.citations || 0)).slice(0, 30);
+  const pg = bs.slice(ev.page * 10, ev.page * 10 + 10);
+  const split = b => { const own = b.row != null ? P.lvl[lv][b.row] : null; return own === e.c2 ? `${b.k1} of 14 neighbours in ${n1}` : `${b.k2} of 14 neighbours in ${n2}`; };
+  h += `<h4>Bridge papers · ${ev.newest ? 'newest first' : 'most cited'} · ${bs.length ? ev.page * 10 + 1 : 0}–${ev.page * 10 + pg.length} of ${fmt(d.n_bridge ?? bs.length)}</h4>
+    <div style="display:flex;gap:6px;margin-bottom:4px"><button data-act="evSort" aria-pressed="${!!ev.newest}">newest first</button><button data-act="evPage" data-d="-1" ${ev.page ? '' : 'disabled'}>prev</button><button data-act="evPage" data-d="1" ${(ev.page + 1) * 10 < bs.length ? '' : 'disabled'}>next</button></div>
+    <div class="plist">${pg.map(b => `<div><a href="${ARXIV}${esc(b.id)}" target="_blank" rel="noopener">${esc(b.title)}</a><small>arXiv:${esc(b.id)} · ${monthName(b.month)} · ${split(b)}</small></div>`).join('') || '<div class="muted">no bridge papers in this window</div>'}</div>`;
+  h += `<h4>Shared rising phrases · all 36 months</h4>` + (d.phrases && d.phrases.length ? d.phrases.map(p => `<button class="chip" data-act="phrase" data-ph="${esc(p.phrase)}">${esc(p.phrase)} <span class="muted">${p.n1} / ${p.n2} papers</span></button>`).join('') + ' <span class="tiny muted">all 36 months</span>' : '<div class="muted small">no shared rising phrases</div>');
+  h += `<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap"><button data-act="evAB" class="pri">Set as A and B</button><button data-act="evMap" aria-pressed="${!!ev.onMap}">${ev.onMap ? 'Hide bridge papers' : 'Show bridge papers on map'}</button></div>`;
+  return h;
+}
+function renderInspector() {
+  const el = $('inspBody'), prevKey = el.dataset.key, s = S.focus;
+  let h = '', key = S.view;
+  if (S.view === 'evidence' && S.ev) { h = evidenceView(); key += S.ev.c1 + ':' + S.ev.c2; }
+  else if (S.view === 'msg') h = `<p>${esc(S.msg)}</p>`;
+  else if (s && S.view === 'sel') { h = (s.loading ? '<div class="prog on"></div><p class="muted small" id="slowLine"></p>' : '') + selView(s) + (s.data && !s.err ? selButtons(s) : ''); key += (s.sel_id || s.label); }
+  else { S.view = 'summary'; h = summaryView(); }
+  el.innerHTML = h; el.dataset.key = key;
+  if (prevKey !== key) anim(el, {opacity: [0, 1], duration: 180});
+  const sn = $('saveName'); if (sn && s && s.saveOpen && !s.saveFocused) { s.saveFocused = true; sn.focus(); sn.select(); }
+  renderAB();
+}
+function shownPreview() {  // the 28 papers the server will send (mirrors arch §5.6 so the confirm step can list them before any call)
+  const seen = new Set(), out = [], add = (p, side) => { if (p && !seen.has(p.id)) { seen.add(p.id); out.push({...p, side}); return true; } return false; };
+  let nb = 0; for (const p of (S.dist && S.dist.bridges) || []) { if (nb >= 8) break; if (add(p, 'bridge')) nb++; }
+  const side = (s, k) => { let c = 0, n = 0; for (const p of s.data.top_cited || []) { if (c >= 5) break; if (add(p, k)) c++; } for (const p of s.data.newest || []) { if (n >= 5) break; if (add(p, k)) n++; } return c + n; };
+  const na = side(S.A, 'A'), nB = side(S.B, 'B'); return {list: out, nb, na, nB};
+}
+function renderAB() {
+  const el = $('abBlock');
+  if (!(S.A && S.B)) { el.innerHTML = S.ideasWait ? ideasArea() : ''; return; }
+  const d = S.dist;
+  let h = `<h4 style="margin-top:0">A vs B</h4><div class="small"><span style="color:var(--color-a);font-weight:700">A</span> ${esc(S.A.label)}<br><span style="color:var(--color-b);font-weight:700">B</span> ${esc(S.B.label)}</div>`;
+  h += d ? `<div class="kv"><span>cosine distance</span><span class="num">${d.cos_dist.toFixed(3)}</span><span>overlap</span><span class="num">${fmt(d.overlap)} papers</span><span>bridge papers between them:</span><span class="num">${fmt(d.n_bridges)}</span></div><div class="plist small">${(d.bridges || []).slice(0, 5).map(p => `<div><a href="${ARXIV}${esc(p.id)}" target="_blank" rel="noopener">${esc(p.title)}</a></div>`).join('')}</div>` : '<p class="muted small">computing distance…</p>';
+  h += `<div style="margin-top:8px"><button data-act="ideas" class="pri">Ideas between A and B</button></div>` + ideasArea();
+  el.innerHTML = h;
+}
+function ideasArea() {
+  const w = S.ideasWait, I = S.ideasUI; if (!I && !w) return '';
+  if (w && !w.stopped) { const sec = Math.round((performance.now() - w.t0) / 1000); return `<div id="ideasArea" style="margin-top:6px">${sec >= 90 ? `<span class="muted" id="ideasCounter">Still waiting (90 s). The model may be slow or stuck.</span>` : `<span id="ideasCounter">Asking the model … ${sec} s</span>`} <a href="#" data-act="stopWait">Stop waiting (the result will still be saved)</a>${I && I.busyNote ? '<div class="small muted">one request at a time</div>' : ''}</div>`; }
+  if (!I) return '';
+  if (I.kind === 'confirm') return `<div id="ideasArea" class="small" style="margin-top:6px">Sends ${I.p.list.length} papers to the model: ${I.p.nb} bridge papers, ${I.p.na} from A (5 most cited, 5 newest), ${I.p.nB} from B. Usually 10 to 40 seconds.<details><summary style="text-decoration:underline">the ${I.p.list.length} titles</summary><ol style="padding-left:18px;margin:4px 0">${I.p.list.map(p => `<li>${esc(p.title)} <span class="muted">(${p.side})</span></li>`).join('')}</ol></details><button data-act="sendIdeas" class="pri">Send</button></div>`;
+  if (I.kind === 'error') return `<div id="ideasArea" class="err">${esc(I.text)} <button data-act="ideas">Try again</button></div>`;
+  if (I.kind === 'result') return `<div id="ideasArea">${ideasHTML(I.res)}</div>`;
+  return '';
+}
+function ideasHTML(res) {
+  const sides = {}; for (const p of res.shown || []) sides[p.id] = p.side; for (const i of res.ideas || []) Object.assign(sides, i.shown_sides || {});
+  const when = String(res.created || (res.ideas && res.ideas[0] && res.ideas[0].created) || new Date().toISOString()).replace('T', ' ').slice(0, 16);
+  const nShown = (res.shown && res.shown.length) || Object.keys(sides).length || new Set((res.ideas || []).flatMap(i => i.cited || [])).size;
+  let h = `<div class="small muted">Generated ${esc(when)} from ${nShown} papers (window ${esc(textOfWin(res.window) || '?')})</div>`;
+  h += (res.ideas || []).map(i => `<div style="margin:8px 0"><b>${esc(i.title)}</b><div class="small">${esc(i.text).replace(/arXiv:(\d{4}\.\d{4,5})(v\d+)?/g, (m, id) => `<a href="${ARXIV}${id}" target="_blank" rel="noopener">arXiv:${id}</a> <span class="pill" data-side="${esc((i.shown_sides ? i.shown_sides[id] : sides[id]) || '?')}">${esc((i.shown_sides ? i.shown_sides[id] : sides[id]) || '?')}</span>`)}</div></div>`).join('');
+  const nd = Number(res.dropped) || 0;
+  if (nd && (res.ideas || []).length) {
+    const reasons = (res.dropped_reasons || []).map(reason => {
+      const outside = reason.match(/^cites (.+?) not in the shown set/);
+      return outside ? `it cited ${outside[1]}, which was not among the ${nShown} papers sent, and the retry also failed.` : reason;
+    });
+    h += `<div class="small muted">${nd} idea${nd > 1 ? 's' : ''} dropped: ${esc(reasons.join(' ') || 'the citation check and retry failed.')}</div>`;
+  }
+  if (nd && !(res.ideas || []).length) h += `<div class="small">No idea passed the citation check (${nd} dropped). This happens when the model cites papers it was not shown. <button data-act="ideas">Try again</button></div>`;
+  return h;
+}
+function nearestPhrases(q) {
+  const lev = (a, b) => { const m = a.length, n = b.length, d = Array.from({length: n + 1}, (_, j) => j); for (let i = 1; i <= m; i++) { let p = d[0]; d[0] = i; for (let j = 1; j <= n; j++) { const t = d[j]; d[j] = Math.min(d[j] + 1, d[j - 1] + 1, p + (a[i - 1] === b[j - 1] ? 0 : 1)); p = t; } } return d[n]; };
+  return (S.phraseList || []).map(p => [lev(q.toLowerCase(), p.phrase.toLowerCase()), p.phrase]).sort((a, b) => a[0] - b[0]).slice(0, 3).map(x => x[1]);
+}
+
+// ---------- evidence ----------
+async function openEvidence(e) {
+  if (S.view !== 'evidence') S.prevView = {view: S.view, focus: S.focus};
+  S.ev = {c1: e.c1, c2: e.c2, level: S.level, link: e, data: null, page: 0}; S.view = 'evidence';
+  if (NARROW.matches) document.body.classList.add('drawer');
+  renderInspector(); renderLinks(); render();
+  try { const d = await api(`/link?level=${S.level}&c1=${e.c1}&c2=${e.c2}&${winQS()}`); if (S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2) { S.ev.data = d; renderInspector(); } } catch (err) {}
+}
+function closeEvidence() { S.ev = null; const p = S.prevView || {view: 'summary'}; S.view = p.view === 'evidence' ? 'summary' : p.view; S.focus = p.focus || S.focus; renderInspector(); renderLinks(); render(); }
+
+// ---------- ideas ----------
+function startIdeas() {
+  if (S.ideasWait && !S.ideasWait.stopped) { S.ideasUI = {...(S.ideasUI || {}), busyNote: true}; renderAB(); return; }
+  if (!(S.A && S.B && S.A.data && S.B.data)) return;
+  S.ideasUI = {kind: 'confirm', p: shownPreview()}; renderAB();
+}
+async function sendIdeas() {
+  const a = S.A, b = S.B, w = {t0: performance.now(), a, b, stopped: false}; S.ideasWait = w; S.ideasUI = null; renderAB();
+  w.timer = setInterval(() => { const c = $('ideasCounter'); if (!c || w.stopped) return; const sec = Math.round((performance.now() - w.t0) / 1000); if (sec >= 90) { c.className = 'muted'; c.textContent = 'Still waiting (90 s). The model may be slow or stuck.'; } else c.textContent = `Asking the model … ${sec} s`; anim(c, {opacity: [0.4, 1], duration: 150}); }, 1000);
+  let res = null, err = null;
+  try { res = await api('/ideas', {a: a.sel_id, b: b.sel_id, n: 3, a_name: a.label, b_name: b.label, window: winObj()}); }
+  catch (e) { err = e; }
+  clearInterval(w.timer); S.ideasWait = null;
+  const moved = w.stopped || S.A !== a || S.B !== b || S.view !== 'sel';
+  if (err) {
+    const text = err.status === 409 && err.body && err.body.error === 'ideas_busy' ? 'Another ideas request is running. Wait for it to finish.' : err.offline ? 'The server stopped while asking the model.' : `The model call failed: ${err.message}. Nothing was saved.`;
+    S.ideasUI = {kind: 'error', text};
+  } else {
+    if (!res.window) res.window = winObj();
+    S.ideasUI = {kind: 'result', res}; loadIdeas(); loadSaved();
+    if (moved) toast(`${(res.ideas || []).length} ideas ready for ${a.label} ↔ ${b.label}.`, () => { S.A = a; S.B = b; S.ideasUI = {kind: 'result', res}; renderSlots(); renderAB(); });
+  }
+  renderAB();
+}
+function toast(text, onOpen) {
+  const t = $('toast'); t.innerHTML = `${esc(text)} <button data-act="toastOpen">Open</button>`; t.hidden = false; t._open = onOpen;
+  anim(t, {translateY: [16, 0], opacity: [0, 1], duration: 250});
+  clearTimeout(t._h); t._h = setTimeout(() => { t.hidden = true; }, 6000);
+}
+
+// ---------- search ----------
+const norm = s => s.toLowerCase().replace(/-/g, ' ');
+function suggest() {
+  const v = $('q').value.trim(), ul = $('sugg'), mode = document.querySelector('input[name=smode]:checked').value;
+  if (!v || mode !== 'phrase' || !S.phraseList) { ul.hidden = true; $('q').setAttribute('aria-expanded', 'false'); return; }
+  const m = S.phraseList.filter(p => norm(p.phrase).includes(norm(v))).slice(0, 12);
+  ul.innerHTML = m.map((p, i) => `<li role="option" id="sg${i}" data-ph="${esc(p.phrase)}" aria-selected="false">${esc(p.phrase)} · ${fmt(p.recent)} papers · ×${(p.growth || 0).toFixed(1)}</li>`).join('');
+  ul.hidden = !m.length; $('q').setAttribute('aria-expanded', String(!!m.length)); ul._i = -1;
+}
+function runSearch(text, mode) {
+  text = text.trim(); if (!text) return;
+  $('sugg').hidden = true; $('q').setAttribute('aria-expanded', 'false');
+  if (mode === 'title') makeSel({query: text}, {kind: 'query', label: `title contains "${text}"`});
+  else makeSel({phrase: text}, {kind: 'phrase', label: `phrase: "${text}"`});
+}
+
+// ---------- saved selections ----------
+async function doSave(name) {
+  const s = S.focus; if (!s || !s.sel_id) return;
+  if (!name.trim()) { $('saveMsg').textContent = 'name required'; return; }
+  try { await api('/selections', {sel_id: s.sel_id, name: name.trim(), polygon: s.kind === 'lasso' ? s.poly : null, window: winObj(), run_id: S.runId}); s.saveOpen = false; s.saveFocused = false; await loadSaved(); renderInspector(); }
+  catch (e) { $('saveMsg').textContent = e.message; }
+}
+function loadSavedSel(id, slot) {
+  const v = S.saved.find(x => x.sel_id === id); if (!v) return;
+  const sel = {kind: 'saved', name: v.name || 'unnamed', label: `Saved: ${v.name || 'unnamed'}`, created: v.created};
+  makeSel({sel_id: id}, sel, slot ? {slot} : {});
+}
+async function delSaved(id, confirmed) {
+  const v = S.saved.find(x => x.sel_id === id), m = $('delMsg'); if (!v) return;
+  if (!confirmed) { m.innerHTML = `Delete "${esc(v.name || 'unnamed')}"? Ideas that reference it block deletion. <button data-act="delConfirm" data-id="${id}">Delete</button>`; return; }
+  try { await api('/selections/delete', {sel_id: id}); await loadSaved(); renderSlots(); }
+  catch (e) { const k = (e.message.match(/\d+/) || [])[0]; $('delMsg').textContent = e.status === 409 ? `Cannot delete: ${k || 'some'} ideas reference this selection.` : e.message; }
+}
+
+// Compact layout moves controls across DOM regions; order those groups before the map.
+// Wide layout retains its original natural tab order, including generated slot controls.
+function syncControlTabOrder() {
+  document.querySelectorAll('[data-control-tab]').forEach(el => {
+    const prior = el.dataset.controlTab;
+    if (prior === '') el.removeAttribute('tabindex'); else el.setAttribute('tabindex', prior);
+    delete el.dataset.controlTab;
+  });
+  if (!COMPACT.matches) return;
+  const groups = ['qswitch', 'winDD', 'infoBtn', 'levelBox', 'colourBox', 'legendBox', 'layersBox', 'searchBox', 'compareBox', 'lassoWrap', 'savedBox'];
+  const selector = 'button, input, select, summary, [tabindex]';
+  groups.forEach((id, i) => {
+    const group = $(id), controls = group.matches(selector) ? [group] : group.querySelectorAll(selector);
+    for (const el of controls) {
+      // Summary elements can report -1 by default; only skip explicit negative tabindex values.
+      if (el.hasAttribute('tabindex') && el.tabIndex < 0) continue;
+      el.dataset.controlTab = el.getAttribute('tabindex') ?? '';
+      el.tabIndex = i + 1;
+    }
+  });
+}
+
+// ---------- layout (move control blocks between the left column and the 2-row header) ----------
+function layout() {
+  const c = COMPACT.matches, left = $('left');
+  if (c) {
+    $('hrow1').insertBefore($('searchBox'), $('status'));
+    for (const id of ['levelBox', 'colourBox', 'layersBox', 'legendBox']) $('hrow2').append($(id));
+    $('inspTop').append($('compareBox'), $('savedBox')); $('mapLassoSlot').append($('lassoWrap'));
+    $('layersBox').open = false; $('savedBox').open = false;
+  } else {
+    for (const id of ['levelBox', 'colourBox', 'legendBox', 'layersBox', 'searchBox', 'compareBox']) left.append($(id));
+    $('lassoHome').append($('lassoWrap')); left.append($('lassoHome'), $('savedBox'), $('leftNote'));
+    $('layersBox').open = true; $('savedBox').open = true; document.body.classList.remove('drawer');
+  }
+  syncControlTabOrder();
+  $('tabs').parentElement.style.removeProperty('--tabs-h'); tabsH = null;
+  if (DK) { queueLabels(); }
+}
+COMPACT.addEventListener('change', layout); NARROW.addEventListener('change', () => document.body.classList.remove('drawer'));
+
+// tabs resize handle: body 120..520, double-click collapses to the 32 px bar
+let tabsH = null, tabsPrev = null;
+(() => {
+  const h = $('handle'), app = $('app'), cur = () => $('tabs').getBoundingClientRect().height - 32;
+  h.addEventListener('pointerdown', e => { h.setPointerCapture(e.pointerId); const y0 = e.clientY, b0 = cur(); h.onpointermove = ev => { tabsH = Math.max(120, Math.min(520, b0 + y0 - ev.clientY)); app.style.setProperty('--tabs-h', (tabsH + 32) + 'px'); }; });
+  h.addEventListener('pointerup', () => { h.onpointermove = null; queueLabels(); });
+  h.addEventListener('dblclick', () => { if (tabsPrev == null) { tabsPrev = cur(); app.style.setProperty('--tabs-h', '32px'); } else { app.style.setProperty('--tabs-h', (tabsPrev + 32) + 'px'); tabsPrev = null; } queueLabels(); });
+})();
+
+// ---------- events ----------
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]');
+  const pop = $('infoPop'); if (!pop.hidden && !e.target.closest('#infoPop') && !(t && t.dataset.act === 'info')) closeInfo();
+  if (!t) {
+    const tr = e.target.closest('tr[data-c]'); if (tr && tr.closest('#pTopics') && !e.target.closest('button')) return selectTopic(S.level, +tr.dataset.c);
+    const lr = e.target.closest('tr[data-li]'); if (lr) return openEvidence(S.linkRows[+lr.dataset.li]);
+    const pr = e.target.closest('tr[data-ph], #sugg li'); if (pr) { $('q').value = pr.dataset.ph; return runSearch(pr.dataset.ph, 'phrase'); }
+    const ir = e.target.closest('tr[data-ig]'); if (ir) { const g = ideaGroups().find(x => x.key === ir.dataset.ig); if (g) { S.view = 'ideas'; $('inspBody').innerHTML = `<h4 style="margin-top:0">Ideas: ${esc(g.a || 'A')} ↔ ${esc(g.b || 'B')}</h4>` + ideasHTML({ideas: g.ideas, created: g.created, window: g.window, shown: []}); if (NARROW.matches) document.body.classList.add('drawer'); } }
+    return;
+  }
+  const a = t.dataset.act, d = t.dataset;
+  if (t.tagName === 'A') e.preventDefault();
+  switch (a) {
+    case 'preset': applyPreset(+d.p); break;
+    case 'win': if (d.n === 'custom') { $('customBox').hidden = false; } else { $('winDD').open = false; setWindow({n: +d.n}); } break;
+    case 'winApply': $('winDD').open = false; $('customBox').hidden = true; setWindow({a: +$('cFrom').value, b: +$('cTo').value}); break;
+    case 'info': $('infoPop').hidden ? openInfo() : closeInfo(); break;
+    case 'level': setLevel(+d.l); break;
+    case 'tab': setTab(d.t); break;
+    case 'sort': S.sort = {col: d.k, dir: S.sort.col === d.k ? -S.sort.dir : -1}; renderTopics(); break;
+    case 'linksort': S.linkSort = {col: d.k, dir: S.linkSort.col === d.k ? -S.linkSort.dir : -1}; renderLinks(); document.querySelector(`#linksTable [data-k="${d.k}"]`).focus(); break;
+    case 'phsort': S.phSort = {col: d.k, dir: S.phSort.col === d.k ? -S.phSort.dir : -1}; renderPhrases(); break;
+    case 'lowToggle': S.lowOpen = !S.lowOpen; renderLinks(); break;
+    case 'sub': { const c = +d.c; selectTopic(0, c, {zoom: true}); break; }
+    case 'topicLink': selectTopic(1, +d.c); break;
+    case 'phrase': $('q').value = d.ph; runSearch(d.ph, 'phrase'); break;
+    case 'setA': setSlot('A'); break;
+    case 'setB': setSlot('B'); break;
+    case 'replaceA': setSlot('A'); break;
+    case 'clear': clearSlot(d.slot); break;
+    case 'swap': { const x = S.A; S.A = S.B; S.B = x; if (S.colour === 'dist') loadDist(); S.dist = S.dist && S.A && S.B ? {...S.dist, key: S.A.sel_id + ':' + S.B.sel_id} : null; renderSlots(); render(); renderAB(); break; }
+    case 'lasso': setLasso(S.mode !== 'lasso'); break;
+    case 'zin': flyTo({zoom: VS.zoom + 1}, 150); break;
+    case 'zout': flyTo({zoom: VS.zoom - 1}, 150); break;
+    case 'fit': flyTo(fitView(), 300); break;
+    case 'save': if (S.focus) { S.focus.saveOpen = true; S.focus.saveFocused = false; renderInspector(); } break;
+    case 'loadSaved': { const dd = t.closest('details.dd') || (COMPACT.matches && t.closest('#savedBox')); if (dd) dd.open = false; } loadSavedSel(d.id, d.slot); break;
+    case 'delSaved': delSaved(d.id, false); break;
+    case 'delConfirm': delSaved(d.id, true); break;
+    case 'zoomMatches': if (S.focus && S.focus.rows) fitRows(S.focus.rows); break;
+    case 'back': closeEvidence(); break;
+    case 'evSort': S.ev.newest = !S.ev.newest; S.ev.page = 0; renderInspector(); break;
+    case 'evPage': S.ev.page += +d.d; renderInspector(); break;
+    case 'evMap': S.ev.onMap = !S.ev.onMap; renderInspector(); render(); break;
+    case 'evAB': { const ev = S.ev; S.ev = null; S.view = 'sel'; S.cur = null; selectTopic(ev.level, ev.c1, {slot: 'A'}); selectTopic(ev.level, ev.c2, {slot: 'B'}); renderLinks(); break; }
+    case 'ideas': startIdeas(); break;
+    case 'sendIdeas': sendIdeas(); break;
+    case 'stopWait': if (S.ideasWait) { S.ideasWait.stopped = true; renderAB(); } break;
+    case 'toastOpen': $('toast').hidden = true; $('toast')._open && $('toast')._open(); break;
+  }
+});
+document.addEventListener('change', e => {
+  const t = e.target;
+  if (t.name === 'colour') setColour(t.value);
+  else if (t.id === 'lightness') { S.lightness = t.checked; renderLegend(); recolour(); renderTopics(); render(); }
+  else if (t.id === 'tNodes') { S.nodes = t.checked; render(); syncPreset(); }
+  else if (t.id === 'tBridges') { S.bridges = t.checked; render(); syncPreset(); }
+  else if (t.id === 'tPhrases') { S.phrases = t.checked; render(); syncPreset(); }
+  else if (t.id === 'cFrom' || t.id === 'cTo') checkCustom();
+  else if (t.name === 'smode') suggest();
+});
+document.addEventListener('input', e => {
+  if (e.target.id === 'edgeN') { S.edgeN = +e.target.value; render(); syncPreset(); }
+  else if (e.target.id === 'q') suggest();
+  else if (e.target.id === 'phFilter') renderPhrases();
+});
+function openInfo() {
+  const m = S.meta || {}, T = m.bridge_T || 4, v = volOf(), pop = $('infoPop'), r = $('infoBtn').getBoundingClientRect();
+  pop.innerHTML = `<p><b>Window.</b> ${S.MS.length ? winText() : ''}: complete months only; the prior window is the same number of months just before. The current partial month is never counted.</p>
+  <p><b>CS correction.</b> Every growth ratio is divided by the growth of all CS papers (×${v ? v.toFixed(2) : '…'} for this window).</p>
+  <p><b>Growth.</b> g = (papers now + 1) / (papers before × CS factor + 1). Steps at ×0.5, 0.71, 0.9, 1.11, 1.41, 2.0.</p>
+  <p><b>Bridge paper.</b> ${T} or more of its k = 14 nearest neighbours (768-number vectors) fall in each of two topics.</p>
+  <p><b>Strength</b> = bridges / √(papers₁ × papers₂). <b>Share</b> = bridges / (papers₁ + papers₂). <b>Link growth</b> = share now ÷ smoothed share before.</p>
+  <p><b>Phrase links</b> use all 36 months and do not follow the window: 10+ papers and 20%+ of the phrase's papers in each topic, spread over at most 4 topics.</p>
+  <p><b>Arriving sub-topic.</b> Onset (the month it reached ${Math.round(100 * (m.onset_share || 0.1))}% of its papers) inside the window, 30 or more papers now, and ×2 or more.</p>
+  <p><b>"new".</b> A sub-topic or topic: 30 or more papers now, fewer than 5 before. A link: 10 or more bridge papers now, fewer than 3 before.</p>
+  <p><b>Track record.</b> ${esc(m.backtest_line || '')}</p>
+  <p><b>kNN precision.</b> recall@14 ${m.knn_recall14 != null ? m.knn_recall14 : '–'}${m.knn_bridge_agree != null ? `, bridge agreement ${m.knn_bridge_agree}%` : ''} against an exact search.</p>
+  <p class="muted">Colour mode resets to growth on reload.</p>`;
+  pop.style.left = Math.max(8, Math.min(innerWidth - 368, r.left - 170)) + 'px'; pop.style.top = (r.bottom + 6) + 'px'; pop.hidden = false; $('infoBtn').setAttribute('aria-expanded', 'true');
+}
+function closeInfo() { $('infoPop').hidden = true; $('infoBtn').setAttribute('aria-expanded', 'false'); }
+function escLayer() {  // innermost first
+  if (!$('infoPop').hidden) return closeInfo();
+  const dd = document.querySelector('details.dd[open], #layersBox[open]:not(#left #layersBox), #savedBox[open]:not(#left #savedBox)'); if (dd && COMPACT.matches || dd && dd.classList.contains('dd')) { dd.open = false; return; }
+  if (!$('sugg').hidden) { $('sugg').hidden = true; return; }
+  if (S.mode === 'lasso') return setLasso(false);
+  if (NARROW.matches && document.body.classList.contains('drawer')) return document.body.classList.remove('drawer');
+  if (S.view === 'evidence') return closeEvidence();
+  if (S.view === 'msg' || S.view === 'ideas') { S.view = S.focus ? 'sel' : 'summary'; return renderInspector(); }
+  if (S.cur) return clearSlot('cur');
+  if (S.B) return clearSlot('B');
+  if (S.A) return clearSlot('A');
+}
+document.addEventListener('keydown', e => {
+  const t = e.target, inText = t.matches && t.matches('input[type=text],input[type=search],textarea,select');
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); if (S.focus && S.view === 'sel') { S.focus.saveOpen = true; S.focus.saveFocused = false; renderInspector(); } return; }
+  if (t.id === 'saveName') { if (e.key === 'Enter') doSave(t.value); else if (e.key === 'Escape') { S.focus.saveOpen = false; S.focus.saveFocused = false; renderInspector(); } e.stopPropagation(); return; }
+  if (t.id === 'q') {
+    const ul = $('sugg'), items = [...ul.querySelectorAll('li')];
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !ul.hidden && items.length) { e.preventDefault(); ul._i = Math.max(0, Math.min(items.length - 1, (ul._i ?? -1) + (e.key === 'ArrowDown' ? 1 : -1))); items.forEach((li, i) => li.setAttribute('aria-selected', String(i === ul._i))); t.setAttribute('aria-activedescendant', 'sg' + ul._i); return; }
+    if (e.key === 'Enter') { const pick = !ul.hidden && ul._i >= 0 ? items[ul._i].dataset.ph : null; if (pick) t.value = pick; runSearch(t.value, document.querySelector('input[name=smode]:checked').value); return; }
+    if (e.key === 'Escape') { e.preventDefault(); ul.hidden = true; ul._i = -1; t.value = ''; t.setAttribute('aria-expanded', 'false'); t.removeAttribute('aria-activedescendant'); t.blur(); return; }
+    return;
+  }
+  if (inText) { if (e.key === 'Escape') t.blur(); return; }
+  // table row navigation
+  const tr = t.closest && t.closest('tbody tr[tabindex]'), th = t.closest && t.closest('thead');
+  if ((tr || th) && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+    e.preventDefault(); const tb = (tr || th).closest('table').querySelector('tbody'), rows = tb ? [...tb.querySelectorAll('tr[tabindex]')] : [];
+    if (!rows.length) return;
+    const i = tr ? rows.indexOf(tr) : -1, j = Math.max(0, Math.min(rows.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)));
+    rows.forEach(r => r.tabIndex = -1); rows[j].tabIndex = 0; rows[j].focus(); return;
+  }
+  if ((tr || th) && e.key === 'Escape') { e.preventDefault(); t.blur(); return; }
+  if (tr && e.key === 'Enter') { e.preventDefault(); tr.click(); return; }
+  if (e.key === 'Escape') { if (S.mode === 'lasso' && lassoPts) { setLasso(false); return; } escLayer(); return; }
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const onMap = t === $('map'), k = e.key;
+  if (k === '/') { e.preventDefault(); if (COMPACT.matches || true) $('q').focus(); return; }
+  if (k === 'l' || k === 'L') return setLasso(S.mode !== 'lasso');
+  if (k === 'a' || k === 'A') return setSlot('A');
+  if (k === 'b' || k === 'B') return setSlot('B');
+  if (k === '1' || k === '2') return applyPreset(+k);
+  if (k === '[' || k === ']') { const order = [3, 6, 12], i = order.indexOf(S.win.n); const j = i < 0 ? 1 : Math.max(0, Math.min(2, i + (k === ']' ? 1 : -1))); if (order[j] !== S.win.n) setWindow({n: order[j]}); return; }
+  if (!onMap || !VS || !R.deckReady) return;
+  const vp = DK.getViewports()[0], dx = vp.width / Math.pow(2, VS.zoom) * 0.15;
+  if (k === '+' || k === '=') flyTo({zoom: VS.zoom + 1}, 150);
+  else if (k === '-') flyTo({zoom: VS.zoom - 1}, 150);
+  else if (k === '0') flyTo(fitView(), 300);
+  else if (k.startsWith('Arrow')) { e.preventDefault(); const [x, y] = VS.target; flyTo({target: [x + (k === 'ArrowLeft' ? -dx : k === 'ArrowRight' ? dx : 0), y + (k === 'ArrowUp' ? dx : k === 'ArrowDown' ? -dx : 0), 0]}, 0); }
+});
+$('mapwrap').addEventListener('pointerdown', () => { S.down = true; });
+addEventListener('pointerup', () => { S.down = false; });
+$('mapwrap').addEventListener('pointerleave', () => { $('tip').style.display = 'none'; });
+if (params.get('bench')) { const b = document.createElement('div'); b.id = 'bench'; document.body.append(b); setInterval(render, 1000); }
+boot();
+</script>
+</body></html>
