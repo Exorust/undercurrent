@@ -1,0 +1,296 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Workbench wireframe</title>
+<style>
+:root{--bg:#111;--panel:#161616;--line:#2a2a2a;--tx:#ddd;--tx2:#9a9a9a;--A:#e05cf5;--B:#3fd68a;
+--g1:#2f62b8;--g2:#5a86c8;--g3:#8ea3c0;--g4:#8c8c8c;--g5:#c8a57a;--g6:#e3883a;--g7:#ff6a1a;--nd:#333}
+*{box-sizing:border-box}
+body{margin:0;background:#0a0a0a;color:var(--tx);font:13px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+.note{padding:6px 12px;color:var(--tx2);font-size:12px}
+.wrap{width:1400px;height:875px;overflow:hidden;margin:0 0 4px}
+.frame{width:1600px;height:1000px;transform:scale(.875);transform-origin:0 0;background:var(--bg);display:grid;
+ grid-template-columns:232px 968px 400px;grid-template-rows:44px 676px 280px;border:1px solid #333}
+header{grid-column:1/4;display:flex;align-items:center;gap:14px;padding:0 12px;border-bottom:1px solid var(--line)}
+header b.name{font-size:15px}
+.seg{display:inline-flex;border:1px solid #444;border-radius:4px;overflow:hidden}
+.seg span{padding:4px 10px;font-size:12px;color:var(--tx2);border-right:1px solid #444}.seg span:last-child{border-right:0}
+.seg span.on{background:#2c2c2c;color:#fff}
+.sel{border:1px solid #444;border-radius:4px;padding:3px 8px;font-size:12px}
+.wl{color:var(--tx2);font-size:12px}.wl b{color:var(--tx);font-weight:500}
+.info{display:inline-block;width:16px;height:16px;border:1px solid #666;border-radius:50%;text-align:center;font-size:11px;line-height:14px;color:var(--tx2)}
+.status{margin-left:auto;font-size:12px;color:var(--tx2)}
+.left{grid-row:2/4;border-right:1px solid var(--line);padding:10px;overflow:hidden;background:var(--panel)}
+.left h4,.insp h4{margin:12px 0 5px;font-size:11px;letter-spacing:.04em;text-transform:uppercase;color:var(--tx2);font-weight:600}
+.left h4:first-child{margin-top:0}
+.radio{font-size:12px;line-height:1.7}.radio i{display:inline-block;width:10px;height:10px;border:1px solid #777;border-radius:50%;margin-right:6px;vertical-align:-1px}.radio i.on{background:#ddd}
+.leg{font-size:11.5px;line-height:1.55}.leg div{display:flex;align-items:center;gap:6px}.leg s{display:inline-block;width:18px;height:10px;text-decoration:none}.leg em{margin-left:auto;color:var(--tx2);font-style:normal}
+.tog{font-size:12px;line-height:1.75}.tog i{display:inline-block;width:22px;height:12px;border:1px solid #666;border-radius:7px;margin-right:6px;vertical-align:-2px;position:relative}.tog i::after{content:"";position:absolute;top:1px;left:1px;width:8px;height:8px;border-radius:50%;background:#666}.tog i.on{border-color:#ccc}.tog i.on::after{left:11px;background:#ddd}
+.tog small{color:var(--tx2)}
+.input{border:1px solid #444;border-radius:4px;padding:5px 8px;color:var(--tx2);font-size:12px}
+.slot{display:flex;align-items:center;gap:6px;font-size:12px;margin:4px 0}.slot b{width:18px;height:18px;border-radius:3px;display:inline-flex;align-items:center;justify-content:center;color:#000;font-size:11px}
+.slot span{flex:1;border:1px dashed #444;border-radius:4px;padding:3px 6px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.saved div{font-size:12px;padding:3px 0;border-bottom:1px solid var(--line)}.saved small{color:var(--tx2)}
+.btn{display:inline-block;border:1px solid #555;border-radius:4px;padding:4px 10px;font-size:12px}
+.btn.pri{border-color:#bbb;color:#fff}
+.map{position:relative;border-bottom:1px solid var(--line);overflow:hidden}
+.map canvas,.map svg{position:absolute;left:0;top:0}
+.zoom{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px}.zoom span{width:26px;height:26px;border:1px solid #444;border-radius:4px;text-align:center;line-height:24px;background:#161616}
+.tabs{display:flex;flex-direction:column;overflow:hidden}
+.tabbar{height:32px;display:flex;align-items:flex-end;gap:2px;padding:0 8px;border-bottom:1px solid var(--line)}
+.tabbar span{padding:6px 12px;font-size:12px;color:var(--tx2);border:1px solid transparent;border-bottom:0}
+.tabbar span.on{color:#fff;border-color:var(--line);background:var(--bg);margin-bottom:-1px}
+.tabhead{padding:5px 10px;font-size:11.5px;color:var(--tx2);border-bottom:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:12px}
+th{text-align:left;font-weight:500;color:var(--tx2);padding:4px 8px;border-bottom:1px solid var(--line);font-size:11.5px}
+td{padding:3px 8px;border-bottom:1px solid #1e1e1e;vertical-align:top;white-space:nowrap}
+td.r,th.r{text-align:right}
+.gr{display:inline-block;min-width:44px;text-align:center;border-radius:3px;padding:0 4px;color:#000;font-weight:600;font-size:11.5px}
+.chip{display:inline-block;border:1px solid #444;border-radius:9px;padding:0 7px;font-size:11px;margin-right:4px;color:#ccc}
+.chip .gr{min-width:0;padding:0 4px;margin-left:3px;font-size:10.5px}
+.new{display:inline-block;background:var(--g7);color:#000;font-weight:700;border-radius:3px;padding:0 4px;font-size:10.5px}
+.rank{display:inline-block;width:16px;height:16px;border-radius:50%;background:#fff;color:#000;font-size:10.5px;text-align:center;line-height:16px;font-weight:700}
+.muted{color:var(--tx2)}
+.insp{grid-row:2/4;grid-column:3;border-left:1px solid var(--line);padding:12px 14px;overflow:hidden}
+.insp h3{margin:0 0 2px;font-size:16px}
+.kv{display:grid;grid-template-columns:auto auto;gap:2px 12px;font-size:12.5px;margin:6px 0}.kv span:nth-child(odd){color:var(--tx2)}
+.foot{font-size:11px;color:var(--tx2)}
+.plist div{padding:4px 0;border-bottom:1px solid #1e1e1e;font-size:12.5px}.plist small{color:var(--tx2);display:block;font-size:11px}
+.plist a{color:#8cc4ff;text-decoration:none}
+.def{background:#1a1a1a;border:1px solid var(--line);border-radius:4px;padding:6px 8px;font-size:11.5px;color:var(--tx2);margin:6px 0}
+.legend-g{display:inline-flex;vertical-align:middle}.legend-g s{display:inline-block;width:12px;height:8px}
+</style></head><body>
+
+<div class="note">Wireframe for docs/designs/topic-workbench-ui.md. Frame 1: default first view, 1600×1000 layout drawn at 87.5%. Topic names, phrase counts and the CS factor ×1.36 are real (data/radar.duckdb, 2026-11-06); growth values, paper titles and bridge counts are placeholders.</div>
+
+<!-- ============ FRAME 1: What is arriving (default) ============ -->
+<div class="wrap"><div class="frame">
+<header>
+ <b class="name">field-radar</b>
+ <span class="seg"><span class="on">What is arriving</span><span>How topics connect</span></span>
+ <span class="sel">Last 6 months ▾</span>
+ <span class="wl"><b>May–Oct 2026</b> vs Nov 2025–Apr 2026 · corrected for CS growth (×1.36) · last complete month Oct 2026</span> <span class="info">i</span>
+ <span class="status">server: localhost:8765 ●</span>
+</header>
+<div class="left">
+ <h4>Level</h4><span class="seg"><span>Areas 20</span><span class="on">Topics 116</span><span>Sub 368</span></span>
+ <h4>Colour by</h4>
+ <div class="radio"><i class="on"></i>Growth<br><i></i>Topic<br><i></i>Date<br><i></i><span class="muted">Distance to A (set A first)</span></div>
+ <h4>Growth vs CS, topics</h4>
+ <div class="leg">
+  <div><s style="background:var(--g7)"></s>×2 or more<em>7</em></div>
+  <div><s style="background:var(--g6)"></s>×1.41 to 2<em>15</em></div>
+  <div><s style="background:var(--g5)"></s>×1.11 to 1.41<em>30</em></div>
+  <div><s style="background:var(--g4)"></s>flat ×0.9 to 1.1<em>41</em></div>
+  <div><s style="background:var(--g3)"></s>×0.71 to 0.9<em>14</em></div>
+  <div><s style="background:var(--g2)"></s>×0.5 to 0.71<em>6</em></div>
+  <div><s style="background:var(--g1)"></s>under ×0.5<em>3</em></div>
+  <div><span class="new">new</span>new in window<em>—</em></div>
+  <div><s style="background:var(--nd)"></s>too few papers<em>0</em></div>
+  <div class="muted" style="margin-top:2px">☐ Lightness only</div>
+ </div>
+ <h4>Map layers</h4>
+ <div class="tog"><i class="on"></i>Points<br><i></i>Topic nodes<br><i></i>Bridge links <small>(40)</small><br><i></i>Phrase links <small>(all 36 months)</small></div>
+ <h4>Search</h4>
+ <div class="input">/ phrase or title…</div>
+ <div class="muted" style="font-size:11px;margin-top:3px">◉ phrase (title+abstract) ○ title</div>
+ <h4>Compare</h4>
+ <div class="slot"><b style="background:var(--A)">A</b><span>empty: click a topic</span></div>
+ <div class="slot"><b style="background:var(--B)">B</b><span>empty</span></div>
+ <div style="margin-top:6px"><span class="btn">Lasso (L)</span></div>
+ <h4>Saved</h4>
+ <div class="saved"><div>home field: GPU kernels + small LMs <small>2,314 · 11-06</small></div><div>gap: robots ↔ diffusion <small>1,204 · 11-06</small></div></div>
+</div>
+<div class="map" id="map1"><canvas id="c1" width="968" height="676"></canvas><svg id="s1" width="968" height="676"></svg>
+ <div class="zoom"><span>+</span><span>−</span><span>⤢</span></div></div>
+<div class="tabs">
+ <div class="tabbar"><span class="on">Topics</span><span>Links</span><span>Phrases</span><span>Ideas</span></div>
+ <div class="tabhead">Sorted by growth vs CS · ranked: topics with 200+ papers in the window · arriving sub-topics under each name</div>
+ <div style="overflow:hidden"><table id="topics"></table></div>
+</div>
+<div class="insp">
+ <h4 style="margin-top:0">This window</h4>
+ <h3>May–Oct 2026</h3>
+ <div class="kv"><span>CS papers in window</span><span>113,241</span><span>prior window</span><span>83,358 (all CS ×1.36)</span></div>
+ <h4>Fastest-growing topics</h4>
+ <div id="top5" style="font-size:12.5px;line-height:1.85"></div>
+ <h4>Arriving sub-topics, all CS</h4>
+ <table id="arr"></table>
+ <p class="foot" style="margin-top:14px">Click a topic, press L to lasso, or / to search.</p>
+</div>
+</div></div>
+
+<div class="note">Frame 2: "How topics connect" after clicking the edge Robot Manipulation Learning ↔ Diffusion and Flow Generation and pressing "Set as A and B". The inspector shows the link's evidence. Points are grey; topic nodes carry growth colour; edge width = strength, edge colour = link growth.</div>
+
+<!-- ============ FRAME 2: How topics connect, evidence open ============ -->
+<div class="wrap"><div class="frame">
+<header>
+ <b class="name">field-radar</b>
+ <span class="seg"><span>What is arriving</span><span class="on">How topics connect</span></span>
+ <span class="sel">Last 6 months ▾</span>
+ <span class="wl"><b>May–Oct 2026</b> vs Nov 2025–Apr 2026 · corrected for CS growth (×1.36) · last complete month Oct 2026</span> <span class="info">i</span>
+ <span class="status">server: localhost:8765 ●</span>
+</header>
+<div class="left">
+ <h4>Level</h4><span class="seg"><span>Areas 20</span><span class="on">Topics 116</span><span>Sub 368</span></span>
+ <h4>Colour by</h4>
+ <div class="radio"><i class="on"></i>Growth<br><i></i>Topic<br><i></i>Date<br><i></i>Distance to A</div>
+ <h4>Link growth (edges) and topic growth (nodes)</h4>
+ <div class="leg">
+  <div><s style="background:var(--g7)"></s>×2 or more / new<em>4</em></div>
+  <div><s style="background:var(--g6)"></s>forming ×1.41 to 2<em>9</em></div>
+  <div><s style="background:var(--g5)"></s>×1.11 to 1.41<em>11</em></div>
+  <div><s style="background:var(--g4)"></s>steady<em>10</em></div>
+  <div><s style="background:var(--g3)"></s>×0.71 to 0.9<em>4</em></div>
+  <div><s style="background:var(--g2)"></s>fading ×0.5 to 0.71<em>2</em></div>
+  <div><s style="background:var(--g1)"></s>under ×0.5<em>0</em></div>
+  <div class="muted" style="margin-top:3px">Width = strength, 1 to 8 px<br>- - - dashed = phrase link (all 36 months)</div>
+ </div>
+ <h4>Map layers</h4>
+ <div class="tog"><i class="on"></i>Points <small>(grey)</small><br><i class="on"></i>Topic nodes<br><i class="on"></i>Bridge links <small>(40)</small><br><i></i>Phrase links <small>(all 36 months)</small></div>
+ <div class="muted" style="font-size:11px">edges shown ──●──── 40</div>
+ <h4>Search</h4>
+ <div class="input">/ phrase or title…</div>
+ <h4>Compare</h4>
+ <div class="slot"><b style="background:var(--A)">A</b><span style="color:var(--tx);border-style:solid">Robot Manipulation Learning</span></div>
+ <div class="slot"><b style="background:var(--B)">B</b><span style="color:var(--tx);border-style:solid">Diffusion and Flow Generation</span></div>
+ <div style="margin-top:6px"><span class="btn">Lasso (L)</span> <span class="btn">⇄</span></div>
+ <h4>Saved</h4>
+ <div class="saved"><div>home field: GPU kernels + small LMs <small>2,314 · 11-06</small></div><div>gap: robots ↔ diffusion <small>1,204 · 11-06</small></div></div>
+</div>
+<div class="map"><canvas id="c2" width="968" height="676"></canvas><svg id="s2" width="968" height="676"></svg>
+ <div class="zoom"><span>+</span><span>−</span><span>⤢</span></div></div>
+<div class="tabs">
+ <div class="tabbar"><span>Topics</span><span class="on">Links</span><span>Phrases</span><span>Ideas</span></div>
+ <div class="tabhead">New pairs first, then link growth. Bridge paper: 4+ of its 14 nearest neighbours in the other topic. Strength = bridges / √(papers₁ × papers₂). <u>how this is measured</u></div>
+ <div style="overflow:hidden"><table id="links"></table></div>
+</div>
+<div class="insp">
+ <div class="muted" style="font-size:12px">← back to A</div>
+ <h4>Link evidence</h4>
+ <h3><span style="color:var(--A)">A</span> Robot Manipulation Learning ↔<br><span style="color:var(--B)">B</span> Diffusion and Flow Generation</h3>
+ <span class="gr" style="background:var(--g6)">forming</span>
+ <div class="kv">
+  <span>bridge papers, window</span><span>412</span>
+  <span>bridge papers, prior</span><span>205</span>
+  <span>bridge share now / before</span><span>1.43% / 0.98%</span>
+  <span>link growth</span><span>×1.46</span>
+  <span>strength</span><span>0.029 (rank 7 of 40)</span>
+ </div>
+ <div class="def">Share = bridges / (papers in A + papers in B). Growth = share now ÷ share before (prior +1 smoothing). Bridge papers follow the window; shared phrases use all 36 months.</div>
+ <h4>Bridge papers · most cited ▾ · 1–5 of 412</h4>
+ <div class="plist">
+  <div>Action-chunked diffusion policies for long-horizon manipulation <small><a>arXiv:2606.0xxxx</a> · Jun 2026 · 6 of 14 neighbours in Diffusion</small></div>
+  <div>Flow-matching policies with world action models for bimanual tasks <small><a>arXiv:2607.0xxxx</a> · Jul 2026 · 5 of 14 in Diffusion</small></div>
+  <div>Video diffusion pretraining as a prior for robot control <small><a>arXiv:2605.0xxxx</a> · May 2026 · 7 of 14 in Diffusion</small></div>
+  <div>One-step distilled diffusion policies for real-time grasping <small><a>arXiv:2609.0xxxx</a> · Sep 2026 · 4 of 14 in Diffusion</small></div>
+  <div>Consistency models for dexterous in-hand rotation <small><a>arXiv:2608.0xxxx</a> · Aug 2026 · 4 of 14 in Diffusion</small></div>
+ </div>
+ <h4>Shared rising phrases · all 36 months</h4>
+ <div style="font-size:12.5px;line-height:1.8">
+  <span class="chip">world action models <span class="muted">41 / 63</span></span>
+  <span class="chip">diffusion policy <span class="muted">388 / 140</span></span><br>
+  <span class="chip">flow matching policy <span class="muted">57 / 49</span></span>
+  <span class="chip">action chunking <span class="muted">72 / 22</span></span>
+ </div>
+ <div style="margin-top:12px;display:flex;gap:6px"><span class="btn">Show bridge papers on map</span><span class="btn pri">Ideas between A and B</span></div>
+ <div class="foot" style="margin-top:6px">Sends 28 papers: 8 bridge, 10 from A, 10 from B. Usually 10 to 40 s.</div>
+</div>
+</div></div>
+
+<div class="note">States, for reference: ideas waiting state, citation-check drop, server banner.</div>
+<div style="display:flex;gap:12px;padding:0 12px 16px;width:1400px">
+ <div style="flex:1;border:1px solid #333;padding:10px;background:var(--bg)"><b>Ideas waiting</b><div style="margin-top:6px" class="btn">Asking the model … 14 s</div> <span class="muted" style="font-size:12px">Stop waiting (the result will still be saved)</span></div>
+ <div style="flex:1;border:1px solid #333;padding:10px;background:var(--bg)"><b>Dropped idea</b><div class="muted" style="margin-top:6px;font-size:12px">1 idea dropped: it cited arXiv:2405.01234, which was not among the 28 papers sent, and the retry also failed.</div></div>
+ <div style="flex:1;border:1px solid #333;padding:10px;background:#1c1c1c"><b>Server banner</b><div class="muted" style="margin-top:6px;font-size:12px">Server not reachable at localhost:8765. Start it with .venv/bin/python -m radar.serve. The map still pans and colours; selections, tables and ideas need the server.</div></div>
+</div>
+
+<script>
+const G=["#2f62b8","#5a86c8","#8ea3c0","#8c8c8c","#c8a57a","#e3883a","#ff6a1a"];
+let seed=7;const rnd=()=>(seed=(seed*16807)%2147483647)/2147483647;
+const gauss=()=>{let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)};
+const W=968,H=676;
+// areas: name, x, y (0..1), spread, size, topic growth steps
+const AREAS=[["Federated and Distributed Learning",.55,.55,.07,1.0,[3,3,4,2]],["Language Model Alignment and Decoding",.33,.50,.06,.8,[4,3,5,4]],
+["LLM Agents and Security",.42,.68,.055,.7,[6,6,5,4]],["Medical Image Segmentation",.55,.31,.055,.55,[3,3,2,3]],
+["3D Perception and Point Clouds",.72,.22,.055,.55,[4,5,3,3]],["AI Software Engineering and Governance",.35,.83,.05,.5,[5,4,3,3]],
+["Graph Algorithms and Combinatorics",.62,.83,.05,.5,[3,3,4,2]],["Robot Manipulation and RL",.79,.45,.05,.45,[5,6,5,4]],
+["Image Generation and Video Understanding",.60,.12,.045,.4,[4,5,3,3]],["Vision-Language Multimodal Models",.43,.18,.045,.35,[4,3,5,3]],
+["Control Theory and Safe RL",.81,.64,.04,.33,[3,2,3,3]],["LLM Reasoning and Evaluation",.24,.36,.04,.3,[5,4,5,4]],
+["Numerical Methods for PDEs",.78,.82,.04,.3,[3,2,3,1]],["Speech and Emotion Recognition",.26,.17,.04,.25,[3,3,2,3]],
+["Wireless and Semantic Communication",.68,.74,.035,.25,[2,3,3,3]],["Physics-Informed Scientific ML",.90,.74,.035,.22,[3,4,3,3]],
+["Climate and Environmental Forecasting",.91,.56,.035,.22,[3,3,4,2]],["Clinical LLMs and NLP",.15,.55,.035,.17,[3,4,3,3]],
+["Quantum Computing and Cryptography",.50,.94,.03,.16,[3,3,4,3]],["Power Systems and Electrical Control",.92,.36,.03,.12,[2,3,3,3]]];
+function points(ctx,mode){
+ ctx.fillStyle="#111";ctx.fillRect(0,0,W,H);
+ for(const [n,x,y,s,sz,steps] of AREAS){
+  steps.forEach((st,k)=>{const a=k*1.7+x*9,ox=x+Math.cos(a)*s*.9,oy=y+Math.sin(a)*s*.9,cnt=Math.round(1400*sz);
+   ctx.fillStyle=mode==="grey"?"rgba(90,90,90,.16)":G[st];ctx.globalAlpha=mode==="grey"?1:.38;
+   for(let i=0;i<cnt;i++){const px=(ox+gauss()*s*.55)*W,py=(oy+gauss()*s*.55*1.1)*H;ctx.fillRect(px,py,1.3,1.3)}});
+ } ctx.globalAlpha=1;
+}
+points(document.getElementById("c1").getContext("2d"),"growth");
+points(document.getElementById("c2").getContext("2d"),"grey");
+const esc=s=>s.replace(/&/g,"&amp;");
+function wrap(t,max){const w=t.split(" "),L=[];let c="";for(const x of w){if((c+" "+x).trim().length>max&&c){L.push(c);c=x}else c=(c+" "+x).trim()}L.push(c);return L}
+// Frame 1 overlay: area labels + 5 badges
+const BADGES=[["Production Agentic AI Workflows",.47,.64,"×2.6","end"],["Reinforcement Learning World Models",.83,.40,"×2.3","end"],
+["Efficient LLM Inference and Compression",.30,.58,"×1.9"],["LLM Code Generation and Software Engineering",.38,.78,"×1.8"],["Robot Manipulation Learning",.76,.50,"×1.7"]];
+let s1="";
+for(const [n,x,y] of AREAS){const L=wrap(n,20);s1+=`<text x="${x*W}" y="${y*H-8*(L.length-1)}" text-anchor="middle" style="font:600 12.5px -apple-system,sans-serif;fill:#e6e6e6;paint-order:stroke;stroke:#111;stroke-width:3px">${L.map((l,i)=>`<tspan x="${x*W}" dy="${i?15:0}">${esc(l)}</tspan>`).join("")}</text>`}
+BADGES.forEach(([n,x,y,g,an],i)=>{const X=x*W,Y=y*H,TX=an?X-13:X+13;s1+=`<circle cx="${X}" cy="${Y}" r="9" fill="#fff"/><text x="${X}" y="${Y+4}" text-anchor="middle" style="font:700 11px sans-serif;fill:#000">${i+1}</text>`+
+ `<text x="${TX}" y="${Y+4}" text-anchor="${an||"start"}" style="font:600 11.5px -apple-system,sans-serif;fill:#ffb27a;paint-order:stroke;stroke:#111;stroke-width:3px">${esc(n)} ${g}</text>`});
+s1+=`<text x="12" y="${H-12}" style="font:11px sans-serif;fill:#9a9a9a">459,249 points · colour = growth of each point's topic, May–Oct 2026 vs prior 6 months, corrected for CS</text>`;
+document.getElementById("s1").innerHTML=s1;
+// Topics table
+const spark=(up)=>{let b="";for(let i=0;i<36;i++){const h=4+Math.min(14,(i/36)**(up?2.2:1)*14*(up?1:.5)+rnd()*3);b+=`<rect x="${i*2.4}" y="${18-h}" width="1.8" height="${h}" fill="${i>=29&&i<35?'#bbb':'#555'}"/>`}return `<svg width="88" height="18">${b}</svg>`};
+const TROWS=[[1,"Production Agentic AI Workflows","LLM Agents and Security",3412,968,"×2.6",6,`<span class="chip">agent harnesses <span class="gr" style="background:var(--g7)">×3.1</span></span><span class="chip">recursive self-improvement <span class="new">new</span></span>`],
+[2,"Reinforcement Learning World Models","Robot Manipulation and RL",2205,701,"×2.3",6,`<span class="chip">world action models <span class="new">new</span></span>`],
+[3,"Efficient LLM Inference and Compression","Language Model Alignment and Decoding",2014,780,"×1.9",5,`<span class="chip">on-policy distillation <span class="gr" style="background:var(--g7)">×4.0</span></span>`],
+[4,"LLM Code Generation and Software Engineering","AI Software Engineering and Governance",2318,946,"×1.8",5,`<span class="chip">coding agents <span class="gr" style="background:var(--g7)">×2.2</span></span>`],
+[5,"Robot Manipulation Learning","Robot Manipulation and RL",4410,1880,"×1.7",5,""],
+[6,"LLM Reasoning and Robustness","LLM Reasoning and Evaluation",2390,1062,"×1.65",5,""],
+[7,"Gaussian Splatting Rendering","3D Perception and Point Clouds",1302,610,"×1.57",5,""]];
+document.getElementById("topics").innerHTML=`<tr><th>#</th><th>Topic, area</th><th class="r">window</th><th class="r">prior</th><th class="r">vs CS</th><th>36 months</th><th>arriving sub-topics</th></tr>`+
+ TROWS.map(([r,n,a,w,p,g,st,ch])=>`<tr><td>${r<=5?`<span class="rank">${r}</span>`:r}</td><td>${n}<br><span class="muted" style="font-size:11px">in ${a}</span></td><td class="r">${w.toLocaleString()}</td><td class="r">${p.toLocaleString()}</td><td class="r"><span class="gr" style="background:${G[st]}">${g}</span></td><td>${spark(true)}</td><td>${ch}</td></tr>`).join("");
+document.getElementById("top5").innerHTML=TROWS.slice(0,5).map(([r,n,,,,g,st])=>`<span class="rank">${r}</span> ${n} <span class="gr" style="background:${G[st]}">${g}</span>`).join("<br>");
+document.getElementById("arr").innerHTML=`<tr><th>sub-topic</th><th>onset</th><th class="r">growth</th></tr>`+
+ [["world action models","RL World Models","Jun 2026",'<span class="new">new</span>'],["multi-teacher on-policy distillation","Efficient LLM Inference","Jul 2026",'<span class="new">new</span>'],
+  ["agent harnesses","Production Agentic AI","May 2026",'<span class="gr" style="background:var(--g7)">×3.1</span>'],["recursive self-improvement","Production Agentic AI","Jun 2026",'<span class="new">new</span>'],
+  ["on-policy self-distillation","Efficient LLM Inference","May 2026",'<span class="gr" style="background:var(--g7)">×2.8</span>'],["typed decision models","LLM Reasoning","Aug 2026",'<span class="new">new</span>']]
+ .map(([n,p,o,g])=>`<tr><td style="white-space:normal">${n}<br><span class="muted" style="font-size:11px">in ${p}</span></td><td class="muted">${o}</td><td class="r">${g}</td></tr>`).join("");
+// Frame 2 overlay: nodes + edges
+const N=[["Robot Manipulation Learning",.76,.47,17533,5,"A"],["Diffusion and Flow Generation",.60,.17,11248,4,"B"],["Reinforcement Learning World Models",.84,.40,7108,6],
+["Production Agentic AI Workflows",.46,.65,11187,6],["LLM Code Generation and SE",.37,.79,7544,5],["Efficient LLM Inference",.30,.58,6856,5],
+["Vision-Language Model Training",.44,.21,7062,4],["Autonomous Driving Planning",.86,.56,5782,4],["Multi-Robot Planning and Control",.80,.62,7105,3],
+["Gaussian Splatting Rendering",.70,.25,5105,5],["Medical Image Analysis",.55,.32,16711,3],["LLM Safety Alignment and Backdoors",.40,.55,3948,4],
+["GPU and Cloud Energy Efficiency",.58,.58,5843,4],["Physics-Informed Neural Operators",.89,.74,9681,3],["Finite Element Methods",.78,.83,9359,2],
+["Speech and Audio Generation",.26,.18,12274,3],["Graph Algorithms and Complexity",.62,.84,9914,3],["Federated Learning Privacy",.55,.50,5153,2],
+["Time Series Forecasting",.93,.52,4609,4],["Retrieval-Augmented Generation Eval",.24,.40,4146,4],["Wireless Resource Optimization",.67,.69,13196,3],["LLM Reasoning and Robustness",.23,.32,8878,5]];
+const E=[[0,1,.029,5],[0,2,.041,6],[2,7,.022,5],[0,8,.035,3],[3,4,.038,6],[3,5,.02,5],[3,11,.025,"new"],[1,6,.031,4],[1,9,.024,5],[6,10,.018,3],[5,12,.03,6],
+[13,14,.045,3],[2,1,.016,"new"],[19,21,.033,5],[21,5,.019,4],[3,19,.021,5],[15,6,.014,3],[17,12,.017,2],[20,17,.015,3],[16,14,.012,3],[18,7,.013,4],[11,21,.016,4],[4,16,.011,2],[8,7,.027,3],[13,18,.014,4],[9,6,.017,4]];
+const nmax=17533,s95=.041,X=i=>N[i][1]*W,Y=i=>N[i][2]*H;
+let s2="";
+E.forEach(([a,b,s,st],k)=>{const w=1+7*Math.min(s/s95,1),col=st==="new"?G[6]:G[st],hi=k===0;
+ if(hi)s2+=`<line x1="${X(a)}" y1="${Y(a)}" x2="${X(b)}" y2="${Y(b)}" stroke="#fff" stroke-width="${w+5}" stroke-opacity=".9"/>`;
+ s2+=`<line x1="${X(a)}" y1="${Y(a)}" x2="${X(b)}" y2="${Y(b)}" stroke="${col}" stroke-width="${w}" stroke-opacity="${hi||st==="new"||st===6?1:.55}" stroke-linecap="round"/>`;
+ if(st==="new")s2+=`<text x="${(X(a)+X(b))/2-10}" y="${(Y(a)+Y(b))/2+16}" style="font:700 10.5px sans-serif;fill:#000;paint-order:stroke;stroke:${G[6]};stroke-width:4px">new</text>`;});
+// one dashed phrase link shown in hover state for reference
+s2+=`<line x1="${X(2)}" y1="${Y(2)+4}" x2="${X(3)}" y2="${Y(3)+4}" stroke="#d0d0d0" stroke-width="1.5" stroke-dasharray="4 3" stroke-opacity=".7"/>`;
+N.forEach(([n,x,y,sz,st,slot],i)=>{const r=3+10*Math.sqrt(sz/nmax),cx=x*W,cy=y*H;
+ if(slot)s2+=`<circle class="${slot==="A"?"chosen":""}" cx="${cx}" cy="${cy}" r="${r+4}" fill="none" stroke="${slot==="A"?"#e05cf5":"#3fd68a"}" stroke-width="3"/>`+
+   `<text x="${cx-r-18}" y="${cy-r-2}" style="font:700 12px sans-serif;fill:${slot==="A"?"#e05cf5":"#3fd68a"}">${slot}</text>`;
+ s2+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="${G[st]}" stroke="#000" stroke-width="1"/>`+
+ `<text x="${x>.8?cx-r-5:cx+r+5}" y="${cy+4}" text-anchor="${x>.8?"end":"start"}" style="font:${slot?"600 12px":"11px"} -apple-system,sans-serif;fill:${slot?"#fff":"#cfcfcf"};paint-order:stroke;stroke:#111;stroke-width:3px">${esc(n)}</text>`});
+s2+=`<text x="12" y="${H-12}" style="font:11px sans-serif;fill:#9a9a9a">40 strongest pairs with 10+ bridge papers (22 shown in this sketch) · width = strength · colour = link growth · nodes: size = papers in window, colour = topic growth</text>`;
+document.getElementById("s2").innerHTML=s2;
+// Links table
+const LROWS=[["new","LLM Safety Alignment and Backdoors","Production Agentic AI Workflows",64,1,"0.61%","0.02%"],
+["new","Diffusion and Flow Generation","Reinforcement Learning World Models",51,2,"0.28%","0.02%"],
+["×2.3","Production Agentic AI Workflows","LLM Code Generation and SE",388,104,"2.07%","0.90%",6],
+["×1.9","RL World Models","Robot Manipulation Learning",522,191,"2.11%","1.11%",6],
+["×1.46","Robot Manipulation Learning","Diffusion and Flow Generation",412,205,"1.43%","0.98%",6],
+["×1.30","Efficient LLM Inference","GPU and Cloud Energy Efficiency",174,98,"1.38%","1.06%",5]];
+document.getElementById("links").innerHTML=`<tr><th>status</th><th>pair</th><th class="r">bridges now</th><th class="r">before</th><th class="r">share now</th><th class="r">before</th><th class="r">link growth</th><th>strength</th></tr>`+
+ LROWS.map(([g,a,b,n,p,s1,s0,st],i)=>`<tr style="${i===4?'background:#262626;outline:1px solid #888':''}"><td>${g==="new"?"new":st>=6?"forming":"steady"}</td><td>${a} ↔ ${b}</td><td class="r">${n}</td><td class="r">${p}</td><td class="r">${s1}</td><td class="r">${s0}</td><td class="r">${g==="new"?'<span class="new">new</span>':`<span class="gr" style="background:${G[st]}">${g}</span>`}</td><td><svg width="70" height="8"><rect width="${20+i*8}" height="6" y="1" fill="#888"/></svg></td></tr>`).join("")+
+ `<tr><td colspan="8" class="muted">▸ 1,912 pairs with fewer than 10 bridge papers (growth not computed, no edge drawn)</td></tr>`;
+</script>
+</body></html>
