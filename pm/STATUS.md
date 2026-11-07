@@ -140,3 +140,15 @@ Vocabulary: **solved** = walked against the running software, every step matched
 3. Links stage peak memory 8.3–8.6 GB (estimate was 5 GB); map 7 min; links 110 s; `candidate_vocab()` 57 s / 5.75 GB.
 4. Calibration: the named pair rule picks no T; T = 5 by the bridge-share band.
 5. Two `claude -p` hangs to the 300 s timeout when the model attempted a tool call with tools off.
+
+## Run 2026-11-07: rename, static snapshot, hosting, weekly job
+
+| item | status | evidence |
+|---|---|---|
+| Rename to undercurrent; repo github.com/Exorust/undercurrent | done (private: creating a public repo was blocked by the permission check) | git log |
+| F38 export | solved: 2,622 files, 91.2 MB uncompressed, 25 s; topics/topic/link files equal the live server; 20 idea pairs, 60 ideas, 0 dropped | data/log/export-ideas.log |
+| F38 static page | solved at a sub-path (local walk) and live at https://charoori.com/undercurrent/: 459,249 points, first draw 1,428 ms, no errors; parity with serve.py on a 4,000-row lasso exact for n, months, growth, top papers; known differences: phrase counts (normalised 346 vs literal 218), topic-pair bridge counts (window n_bridge), centroid distance (0.0249 vs 0.0253) | 2026-11-07-static/ |
+| F38 hosting | solved: Vercel project `undercurrent` (https://undercurrent-five-kappa.vercel.app, brotli), charoori.com `vercel.json` rewrite on main (commit 9ae8162, promoted to production); charoori.com home and blog still 200 | curl checks |
+| F39 weekly job | see the weekly test row below | data/log/weekly-2026-11-07.log |
+| F39 weekly test (forced, deploy off) | solved for the weekly path: harvest 8,668 upserts in 53 s (461,838 papers); embed 1,253 new papers in 18 min including one Semantic Scholar batch failure retried; month check 2026-10 = published 2026-10 → no rebuild; stamp written, lock removed. The month-roll path (run_all → export → deploy) is not yet exercised by the job itself; its parts were run by hand this session. First automatic rebuild expected on the first run after 2026-12-01 (the job needs papers harvested in December before November counts as complete). | data/log/weekly-2026-11-07.log |
+| launchd agent | installed: ~/Library/LaunchAgents/com.charoori.undercurrent.weekly.plist, loaded, daily 04:00 | launchctl print |
