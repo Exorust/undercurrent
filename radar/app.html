@@ -363,6 +363,8 @@ const hex2rgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const rgb2hex = c => '#' + c.slice(0, 3).map(v => v.toString(16).padStart(2, '0')).join('');
 const stepOf = g => { let s = 0; while (s < 6 && g >= CUTS[s]) s++; return s; };
 const params = new URLSearchParams(location.search);
+// static mode: radar.export injects window.UC_STATIC = {base: "data/"}; every data URL is then relative (hosted under a sub-path)
+const ST = window.UC_STATIC || null, BASE = ST ? ST.base : '', LOCAL_ONLY = 'available in the local version';
 
 // ---------- state ----------
 const S = {
@@ -375,7 +377,7 @@ const S = {
 };
 const P = {n: 0, xy: null, month: null, lvl: null, cat: null, draw: null, xyDraw: null, colours: null, mask: null, bbox: null};
 const R = window.__radar = window.__wb = {
-  ready: false, firstDrawMs: null, firstRecolorMs: null, lastRecolorMs: null, lastFrameMs: null, maxFrameMs: null, lastLassoMs: null, animCount: 0, renderer: null,
+  static: !!ST, ready: false, firstDrawMs: null, firstRecolorMs: null, lastRecolorMs: null, lastFrameMs: null, maxFrameMs: null, lastLassoMs: null, animCount: 0, renderer: null,
   get nPoints() { return P.draw ? P.draw.length : P.n; }, get nDrawn() { return P.draw ? P.draw.length : P.n; },
   get zoom() { return zf(); }, get viewState() { return VS; }, get mode() { return S.mode; },
   selection() { const f = s => s && {sel_id: s.sel_id || null, n: s.data ? s.data.n : (s.rows ? s.rows.length : null), kind: s.kind, label: s.label}; return {current: f(S.cur), A: f(S.A), B: f(S.B)}; },
@@ -413,7 +415,8 @@ function setOffline(v) {
   if (v) banner('down'); else { if ($('banner').dataset.kind === 'down') banner(null); for (const f of [...S.pending]) { S.pending.delete(f); f(); } }
 }
 async function api(path, body) {
-  const opt = {headers: S.runId ? {'X-Run-Id': S.runId} : {}};
+  if (ST) return sapi(path, body);
+  const opt ={headers: S.runId ? {'X-Run-Id': S.runId} : {}};
   if (body) { opt.method = 'POST'; opt.headers['Content-Type'] = 'application/json'; opt.body = JSON.stringify(body); }
   let r;
   try { r = await fetch(path, opt); } catch (e) { setOffline(true); const err = new Error('offline'); err.offline = true; throw err; }
@@ -424,16 +427,154 @@ async function api(path, body) {
   if (!r.ok) { const err = new Error(j.message || ('HTTP ' + r.status)); err.status = r.status; err.body = j; throw err; }
   return j;
 }
-setInterval(() => { if (location.protocol !== 'file:') api('/meta').catch(() => {}); }, 5000);  // heartbeat: banner within 5 s, auto-retry
+setInterval(() => { if (!ST && location.protocol !== 'file:') api('/meta').catch(() => {}); }, 5000);  // heartbeat: banner within 5 s, auto-retry
+
+// ---------- static mode: the endpoints answered from data/ files, or computed here from points.bin ----------
+const SX = {cache: new Map(), sels: new Map(), nsel: 0, meta: null, titles: null, ptsReady: null, ideas: [], C0: null, K0: 0};
+function sget(f, bin) {
+  if (!SX.cache.has(f)) SX.cache.set(f, fetch(BASE + f).then(r => { if (!r.ok) throw sErr(r.status, `${f}: HTTP ${r.status}`); return bin ? r.arrayBuffer() : r.json(); })
+    .catch(e => { SX.cache.delete(f); throw e; }));
+  return SX.cache.get(f);
+}
+const sErr = (status, message, body = {}) => Object.assign(new Error(message), {status, body: {message, ...body}});
+function sWin(from, to) {
+  const W = SX.meta.windows; for (const k in W) if (W[k].from === from && W[k].to === to) return k;
+  if (from == null && to == null) return '6m';
+  throw sErr(400, `Window ${from} to ${to}: the web version has the last 3, 6 and 12 months; custom windows are ${LOCAL_ONLY}.`);
+}
+const curWin = () => sWin(winObj().from, winObj().to);
+async function sPaper(r) { const s = await sget(`papers/${Math.floor(r / 10000)}.json`), x = s[r % 10000]; return {row: r, id: x[0], title: x[1], month: x[2], cat: x[3], citations: x[4]}; }
+function sTitles(note) {  // all 46 shards, lower-cased titles by row; shards stay cached for paper lookups
+  if (!SX.titles) SX.titles = (async () => {
+    const K = Math.ceil(P.n / 10000), out = new Array(P.n); let done = 0;
+    await Promise.all(Array.from({length: K}, (_, k) => sget(`papers/${k}.json`).then(s => { s.forEach((x, i) => { out[k * 10000 + i] = (x[1] || '').toLowerCase(); }); note(++done, K); })));
+    return out;
+  })().catch(e => { SX.titles = null; throw e; });
+  return SX.titles;
+}
+function sRows(id) {
+  const s = SX.sels.get(id); if (!s) throw sErr(404, `selection ${id} not found (selections last for this page visit)`);
+  if (!s.rows) { const lv = P.lvl[s.topic.level], out = []; for (let i = 0; i < P.n; i++) if (lv[i] === s.topic.c) out.push(i); s.rows = Int32Array.from(out); }
+  return s;
+}
+async function sStats(rows, wk) {  // mirrors serve.py stats(): gstats + the 20-paper floor, by_cites, newest, own topic shares
+  const w = SX.meta.windows[wk], MS = SX.meta.months, E = MS.length - 1, n = rows.length, ix = m => MS.indexOf(m);
+  const rf = ix(w.from), rt = ix(w.to), pf = ix(w.prior_from), pt = ix(w.prior_to), mon = new Array(E + 1).fill(0); let r = 0, p = 0;
+  for (const i of rows) { const m = P.month[i]; if (m <= E) mon[m]++; if (m >= rf && m <= rt) r++; else if (m >= pf && m <= pt) p++; }
+  const isNew = r >= 30 && p < 5; let g = isNew || r < 10 ? null : (r + 1) / (p + 1) / w.vol_ratio; if (n < 20) g = null;
+  const cit = new Uint16Array(await sget('citations.bin', true)), a = Array.from(rows);
+  // ponytail: citations.bin stores null as 0 (serve.py sorts null as -1), so ties among uncited papers may order differently
+  const top = [...a].sort((x, y) => cit[y] - cit[x] || x - y).slice(0, 10), nw = a.sort((x, y) => P.month[y] - P.month[x] || y - x).slice(0, 10);
+  const topics = [];
+  for (let lv = 0; lv < 3; lv++) {
+    const cnt = new Map(); for (const i of rows) { const c = P.lvl[lv][i]; if (c >= 0) cnt.set(c, (cnt.get(c) || 0) + 1); }
+    // ponytail: nbr_share needs the neighbour graph (local only); own_share stands in for both
+    [...cnt].sort((x, y) => y[1] - x[1] || x[0] - y[0]).slice(0, 10).forEach(([c, k]) => topics.push({level: lv, c, label: lblOf(lv, c), own_share: k / n, nbr_share: k / n}));
+  }
+  const [tc, np] = await Promise.all([Promise.all(top.map(sPaper)), Promise.all(nw.map(sPaper))]);
+  return {months: mon, growth: {recent: r, prior: p, growth: g, is_new: isNew, window: w}, top_cited: tc, newest: np, terms: [], terms_local: true, terms_sampled: null, topics};
+}
+async function sSelect(b) {
+  const wk = sWin(b.from, b.to), keys = ['rows', 'topic', 'phrase', 'query', 'sel_id'].filter(k => k in b);
+  if (keys.length !== 1) throw sErr(400, 'exactly one of rows, topic, phrase, query, sel_id');
+  const k = keys[0], v = b[k];
+  if (k === 'topic') { if (!SX.sels.has(`topic-${v.level}-${v.c}`)) SX.sels.set(`topic-${v.level}-${v.c}`, {topic: v, kind: 'topic'}); return sget(`topic/${v.level}-${wk}-${v.c}.json`); }
+  await SX.ptsReady;
+  let rows, kind = k;
+  if (k === 'sel_id') { const s = sRows(v); if (s.topic) return sSelect({topic: s.topic, from: b.from, to: b.to}); rows = s.rows; kind = s.kind; }
+  else if (k === 'rows') { rows = Int32Array.from(new Set(v)).sort(); }
+  else if (k === 'phrase') { const pr = await sget('phrase-rows.json'), q = v.trim().toLowerCase(), key = Object.keys(pr).find(x => x.toLowerCase() === q); rows = Int32Array.from(key ? pr[key] : []); }
+  else {
+    const note = (d, K) => { const el = $('slowLine'); if (el) el.textContent = `loading titles (about 18 MB)…${K ? ` ${d} of ${K}` : ''}`; }; note(0, 0);
+    const T = await sTitles(note), q = v.trim().toLowerCase(), out = []; for (let i = 0; i < T.length; i++) if (T[i].includes(q)) out.push(i);
+    rows = Int32Array.from(out);
+  }
+  if (!rows.length) throw sErr(422, `no papers match ${k} '${v}'`, {error: 'empty_selection', n_unembedded: 0});
+  const id = 's' + (++SX.nsel); SX.sels.set(id, {rows, kind});
+  const out = {sel_id: id, kind, n: rows.length, n_unembedded: 0, missing: 0, run_id: SX.meta.run_id};
+  if (kind === 'phrase' || kind === 'query') out.rows = Array.from(rows);
+  return {...out, ...await sStats(rows, wk)};
+}
+async function sMeans(lv) {  // cluster mean vectors at a level, (k x d) Float64; level 1/2 = level-0 means weighted by joint row counts
+  if (!SX.C0) { SX.C0 = new Float32Array(await sget('centroids-0.bin', true)); SX.K0 = (await sget('counts-0.json')).n.length; }
+  const C0 = SX.C0, K0 = SX.K0, d = C0.length / K0;
+  if (lv === 0) return {M: C0, k: K0, d};
+  await SX.ptsReady;
+  let k = 0; const L = P.lvl[lv], L0 = P.lvl[0]; for (let i = 0; i < P.n; i++) if (L[i] >= k) k = L[i] + 1;
+  const J = new Float64Array(k * K0); for (let i = 0; i < P.n; i++) if (L[i] >= 0 && L0[i] >= 0) J[L[i] * K0 + L0[i]]++;
+  const M = new Float64Array(k * d);
+  for (let c = 0; c < k; c++) for (let c0 = 0; c0 < K0; c0++) { const w = J[c * K0 + c0]; if (w) for (let j = 0; j < d; j++) M[c * d + j] += w * C0[c0 * d + j]; }
+  return {M, k, d};
+}
+async function sVec(rows) {  // a selection's mean vector = sum over level-0 clusters of (its rows there) x cluster mean, / n
+  const {M, k, d} = await sMeans(0), cnt = new Float64Array(k), v = new Float64Array(d);
+  for (const i of rows) { const c = P.lvl[0][i]; if (c >= 0) cnt[c]++; }
+  for (let c = 0; c < k; c++) if (cnt[c]) for (let j = 0; j < d; j++) v[j] += cnt[c] * M[c * d + j];
+  return v.map(x => x / Math.max(rows.length, 1));
+}
+const sDot = (a, ao, b, bo, d) => { let s = 0, na = 0, nb = 0; for (let j = 0; j < d; j++) { const x = a[ao + j], y = b[bo + j]; s += x * y; na += x * x; nb += y * y; } return [s, Math.sqrt(na), Math.sqrt(nb)]; };
+async function sDistance(a, b) {
+  await SX.ptsReady;
+  const sa = sRows(a), sb = sRows(b), [va, vb] = await Promise.all([sVec(sa.rows), sVec(sb.rows)]), [s, na, nb] = sDot(va, 0, vb, 0, va.length);
+  const m = new Uint8Array(P.n); for (const i of sa.rows) m[i] = 1; let overlap = 0; for (const i of sb.rows) overlap += m[i];
+  let nbr = null;
+  if (sa.topic && sb.topic && sa.topic.level === sb.topic.level && sa.topic.c !== sb.topic.c) {
+    const c1 = Math.min(sa.topic.c, sb.topic.c), c2 = Math.max(sa.topic.c, sb.topic.c);
+    try { const L = await sget(`links-${sa.topic.level}-${curWin()}.json`), e = L.bridge_links.find(x => x.c1 === c1 && x.c2 === c2); nbr = e ? e.n_bridge : 0; } catch (e) {}
+  }
+  return {cos_dist: 1 - s / (na * nb), n_a: sa.rows.length, n_b: sb.rows.length, overlap, n_bridges: nbr, bridges: []};
+}
+async function sColourDist(a, lv) {
+  await SX.ptsReady;
+  const v = await sVec(sRows(a).rows), {M, k, d} = await sMeans(lv), dist = [];
+  for (let c = 0; c < k; c++) { const [s, nm, nv] = sDot(M, c * d, v, 0, d); dist.push(Math.min(2, Math.max(0, 1 - s / (Math.max(nm, 1e-12) * Math.max(nv, 1e-12))))); }
+  return {level: lv, dist};
+}
+async function sIdeas() {  // ideas.json groups -> the flat rows the Ideas tab groups again
+  try { SX.ideas = await sget('ideas.json'); } catch (e) { SX.ideas = []; }
+  return SX.ideas.flatMap(g => { const sides = {}; for (const p of g.shown || []) sides[p.id] = p.side;
+    return g.ideas.map(i => ({...i, a_sel: `${g.level}-${g.c1}`, b_sel: `${g.level}-${g.c2}`, a_name: g.a_name, b_name: g.b_name, created: g.created, window: SX.meta.windows[g.window] || null, shown_sides: sides})); });
+}
+async function sapi(path, body) {
+  const u = new URL(path, 'http://x'), q = Object.fromEntries(u.searchParams), p = u.pathname, lv = +(q.level ?? 1);
+  if (!SX.meta) SX.meta = await sget('meta.json');
+  switch (p) {
+    case '/meta': return SX.meta;
+    case '/labels': return sget(`labels-${lv}.json`);
+    case '/topics': return sget(`topics-${lv}-${sWin(q.from, q.to)}.json`);
+    case '/links': return sget(`links-${lv}-${sWin(q.from, q.to)}.json`);
+    case '/phrases': return sget(`phrases-${sWin(q.from, q.to)}.json`);
+    case '/link': {
+      const wk = sWin(q.from, q.to), c1 = Math.min(+q.c1, +q.c2), c2 = Math.max(+q.c1, +q.c2);
+      if (!(await sget(`link-index-${lv}-${wk}.json`)).includes(`${c1}-${c2}`)) throw sErr(404, 'Evidence for this pair is in the local version (top links only on the web)');
+      return sget(`link/${lv}-${wk}-${c1}-${c2}.json`);
+    }
+    case '/paper': return sPaper(+q.row);
+    case '/select': return sSelect(body || {});
+    case '/distance': return sDistance(q.a, q.b);
+    case '/colour/dist': return sColourDist(q.a, +(q.level ?? 0));
+    case '/ideas': if (body) break; return sIdeas();
+    case '/selections': if (body) break; return [];
+  }
+  throw sErr(404, `${p} is ${LOCAL_ONLY}`);
+}
+function staticUI() {  // hide what needs the server; one line says where it lives
+  $('status').hidden = true; $('savedBox').hidden = true;
+  const cu = document.querySelector('[data-act=win][data-n=custom]'); cu.hidden = true; cu.title = 'Custom windows are ' + LOCAL_ONLY;
+  $('leftNote').textContent = `Web snapshot. Saving, ideas between any A and B, custom windows and full-text search are ${LOCAL_ONLY}.`;
+}
 
 // ---------- points.bin ----------
 async function loadPoints() {
   performance.mark('pointsStart');
-  const res = await fetch('/points.bin');
+  const res = await fetch(ST ? BASE + 'points.bin' : '/points.bin');
+  if (ST && !res.ok) throw new Error('HTTP ' + res.status);
   const total = +res.headers.get('Content-Length') || 7807265;
   $('loadT').textContent = (total / 1e6).toFixed(1);
-  const buf = new Uint8Array(total); let got = 0; const rd = res.body.getReader();
-  for (;;) { const {done, value} = await rd.read(); if (done) break; buf.set(value, got); got += value.length; $('loadN').textContent = (got / 1e6).toFixed(1); $('loadBar').style.width = (100 * got / total) + '%'; }
+  let buf = new Uint8Array(total); let got = 0; const rd = res.body.getReader();
+  for (;;) { const {done, value} = await rd.read(); if (done) break;
+    if (got + value.length > buf.length) { const nb = new Uint8Array(Math.max(2 * buf.length, got + value.length)); nb.set(buf.subarray(0, got)); buf = nb; }  // ponytail: a gzip host sends the compressed Content-Length
+    buf.set(value, got); got += value.length; $('loadN').textContent = (got / 1e6).toFixed(1); $('loadBar').style.width = (100 * got / total) + '%'; }
   const b = buf.buffer, dv = new DataView(b);
   if (dv.getUint32(0, true) !== 0x54505246 || new Uint32Array(b, 0, 1)[0] !== 0x54505246) throw new Error('points.bin: bad magic or big-endian platform');
   const n = dv.getUint32(8, true);
@@ -898,10 +1039,11 @@ async function loadPhrases() {
   renderPhrases(); suggest();
 }
 async function boot() {
-  $('statusHost').textContent = location.host || 'file';
-  if (location.protocol === 'file:') { banner('file'); $('loading').textContent = 'Map unavailable: open the page through the server.'; return; }
+  $('statusHost').textContent = location.host || 'file'; if (ST) staticUI();
+  if (!ST && location.protocol === 'file:') { banner('file'); $('loading').textContent = 'Map unavailable: open the page through the server.'; return; }
   layout(); renderSlots();
   const pts = loadPoints().catch(e => { $('loading').textContent = 'Could not load map points: ' + e.message; throw e; });
+  if (ST) SX.ptsReady = pts;
   const dk = initDeck();
   const pointDraw = Promise.all([pts, dk]).then(() => {
     VS = fitView(); DK.setProps({initialViewState: VS});
@@ -911,7 +1053,7 @@ async function boot() {
   try { meta = await api('/meta'); } catch (e) { S.pending.add(() => location.reload()); return; }
   S.meta = meta; S.MS = meta.months; S.E = S.MS.indexOf(meta.last_complete); S.runId = meta.run_id;
   for (const [l, n] of Object.entries(meta.levels)) { const b = document.querySelector(`[data-act=level][data-l="${l}"] span`); if (b) b.textContent = `(${n})`; }
-  renderServerNote(meta);
+  renderServerNote(meta); if (ST) staticUI();
   fillCustom(); updateWinLabel(); renderTopics(); renderInspector();
   const labels = Promise.all([0, 1, 2].map(l => api('/labels?level=' + l).then(j => { S.labels[l] = {}; for (const c of j.clusters) S.labels[l][c.c] = c; })));
   await Promise.all([loadWindowData(), labels]);
@@ -1050,7 +1192,7 @@ function ideaGroups() {
 }
 function renderIdeasTab() {
   const gs = ideaGroups();
-  $('pIdeas').innerHTML = gs.length ? `<table><thead><tr><th>date</th><th>A</th><th>B</th><th class="n">ideas</th></tr></thead><tbody>` + gs.map((g, i) => `<tr tabindex="${i ? -1 : 0}" data-ig="${esc(g.key)}"><td class="mono">${esc(String(g.created).replace('T', ' ').slice(0, 16))}</td><td>${esc(g.a || 'A')}</td><td>${esc(g.b || 'B')}</td><td class="n">${g.ideas.length}</td></tr>`).join('') + '</tbody></table>' : '<div class="tabhead">No ideas yet. Set A and B, then press "Ideas between A and B".</div>';
+  $('pIdeas').innerHTML = gs.length ? `<table><thead><tr><th>date</th><th>A</th><th>B</th><th class="n">ideas</th></tr></thead><tbody>` + gs.map((g, i) => `<tr tabindex="${i ? -1 : 0}" data-ig="${esc(g.key)}"><td class="mono">${esc(String(g.created).replace('T', ' ').slice(0, 16))}</td><td>${esc(g.a || 'A')}</td><td>${esc(g.b || 'B')}</td><td class="n">${g.ideas.length}</td></tr>`).join('') + '</tbody></table>' : ST ? `<div class="tabhead">No precomputed ideas in this snapshot. Ideas between any A and B are ${LOCAL_ONLY}.</div>` : '<div class="tabhead">No ideas yet. Set A and B, then press "Ideas between A and B".</div>';
 }
 async function loadIdeas() { try { S.ideas = await api('/ideas'); } catch (e) {} renderIdeasTab(); }
 async function loadSaved() { try { S.saved = await api('/selections'); } catch (e) {} renderSaved(); renderSlots(); }
@@ -1097,13 +1239,14 @@ function selView(s) {
     const q = s.spec.phrase ?? s.spec.query;
     if (s.n_unembedded > 0) return h + `<p>${fmt(s.n_unembedded)} ${s.n_unembedded === 1 ? 'paper matches' : 'papers match'}. None are on the map (no embedding). Stats and paper lists are below; map highlight is not available.</p>`;
     const near = nearestPhrases(q).map(p => `<button class="chip" data-act="phrase" data-ph="${esc(p)}">${esc(p)}</button>`).join('');
+    if (ST && s.kind === 'phrase') return h + `<p>"${esc(q)}" is not one of the rising phrases in this web snapshot. Full-text phrase search is ${LOCAL_ONLY}.</p>${near}`;
     return h + `<p>No paper title or abstract contains "${esc(q)}". ${s.kind === 'phrase' ? 'Phrase search is a literal match: check spelling or try a variant.' : 'Title search is a case-insensitive substring match.'}</p>${near}`;
   }
   if (s.err) return h + `<div class="err">${esc(s.err)}</div>`;
   if (!j) return h + '<p class="muted small">Loading…</p>';
   if (s.kind === 'phrase' || s.kind === 'query') {
     const tot = j.n + (j.n_unembedded || 0);
-    h += `<div class="small muted">${s.kind === 'phrase' ? 'literal match on title and abstract' : 'title contains, case-insensitive'}; ${fmt(j.n_unembedded || 0)} of ${fmt(tot)} papers are not on the map (not embedded)</div><button data-act="zoomMatches" ${j.n ? '' : 'disabled'} style="margin:4px 0">Zoom to matches</button>`;
+    h += `<div class="small muted">${s.kind === 'phrase' ? (ST ? 'papers carrying this rising phrase' : 'literal match on title and abstract') : 'title contains, case-insensitive'}; ${fmt(j.n_unembedded || 0)} of ${fmt(tot)} papers are not on the map (not embedded)</div><button data-act="zoomMatches" ${j.n ? '' : 'disabled'} style="margin:4px 0">Zoom to matches</button>`;
     if (j.n === 0) h += `<p>${fmt(j.n_unembedded)} ${j.n_unembedded === 1 ? 'paper matches' : 'papers match'}. None are on the map (no embedding). Stats and paper lists are below; map highlight is not available.</p>`;
   }
   const g = j.growth || {}, r = g.recent ?? 0, p = g.prior ?? 0;
@@ -1114,7 +1257,7 @@ function selView(s) {
   h += `<div class="tiny muted">${winText()}</div>${bars(j.months || [], s)}`;
   const T = s.kind === 'topic' && S.topics[s.level] && S.topics[s.level].topics.find(t => t.c === s.c);
   if (T && T.arriving && T.arriving.length) h += `<h4>Arriving sub-topics</h4>${T.arriving.map(chip).join('')}`;
-  h += `<h4>Distinctive phrases</h4>` + (j.n >= 30 && j.terms && j.terms.length ? j.terms.slice(0, 20).map(t => `<button class="chip" data-act="phrase" data-ph="${esc(t.term)}" title="share in selection ${(100 * t.share_sel).toFixed(0)}% vs ${(100 * t.share_all).toFixed(1)}% in all papers (z ${(+t.z).toFixed(1)})">${esc(t.term)} <span class="muted">${t.k}</span></button>`).join('') : '<div class="muted small">too few papers for distinctive phrases</div>');
+  h += `<h4>Distinctive phrases</h4>` + (j.n >= 30 && j.terms && j.terms.length ? j.terms.slice(0, 20).map(t => `<button class="chip" data-act="phrase" data-ph="${esc(t.term)}" title="share in selection ${(100 * t.share_sel).toFixed(0)}% vs ${(100 * t.share_all).toFixed(1)}% in all papers (z ${(+t.z).toFixed(1)})">${esc(t.term)} <span class="muted">${t.k}</span></button>`).join('') : j.terms_local ? '<div class="muted small">Distinctive phrases are in the local version</div>' : '<div class="muted small">too few papers for distinctive phrases</div>');
   h += `<h4>Top cited</h4>${plist(j.top_cited || [])}<h4>Newest</h4>${plist(j.newest || [])}`;
   const nb = (j.topics || []).filter(t => t.level === 1 && !(s.kind === 'topic' && s.level === 1 && t.c === s.c)).slice(0, 10);
   if (nb.length) h += `<h4>Links to other topics</h4><div class="small">${nb.map(t => `<div><a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> · ${Math.round(100 * t.nbr_share)}% of neighbours</div>`).join('')}</div>`;
@@ -1122,10 +1265,11 @@ function selView(s) {
 }
 function selButtons(s) {
   const both = S.A && S.B;
-  let b = `<button data-act="save">Save</button> `;
+  let b = ST ? '' : `<button data-act="save">Save</button> `;
   if (s === S.cur) b += S.A ? `<button data-act="setB">Set as B</button> <button data-act="replaceA">Replace A</button> ` : `<button data-act="setA">Set as A</button> `;
   else if (s === S.A && !S.B) b += '';
-  b += `<span title="${both ? '' : 'Set A and B first'}"><button data-act="ideas" ${both ? '' : 'disabled'}>Ideas between A and B</button></span>`;
+  b += ST ? `<span title="Ideas between A and B are ${LOCAL_ONLY}"><button data-act="ideas" disabled>Ideas between A and B</button></span>`
+    : `<span title="${both ? '' : 'Set A and B first'}"><button data-act="ideas" ${both ? '' : 'disabled'}>Ideas between A and B</button></span>`;
   return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">${b}</div>`;
 }
 function summaryView() {
@@ -1147,7 +1291,7 @@ function evidenceView() {
   if (e.status === 'low') h += `<p>${fmt(e.n_bridge)} bridge papers in this window: too few to compute link growth. Strength is shown.</p><div class="kv"><span>strength</span><span class="num">${e.strength.toFixed(3)}</span></div>`;
   else h += `<div class="kv"><span>bridge papers in window:</span><span class="num">${fmt(e.n_bridge)}</span><span>in prior window:</span><span class="num">${fmt(e.n_prior ?? e.n_bridge_prior ?? (d && (d.n_prior ?? d.n_bridge_prior)) ?? NaN)}</span><span>share now</span><span class="num">${pct(e.share_now)}</span><span>share before</span><span class="num">${pct(e.share_prior)}</span><span>link growth</span><span class="num">${e.status === 'new' ? 'new' : '×' + e.growth.toFixed(2)}</span><span>strength</span><span class="num">${e.strength.toFixed(3)}</span></div>`;
   h += `<div class="def">Bridge paper: ${T} or more of its 14 nearest neighbours in the other topic. <details style="display:inline"><summary style="display:inline;text-decoration:underline">how this is measured</summary><div style="margin-top:4px">A paper is a bridge between two topics when at least ${T} of its 14 nearest neighbours (768-number vectors) fall in each of its top two topics. Strength = bridges / √(papers₁ × papers₂) over the window. Share = bridges / (papers₁ + papers₂). Link growth = share now ÷ share in the prior window, with +1 smoothing on the prior. "new" = 10 or more bridges now, fewer than 3 before. Bridge papers follow the window; shared phrases use all 36 months.</div></details></div>`;
-  if (!d) return h + '<div class="prog on" style="position:relative"></div><p class="muted small">Loading bridge papers…</p>';
+  if (!d) return h + (ev.err ? `<div class="err">${esc(ev.err)}</div>` : '<div class="prog on" style="position:relative"></div><p class="muted small">Loading bridge papers…</p>');
   const bs = [...d.bridges].sort(ev.newest ? (a, b) => String(b.month).localeCompare(String(a.month)) : (a, b) => (b.citations || 0) - (a.citations || 0)).slice(0, 30);
   const pg = bs.slice(ev.page * 10, ev.page * 10 + 10);
   const split = b => { const own = b.row != null ? P.lvl[lv][b.row] : null; return own === e.c2 ? `${b.k1} of 14 neighbours in ${n1}` : `${b.k2} of 14 neighbours in ${n2}`; };
@@ -1155,6 +1299,8 @@ function evidenceView() {
     <div style="display:flex;gap:6px;margin-bottom:4px"><button data-act="evSort" aria-pressed="${!!ev.newest}">newest first</button><button data-act="evPage" data-d="-1" ${ev.page ? '' : 'disabled'}>prev</button><button data-act="evPage" data-d="1" ${(ev.page + 1) * 10 < bs.length ? '' : 'disabled'}>next</button></div>
     <div class="plist">${pg.map(b => `<div><a href="${ARXIV}${esc(b.id)}" target="_blank" rel="noopener">${esc(b.title)}</a><small>arXiv:${esc(b.id)} · ${monthName(b.month)} · ${split(b)}</small></div>`).join('') || '<div class="muted">no bridge papers in this window</div>'}</div>`;
   h += `<h4>Shared rising phrases · all 36 months</h4>` + (d.phrases && d.phrases.length ? d.phrases.map(p => `<button class="chip" data-act="phrase" data-ph="${esc(p.phrase)}">${esc(p.phrase)} <span class="muted">${p.n1} / ${p.n2} papers</span></button>`).join('') + ' <span class="tiny muted">all 36 months</span>' : '<div class="muted small">no shared rising phrases</div>');
+  const pre = ST && SX.ideas.find(g => g.level === lv && g.window === curWin() && g.c1 === Math.min(e.c1, e.c2) && g.c2 === Math.max(e.c1, e.c2));
+  if (pre) h += `<h4>Ideas for this pair (precomputed)</h4>` + ideasHTML({ideas: pre.ideas, created: pre.created, window: SX.meta.windows[pre.window], shown: pre.shown});
   h += `<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap"><button data-act="evAB" class="pri">Set as A and B</button><button data-act="evMap" aria-pressed="${!!ev.onMap}">${ev.onMap ? 'Hide bridge papers' : 'Show bridge papers on map'}</button></div>`;
   return h;
 }
@@ -1181,8 +1327,9 @@ function renderAB() {
   if (!(S.A && S.B)) { el.innerHTML = S.ideasWait ? ideasArea() : ''; return; }
   const d = S.dist;
   let h = `<h4 style="margin-top:0">A vs B</h4><div class="small"><span style="color:var(--color-a);font-weight:700">A</span> ${esc(S.A.label)}<br><span style="color:var(--color-b);font-weight:700">B</span> ${esc(S.B.label)}</div>`;
-  h += d ? `<div class="kv"><span>cosine distance</span><span class="num">${d.cos_dist.toFixed(3)}</span><span>overlap</span><span class="num">${fmt(d.overlap)} papers</span><span>bridge papers between them:</span><span class="num">${fmt(d.n_bridges)}</span></div><div class="plist small">${(d.bridges || []).slice(0, 5).map(p => `<div><a href="${ARXIV}${esc(p.id)}" target="_blank" rel="noopener">${esc(p.title)}</a></div>`).join('')}</div>` : '<p class="muted small">computing distance…</p>';
-  h += `<div style="margin-top:8px"><button data-act="ideas" class="pri">Ideas between A and B</button></div>` + ideasArea();
+  h += d ? `<div class="kv"><span>cosine distance</span><span class="num">${d.cos_dist.toFixed(3)}</span><span>overlap</span><span class="num">${fmt(d.overlap)} papers</span><span>bridge papers between them:</span><span class="num">${d.n_bridges == null ? 'local only' : fmt(d.n_bridges)}</span></div><div class="plist small">${(d.bridges || []).slice(0, 5).map(p => `<div><a href="${ARXIV}${esc(p.id)}" target="_blank" rel="noopener">${esc(p.title)}</a></div>`).join('')}</div>` : '<p class="muted small">computing distance…</p>';
+  h += (ST ? `<div style="margin-top:8px"><span title="Ideas between A and B are ${LOCAL_ONLY}"><button data-act="ideas" class="pri" disabled>Ideas between A and B</button></span></div>`
+    : `<div style="margin-top:8px"><button data-act="ideas" class="pri">Ideas between A and B</button></div>`) + ideasArea();
   el.innerHTML = h;
 }
 function ideasArea() {
@@ -1222,7 +1369,7 @@ async function openEvidence(e) {
   S.ev = {c1: e.c1, c2: e.c2, level: S.level, link: e, data: null, page: 0}; S.view = 'evidence';
   if (NARROW.matches) document.body.classList.add('drawer');
   renderInspector(); renderLinks(); render();
-  try { const d = await api(`/link?level=${S.level}&c1=${e.c1}&c2=${e.c2}&${winQS()}`); if (S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2) { S.ev.data = d; renderInspector(); } } catch (err) {}
+  try { const d = await api(`/link?level=${S.level}&c1=${e.c1}&c2=${e.c2}&${winQS()}`); if (S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2) { S.ev.data = d; renderInspector(); } } catch (err) { if (ST && S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2) { S.ev.err = err.message; renderInspector(); } }
 }
 function closeEvidence() { S.ev = null; const p = S.prevView || {view: 'summary'}; S.view = p.view === 'evidence' ? 'summary' : p.view; S.focus = p.focus || S.focus; renderInspector(); renderLinks(); render(); }
 
@@ -1438,7 +1585,7 @@ function escLayer() {  // innermost first
 }
 document.addEventListener('keydown', e => {
   const t = e.target, inText = t.matches && t.matches('input[type=text],input[type=search],textarea,select');
-  if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); if (S.focus && S.view === 'sel') { S.focus.saveOpen = true; S.focus.saveFocused = false; renderInspector(); } return; }
+  if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); if (!ST && S.focus && S.view === 'sel') { S.focus.saveOpen = true; S.focus.saveFocused = false; renderInspector(); } return; }
   if (t.id === 'saveName') { if (e.key === 'Enter') doSave(t.value); else if (e.key === 'Escape') { S.focus.saveOpen = false; S.focus.saveFocused = false; renderInspector(); } e.stopPropagation(); return; }
   if (t.id === 'q') {
     const ul = $('sugg'), items = [...ul.querySelectorAll('li')];
