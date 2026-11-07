@@ -1,0 +1,16 @@
+# Friction — run 2026-11-06/07 (first build and walk)
+
+Advisory only. Nothing here changes a flow's status.
+
+| # | where | what was slow, confusing, or more than needed | suggestion |
+|---|---|---|---|
+| 1 | J1 / Topics tab | Fine-cluster (sub-topic) labels are term lists (`agents, agent, llm, agentic`), while topics and areas have model-written names. Three of the 14 arriving sub-topics are near-identical agent clusters whose labels differ by word order. | Run `--llm-labels` for level 0 too (373 clusters ≈ 15 model calls at 25 per call), or label only the clusters that appear as arriving. |
+| 2 | `/ideas`, F1 | A cold `claude -p` call takes about 26 s before any output, and twice in this run a call hung for the full 300 s timeout (both times when the model tried to use a tool it did not have). The page's counter covers the wait, but the first-ever ideas call feels broken for half a minute. | Keep the timeout; show "model starting (about 30 s)" for the first 30 s; consider `--llm-timeout 120` as the default. |
+| 3 | inspector, distinctive phrases | The shared vocabulary keeps fragments (`models llms`, `language models llms`, `on-policy distillation on-policy`), so some distinctive-phrase chips read as broken text. The S3 rising-phrase list filters these downstream; `paper_terms` does not. | Apply the same fragment and repeated-word filters when building `terms`, or drop a term that is a substring of a longer term with ≥ 60 % co-occurrence. |
+| 4 | search | The search dropdown shows the normalised phrase count (`world action models · 323`), the selection shows the literal-match count (218). Two matchers, two numbers. | Make `POST /select {phrase}` use `phrase_papers` (normalised) when the phrase is a rising phrase, and fall back to the literal scan otherwise. |
+| 5 | `run_all.sh` dry run | `RADAR_DRY=1` writes `sleep 1` output over the real `data/log/<stage>.log` files; the PM's lock walk wiped the real map and links logs (recovered from the console into evidence). | Dry mode should log to `data/log/dry-<stage>.log`. |
+| 6 | links stage | Peak memory was 8.3–8.6 GB (architecture estimated about 5 GB); the laptop is unusable for other work during the 2 minutes. | Fine for a monthly run; note it in the run instructions. |
+| 7 | A vs B block | Each row repeats its label (`cosine distance  cosine distance 0.042`). | Drop the duplicate. |
+| 8 | Links tab | The strongest links are all within one area (compression ↔ in-context learning, text-to-image ↔ diffusion editing). The cross-area links the design cares about are further down; the `new` set (3 pairs) is small. | Add a "cross-area only" filter to the Links tab, or rank by link growth by default in preset 2. |
+| 9 | `--calibrate` | The named positive pair (robot manipulation ↔ diffusion) never reaches the top 40 at any T; the calibration rule as written picks no T and the operator decides from the bridge-share band. | Replace the named pairs with the top-10 sanity list (F4.3), which is what actually decided T. |
+| 10 | first load | Uncached, the Tailwind browser build blocks the first paint for about 1.2 s; cached loads are fine. | Fixed in round 2 with inline critical CSS; the real fix is a one-time Tailwind CLI build to a static `radar/app.css`. |

@@ -1,4 +1,4 @@
-# field-radar: design
+# undercurrent (formerly field-radar): design
 
 Started 2026-11-04. Scope: computer science only.
 

@@ -1,0 +1,90 @@
+# Features — undercurrent (formerly field-radar; renamed 2026-11-07)
+As of: 2026-11-06. Approved by user: yes (2026-11-06, "Approve as written"; libraries chosen: Tailwind + Inter, anime.js).
+
+Sources of intent: `docs/designs/topic-workbench.md` (design, with the 13 amendments), `docs/designs/topic-workbench-architecture.md` (arch), `docs/designs/topic-workbench-ui.md` (ui), `docs/designs/wireframe/sketch.html`. The user's one-sentence goal: "I want to see overarching topics that are coming in and people are publishing, and then I also want to see how different topics connect."
+
+State is as of today: nothing from v2 is built. "partial" means a v1 piece exists that v2 changes or absorbs.
+
+## User types
+- **Researcher** (the user, reading): opens the page, sees which topics are arriving and which are connecting, lassos regions, compares two selections, asks for merge ideas, saves selections for next month.
+- **Operator** (the same user, maintaining): runs `./run_all.sh` monthly, starts and stops `radar.serve`, resolves locks, reruns the pipeline without losing saved selections and ideas.
+
+## Features
+
+### Part 1 — pipeline (new stage `links` after `map`)
+
+| id | feature | user type | state | source of intent |
+|---|---|---|---|---|
+| F1 | Model calls run with tools off: `radar/llm.py` passes `--tools "" --strict-mcp-config --no-session-persistence`, runs in an empty temp dir; applies to `map.py`, `merge.py`, server. `requirements.txt` pins umap-learn 0.5.12, pynndescent 0.7.0 | operator | partial (`llm.py` exists, tools on) | design amendment 1; arch §5.6 |
+| F2 | Neighbour graph kept: `map.py` builds the 15-NN graph with pynndescent, passes it to UMAP as `precomputed_knn`, stores `knn` (14 neighbours per paper), `point_index(row, id)`, `map_meta(run_id, ...)`, writes `report/points.bin` (columnar, about 7.8 MB) | operator | missing | design Part 1, amendments 3 and 5; arch §2.1, §3, §4.1 |
+| F3 | kNN precision gate: 1,000 random papers get the same bridge decision with the approximate graph as with exact 768-d search in at least 95% of cases; result printed and stored in `map_meta.knn_recall14` | operator | missing | design OQ4; arch §4.2 |
+| F4 | Bridges and topic links: `bridges` (paper is a bridge when at least T of 14 neighbours fall in each of its top two clusters), `topic_links(level, c1, c2, month, n_bridge)`, `paper_topics` shares; T set by a printed calibration on named pairs (`python -m radar.links --calibrate`) | operator | missing | design Part 1, amendment 4; arch §4.3–4.5 |
+| F5 | Topic time tables: `topic_months`, `topic_onset` (month the cluster reached 10% of its papers), `topic_parent` (majority parent of each fine cluster with share) | operator | missing | design Part 1, amendment 2; arch §2.2 |
+| F6 | Phrase tables: shared `candidate_vocab()` in `signals.py`; `paper_terms`, `phrase_topics`, `phrase_papers`; phrase links by effective number of clusters ≤ 4 | operator | missing | design Part 1, amendments 7 and 8; arch §6.5 |
+| F7 | Run lock: `run_all.sh` writes `data/run.lock` with `trap` removal; refuses to start while `data/serve.pid` names a live `radar.serve`; stale pid files (dead process or wrong command name) are reported and removed | operator | missing | design Part 2 lock rule; arch §5.3 |
+
+### Part 2 — server (`radar/serve.py`, localhost:8765)
+
+| id | feature | user type | state | source of intent |
+|---|---|---|---|---|
+| F8 | Server lifecycle: `python -m radar.serve` opens `data/radar.duckdb` read-only, loads the 768-d vectors once (about 1.4 GB, about 10 s), writes `data/serve.pid`, refuses to start if `data/run.lock` is live or if the map ran without the links stage (`links_run_id` check), removes stale locks with a printed warning, prints the URL | operator | missing | design Part 2; arch §5.1–5.3 |
+| F9 | Request guards: Host must be `localhost:8765` or `127.0.0.1:8765`; POST must carry the app's own Origin; else 403. One cursor per request; writes to `data/workbench.duckdb` behind one lock; JSON error envelope `{error, message, run_id}` with the status table in arch §5.5 | operator | missing | design Part 2; arch §5.4, §5.5 |
+| F10 | Static and meta endpoints: `GET /` (app.html), `GET /points.bin`, `GET /meta` (run id, months, last complete month, levels, T, recall, backtest line), `GET /labels?level=`, `GET /paper?row=` (hover and detail) | researcher | missing | arch §5.5; design amendment 5 |
+| F11 | Topics endpoint: `GET /topics?level=&from=&to=` returns per cluster recent, prior, CS-corrected growth, `is_new`, arriving sub-clusters (window-share rule, user decision 2026-11-07: the cluster's share of its own papers inside the window ≥ 1.6 × the whole-corpus share for that window, and ≥ 30 papers in the window; the 10 % onset rule found none on this data), plus the window object with CS factor and totals; complete months only | researcher | missing | design Part 1 arriving rule, amendment 11; arch §6.1–6.4 |
+| F12 | Links endpoints: `GET /links` (strength `B/sqrt(n1*n2)`, bridge share now and prior, link growth with pseudo-count, status new / ratio / low, sorted new → growth → low; phrase links separately, marked whole-corpus) and `GET /link` (bridge papers with neighbour split, shared phrases) | researcher | missing | design Part 1 link rules, amendment 10; arch §5.5, §6.3 |
+| F13 | Selections: `POST /select` with exactly one of rows / topic / phrase / query / sel_id; returns n, unembedded count, monthly counts, growth, top cited, newest, distinctive terms (log-odds, prior 1,000, z ≥ 3, ≥ 3 papers), topic shares. Title search is parameterised `ILIKE`; phrase is a literal match. Transient selections live in memory | researcher | missing | design Part 2 `/select`, amendments 7 and 12; arch §5.5, §6.6 |
+| F14 | Saved selections: `GET /selections`, `POST /selections` (ids, name, lasso polygon, window, map run id), `POST /selections/delete` (409 if ideas reference it); stored in `data/workbench.duckdb`, which the pipeline never opens; loading maps ids to current rows and reports missing papers | researcher | missing | design Part 2, amendment 6; arch §2.3 |
+| F15 | Compare: `GET /distance?a=&b=` (cosine distance of centroids, overlap, bridge papers between A and B, including papers outside both) and `GET /colour/dist?a=` (per-cluster distance for the colour mode) | researcher | missing | design Part 2 `/distance`; arch §5.5 |
+| F16 | Ideas: `POST /ideas {a, b, n}` shows at most 28 papers (8 bridges, 5 cited + 5 newest per side), one call at a time (409 `ideas_busy`), auto-saves transient A and B, parses JSON, citation check (every id in the shown set, at least one from each side or one bridge), regenerates a failing idea once, stores dropped with reason; `GET /ideas`. Retires `report/merge.html` and the idea loop in `merge.py` | researcher | partial (prompt and idea loop exist in `merge.py`) | design Part 2 `/ideas`, amendment 12; arch §5.6 |
+
+### Part 2 — page (`radar/app.html`, one file, deck.gl from CDN)
+
+| id | feature | user type | state | source of intent |
+|---|---|---|---|---|
+| F17 | Map of all points: deck.gl `ScatterplotLayer` over 459,249 points, 1 px radius growing to 4 px with zoom, pan and zoom buttons, `0` fits the map, loading bar while `points.bin` streams, one-time "Large map" notice if the first recolour exceeds 1 s; fallback (topic-level colour or 150k sample) if redraw stalls over 1 s | researcher | partial (`report/map.html` is a static datamapplot page) | design OQ2, success criteria; ui §c Points; arch §8.4 |
+| F18 | Colour modes: growth (stepped 7-colour scale at ×0.5, 0.71, 0.9, 1.11, 1.41, 2.0; `new` badge; "no data" `#333`), topic (20 area hues), date (grey ramp), distance to A (disabled until A is set); "Lightness only" fallback; legend with counts per step | researcher | missing | design amendment 9; ui §c growth scale |
+| F19 | Labels by zoom: area names under 2×, topic names 2–5×, sub-topic names over 5×, collision-filtered, halo; badge and selected clusters have top priority | researcher | missing | ui §c labels |
+| F20 | Question presets and window: header switch "What is arriving" (default: 6 complete months, 116 topics, colour growth, links off, Topics tab, top-5 badges on topics with 200+ papers) and "How topics connect" (points grey, nodes on, 40 strongest links with 10+ bridges, Links tab); window dropdown 3 / 6 / 12 / custom, `[` `]` keys; window label with CS factor and last complete month, (i) popover with all rules | researcher | missing | design amendment 9; ui §a, §d flow 5, §f |
+| F21 | Topics tab: sortable table of the current level with recent, prior, growth, arriving sub-topic chips ("world action models · new", "agent harnesses ×3.1"), badge numbers, "Ranked: topics with 200+ papers" header; row click selects; chip click zooms to the sub-topic | researcher | missing | design Part 2 layout; ui §a screen 1 |
+| F22 | Links overlay and Links tab: topic nodes (size = papers in window, fill = growth), bridge edges (width `1 + 7·min(strength/p95, 1)`, colour = link growth, `new` tag, top-5 badges, edge-count slider 10–200), phrase edges dashed and off by default labelled "all 36 months"; Links tab sorted new → growth → collapsed under-10 group; hover tooltip with counts and shares | researcher | missing | design amendments 9 and 10; ui §a screen 2, §c edges |
+| F23 | Link evidence view: click edge or row → inspector shows pair title, status tag (new / forming / steady / fading at ×1.41 / ×0.71), numbers block, definition disclosure, bridge papers (10 per page, citations or newest, neighbour split), shared phrases, "Set as A and B", "Show bridge papers on map", "← back" | researcher | missing | ui §d flow 4; design amendment 10 |
+| F24 | Select by click: point, node, badge or Topics row selects that cluster at the current level, draws a convex hull (white, then slot colour), first click of a session fills A; later clicks offer "Set as B" / "Replace A"; Escape clears innermost first | researcher | missing | ui §d flow 1, §g; design amendment 12 |
+| F25 | Lasso: `L` or button, freehand polygon, browser point-in-polygon, sends row indices; under 20 points shows the "too few" message without a server call; label "Lasso, N papers, mostly <topic> (62%)" | researcher | missing | ui §d flow 2 |
+| F26 | Search: `/` focuses the box, phrase / title toggle, suggestions from rising phrases with counts and hyphen variants, matches drawn with slot-colour rings, "Zoom to matches", unembedded count shown, zero-match message with 3 nearest phrases by edit distance | researcher | missing | ui §d flow 6, §e |
+| F27 | Inspector: selection view (name and level with parent, papers in window and prior, growth with raw value and CS factor, 36 monthly bars with window shaded, arriving sub-topics, distinctive phrases, top cited, newest, links to other topics); empty state shows the window summary and up to 10 arriving sub-topics across CS; small-selection and slow-request states | researcher | missing | ui §d flow 1 step 4, §e, §f |
+| F28 | A and B slots: "Set as A / B" buttons and keys, slot chips with dropdowns of saved selections, swap button, "A vs B" block (distance, overlap, bridge papers), outlines A magenta / B green, points outside both dim to 0.08 | researcher | missing | ui §d flow 3, §c selection colours |
+| F29 | Ideas UI: button disabled until A and B set; confirm step shows the 28 papers that will be sent; seconds counter and "Stop waiting (the result will still be saved)"; 90 s grey warning; ideas rendered with cited ids tagged A / B / bridge and provenance header; dropped-idea and model-failure messages; Ideas tab lists stored ideas; toast if the user moved on | researcher | missing | ui §d flow 7, §e, §f |
+| F30 | Saved selections UI: "Save" or Cmd+S, inline name field, saved list with count and date, load into a slot, restore notes after a rerun (layout changed → polygon hidden; N of M papers found), recomputed label and stats with the saved window shown in grey | researcher | missing | ui §d flows 8 and 9 |
+| F31 | Phrases tab: rising phrases with counts and growth, the pooled backtest line ("36% vs 27%"), click → phrase selection; phrases that are too broad to draw an edge still listed | researcher | missing | design Part 2 honesty; ui §f |
+| F32 | Error and status banners: server unreachable (retry every 5 s, file:// hint), 403 guard message, stale-lock note in the footer, request progress lines | researcher | missing | ui §e |
+| F33 | Keyboard and accessibility: focus order, keys (`Esc / L A B 1 2 [ ] + - 0 Enter`), canvas `tabindex` and `aria-label`, every map number also in a table, 11 px minimum text, contrast ≥ 6.5:1, `prefers-reduced-motion` honoured, colour-blind check with Lightness only | researcher | missing | ui §g |
+| F34 | Layouts: 1600×1000 three columns (232 / 968 / 400, tabs 280 resizable 120–520); below 1500 px the left column folds into a 2-row header and A/B move to the inspector; below 1200 px the inspector is a drawer | researcher | missing | ui §b |
+| F35 | Verification harness: one runnable self-check per module (ponytail), a headless Chrome screenshot script for the default view and the links view, and the deck.gl frame-time measurement at 459k points | operator | partial (scratchpad `shot.cjs` exists for `map.html`) | arch §8; design Next Step 7 |
+
+### Visual design (requested 2026-11-06, not in the design docs)
+
+| id | feature | user type | state | source of intent |
+|---|---|---|---|---|
+| F36 | Design and animation libraries fixed before build, loaded from a CDN (one HTML file, no build step). Survey of `~/myproj` on 2026-11-06: the user's recurring stack is Tailwind v4 (about 20 projects) with Inter or JetBrains Mono, shadcn-style tokens (Radix + `default_shadcn_theme.css` in the fraxia sites), and `motion` / `framer-motion` 12 for animation (Recordly, fraxia, TorchLeet); GSAP + Lenis only on the personal site. field-radar itself uses none of these: `report/map.html` is datamapplot's stock Bootstrap 3 + Roboto output, `merge.html` is bare CSS. User's choice (2026-11-06): **Tailwind v4 browser build** pinned at `https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.5` with a `@theme` block for the dark tokens in ui §c, **Inter** (plus JetBrains Mono for numbers and ids) from Google Fonts, and **anime.js** pinned at `https://cdn.jsdelivr.net/npm/animejs@4.5.0/dist/bundles/anime.umd.min.js` (global `anime`, 84 KB) for panel, toast, counter and badge animations; deck.gl's own `transitions` animate point recolour and zoom-to-selection. Known limit: the Tailwind browser build compiles classes at load (Tailwind calls it development-only) and has no `@apply`; acceptable for a local single-user page. Fallback if load time suffers: generate `radar/app.css` once with the Tailwind CLI and commit it. Not chosen: shadcn token set, motion/framer-motion (the user's other projects), GSAP | researcher | missing | interview 2026-11-06 ("find a design library ... also an animation library. look at what we previously used"); versions resolved on jsDelivr 2026-11-06 |
+| F37 | Visual style after fuselabcreative.com (style change 2026-11-07, user: emulate fuselabcreative.com): light grey canvas `#dddddd` with deep navy text `#091528` and muted `#70747e`; header and left column sit directly on the canvas with no panel background or borders; the map, the tabs area and the inspector are white `#ffffff` cards with 16 px radius, 12 px gaps and 12 px outer padding; the map card itself stays dark (`#0e1116`, like the dark product shots inside the site's light cards) so the growth scale, A/B outlines and the colour-blind checks keep working; typeface **Liter** 400 from Google Fonts for all UI text (JetBrains Mono stays for numbers and ids); headings large and light (inspector title 22 px); pill tags with a coloured dot and a 20 % tint background (violet `#7000ff`, green `#1dec86`, blue `#1c63ec`, red `#ff6157`); primary action buttons solid violet `#7000ff` with white text, secondary solid green `#1dec86` with navy text; controls 8 px radius, 1 px `#c9cbd0` border on white; A = violet `#7000ff` in the light chrome and `#9d6bff` on the dark map card, B = green `#1dec86`. Not chosen: a fully light map (would need a new growth scale and a new colour-blind check; wins only if the user wants the map to read as part of the page rather than as an embedded product view) | researcher | missing | user request 2026-11-07 with the URL; reference captured in `pm/evidence/2026-11-07-style/reference/` |
+
+## Out of scope
+- Notes on selections or ideas, a "thinking desk", vault-on-the-map, taste learning from rated ideas (ruled out in office hours).
+- Convergence over time (time-lapse of topics moving); UMAP is not stable between runs. `topic_links` by month keeps the door open.
+- Semantic search of free text (no local text embedder); title search is `ILIKE`, phrase search is literal.
+- Category pairs (S2) and Hacker News counts (S4) in the workbench; they stay in the monthly report only.
+- Fine clusters smaller than the current minimum (142 papers) as "arriving"; needs a fourth level, deferred.
+- Hosting, login, more than one user, mobile widths under 1200 px as a target.
+- Colour by arXiv category (dropped in the UI plan, decision 8).
+- Persisting every transient selection (only saved ones and ideas are stored).
+
+## Unplanned (found in code, in no intent source — keep or delete?)
+- `report/merge.html` and the two-panel merge view in `radar/merge.py` (`--view`): the design says retire them once F16 exists. Keep until then.
+- `radar/merge.py` `DEFAULT_HOME` phrase list (the home field): under the design it becomes one saved selection; the phrases are still needed once to create that selection. Keep as a seed.
+
+## Open defaults the PM assumes unless told otherwise
+1. Default window 6 months (F20).
+2. First click fills A (F24).
+3. 40 edges by default, re-judged at 20 / 40 / 80 after Part 1 (F22).
+4. Hover titles on points via `GET /paper?row=` (F10).
+5. No permanent home-field marker; the home field is a saved selection (F30).
