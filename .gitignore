@@ -7,3 +7,4 @@ report/*.html
 site/
 .DS_Store
 .vercel/
+mcp/node_modules/

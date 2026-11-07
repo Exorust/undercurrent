@@ -189,6 +189,9 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   .stat .v { font-size: 26px; }
   .cta .btn { flex: 1 1 100%; justify-content: center; }
 }
+#agents pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;font:12px/1.6 var(--mono);margin:0 0 12px}
+#agents button{align-self:flex-start;min-height:28px;cursor:pointer;padding:6px 12px;letter-spacing:0}
+#agentCopyStatus{color:var(--secondary);font-size:13px;min-height:24px}
 </style>
 </head>
 <body>
@@ -217,6 +220,7 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
       <a href="#how">How it works</a>
       <a href="#first">First five minutes</a>
       <a href="#method">Method</a>
+      <a href="#agents">Agents</a>
     </div>
     <div class="navright">
       <a class="wide" href="https://charoori.com/blog/">Writing</a>
@@ -292,6 +296,20 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
         <p>Draw around any patch of the map and set it against your own area: how far apart they are and what they share.</p>
         <a class="go" href="map/?tour=compare">Step-by-step tour →</a>
       </div>
+    </div>
+  </div>
+</section>
+
+<section id="agents">
+  <div class="wrap">
+    <div class="fade">
+      <h2>Use it from your own agent</h2>
+      <p class="lead">Pick two areas on the map and undercurrent writes the prompt: the evidence for both sides and a method for combining them. Paste it into Claude or ChatGPT, or connect your coding agent to undercurrent's MCP server and let it compare topics, read abstracts and check whether an idea already exists.</p>
+    </div>
+    <div class="tile cards3 fade">
+      <div class="task"><h3>Copy the prompt</h3><p>Works with any chat AI. Set A and B on the map, choose what to borrow, then copy the idea prompt with its paper evidence.</p><a class="go" href="map/?tour=compare">Compare two areas →</a></div>
+      <div class="task"><h3>Claude Code, Codex, Cursor</h3><p>Connect your coding agent to the MCP server. For Claude Code:</p><pre class="well"><code id="agentCommand">claude mcp add --transport http undercurrent https://charoori.com/undercurrent/api/mcp</code></pre><button id="copyAgentCommand" class="btn btn-s" aria-label="Copy Claude Code MCP setup">Copy</button><div id="agentCopyStatus" role="status" aria-live="polite"></div></div>
+      <div class="task"><h3>Free while it's new</h3><p>The MCP server is free and read-only. Heavier tools may become a paid plan later.</p></div>
     </div>
   </div>
 </section>
@@ -423,6 +441,15 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
 <script>
 (function () {
   document.documentElement.classList.add('js');
+  var copyAgent = document.getElementById('copyAgentCommand'), copyTimer;
+  copyAgent.addEventListener('click', async function () {
+    var status = document.getElementById('agentCopyStatus');
+    try {
+      await navigator.clipboard.writeText(document.getElementById('agentCommand').textContent);
+      copyAgent.textContent = 'Copied'; status.textContent = 'Claude Code setup copied';
+      clearTimeout(copyTimer); copyTimer = setTimeout(function () { copyAgent.textContent = 'Copy'; }, 2000);
+    } catch (e) { status.textContent = 'Could not copy. Select and copy the code line.'; }
+  });
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   var STEPS = [0.5, 0.71, 0.9, 1.11, 1.41, 2.0];
   var G = ['#2c5f9e','#6c93c3','#a9bcd4','#a6a6a6','#e5b183','#df8743','#c4501b'];   // light map growth steps

@@ -77,6 +77,53 @@ def swap(tmp, out):
     shutil.rmtree(old, ignore_errors=True)
 
 
+def agent_assets(w):
+    """Ship the read-only MCP function and discovery text inside the atomic export."""
+    mcp = pathlib.Path(__file__).resolve().parent.parent / "mcp"
+    for f in sorted((mcp / "api").rglob("*")):
+        if f.is_file(): w.put("api/" + f.relative_to(mcp / "api").as_posix(), f.read_bytes())
+    w.put("package.json", (mcp / "package.json").read_bytes())
+    w.put("llms.txt", """# undercurrent
+
+A static map of 459,249 arXiv CS papers with topic growth, arriving sub-topics,
+and links supported by bridge papers. Growth adjusts for overall CS growth.
+Windows W = 3m, 6m, 12m cover complete months. Levels L = 0 sub-topic, 1 topic, 2 area.
+
+Map: https://charoori.com/undercurrent/map/
+Project: https://charoori.com/undercurrent/
+Source: https://github.com/Exorust/undercurrent
+MCP: https://charoori.com/undercurrent/api/mcp
+Free, read-only Streamable HTTP; no authentication. Rate limits may apply.
+Claude Code setup:
+claude mcp add --transport http undercurrent https://charoori.com/undercurrent/api/mcp
+Tools: list_topics, get_topic, arriving, links, compare, get_papers, novelty_check.
+Prompt: ideas_between. Abstracts and novelty searches use the live arXiv API.
+
+Data paths below are relative to https://charoori.com/undercurrent/data/.
+meta.json: object with n_points, months, levels, last_complete, and windows;
+each window records date bounds, prior bounds and CS volume correction.
+labels-L.json: {level, clusters: [{c, label, n, cx, cy, parent, parent_share}]}.
+topics-L-W.json: {window, level, topics: [{c, label, n_total, recent, prior,
+growth, is_new, arriving}]}; arriving entries include sub-topic shares and growth.
+links-L-W.json: {window, level, rule, bridge_links, phrase_links}; bridge entries
+include c1, c2, n_bridge, strength, growth, status and prior counts.
+link-index-L-W.json: array of "c1-c2" strings identifying exported pair files.
+link/L-W-c1-c2.json: {window, level, c1, c2, n_bridge, bridges, phrases};
+bridges contain row, id, title, month, cat, citations and arXiv URL.
+topic/L-W-c.json: {n, months, growth, top_cited, newest, terms, topics};
+months are counts aligned to meta.months, terms are distinctive terms, topics
+include own_share and nbr_share. Paper lists cover the whole snapshot.
+phrases-W.json: {level, window, phrases}, with rising phrase statistics.
+phrase-rows.json: object mapping phrase strings to paper-row arrays.
+papers/k.json: arrays [id, title, month, cat, citations]; k = floor(row/10000),
+with position row % 10000 in each shard.
+centroids-0.bin: little-endian Float32 matrix of level-0 means, n x 768.
+counts-0.json: {n, parent1, parent2}, parallel arrays of counts and majority parents;
+parent centroid means use counts as weights.
+ideas.json: array of saved idea packs with topic pair, model, shown papers and ideas.
+""")
+
+
 # ---------- export ----------
 
 class Writer:
@@ -182,6 +229,7 @@ def export(out, n_ideas):
             print(f"  ideas {c1}-{c2}: {len(r['ideas'])} kept, {r['dropped']} dropped", flush=True)
         S.wb.close()
     w.put(f"{D}ideas.json", dumps(ideas))
+    agent_assets(w)
     nf, nb = sum(g[0] for g in w.groups.values()), sum(g[1] for g in w.groups.values())
     w.put(f"{D}manifest.json", dumps({"files": nf + 1, "bytes": nb, "generated": gen, "run_id": S.run_id}))
     cur.close(); S.con.close()
@@ -210,7 +258,10 @@ def selftest():
     d = pathlib.Path(tempfile.mkdtemp(prefix="radar-export-selftest-")); out = d / "site"
     out.mkdir(); (out / "old.txt").write_text("old")
     tmp = d / "site.tmp"; tmp.mkdir(); (tmp / "new.txt").write_text("new")
+    agent_assets(Writer(tmp))
     swap(tmp, out)
+    assert (out / "api/mcp.js").is_file() and (out / "llms.txt").is_file()
+    assert (out / "package.json").is_file() and not (out / "node_modules").exists()
     assert (out / "new.txt").read_text() == "new" and not (out / "old.txt").exists() and not tmp.exists() and not (d / "site.old").exists()
     tmp.mkdir(); (tmp / "x").write_text("x"); shutil.rmtree(out); swap(tmp, out)   # first export: no old site
     assert (out / "x").exists()
