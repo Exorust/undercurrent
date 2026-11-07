@@ -89,6 +89,46 @@ def convergence(con, months):
     return pair_rows(by_month(con), recent, prior)[0]
 
 
+PAPER_COLS = "strftime(submitted, '%Y-%m') ym, title, title || '. ' || abstract txt, authors[1] a1, primary_cat"
+
+
+def candidate_vocab(df=None, recent=None, min_recent=30):
+    """The phrase vocabulary of S3: 2-4-grams seen twice in a 10k-paper chunk of the recent window, kept when at least
+    min_recent recent papers use them and they hold no product name. Sorted list. Shared with links.py (paper_terms).
+    With no arguments it reads the live 6-month window from the database (read-only)."""
+    if df is None:
+        con = duckdb.connect(str(DB), read_only=True)
+        df = con.execute(papers_sql(PAPER_COLS)).df(); recent = windows(con, 6)[0]; con.close()
+    # Memory: fitting 2-4-grams on all docs at once builds tens of millions of strings.
+    # Find candidates in 10k-doc chunks of the recent window (seen twice in a chunk), then count only those.
+    rec_txt = df.txt.values[np.isin(df.ym.values, recent)]
+    cand = set()
+    for i in range(0, len(rec_txt), 10000):
+        cand.update(CountVectorizer(min_df=2, **KW).fit(rec_txt[i:i + 10000]).vocabulary_)
+    vec = CountVectorizer(vocabulary=sorted(cand), **KW)
+    rc = np.asarray(vec.transform(rec_txt).sum(0)).ravel()
+    names = vec.get_feature_names_out()
+    named = np.array([any(t in NAMES or any(ch.isdigit() for ch in t) for t in k.split()) for k in names], dtype=bool)
+    return [str(k) for k in names[(rc >= min_recent) & ~named]]
+
+
+def _old_inline_vocab(df, recent, min_recent):  # the pre-extraction code, kept only for the self-check below
+    ym = df.ym.values; rec_mask = np.isin(ym, recent); rec_txt = df.txt.values[rec_mask]; cand = set()
+    for i in range(0, len(rec_txt), 10000):
+        cand.update(CountVectorizer(min_df=2, **KW).fit(rec_txt[i:i + 10000]).vocabulary_)
+    vec = CountVectorizer(vocabulary=sorted(cand), **KW); X = vec.transform(df.txt)
+    rc = np.asarray(X[rec_mask].sum(0)).ravel(); names = vec.get_feature_names_out()
+    named = np.array([any(t in NAMES or any(ch.isdigit() for ch in t) for t in k.split()) for k in names])
+    return list(np.array(names)[np.where((rc >= min_recent) & ~named)[0]])
+
+
+_toy = pd.DataFrame({"ym": ["2026-10"] * 30 + ["2025-01"] * 10,
+                     "txt": [f"world action models for robot {i % 3}. gpt4 agent harness rocks" for i in range(30)]
+                            + ["world action models old paper"] * 10})
+assert candidate_vocab(_toy, ["2026-10"], 5) == _old_inline_vocab(_toy, ["2026-10"], 5) and "world action models" in candidate_vocab(_toy, ["2026-10"], 5)
+del _toy
+
+
 def terms(con, months, min_recent=30):
     """S3: 2–4 word phrases that are young, growing, used by many author groups, and topical.
 
@@ -96,25 +136,15 @@ def terms(con, months, min_recent=30):
     must be concentrated in a few arXiv categories (KL divergence from the average recent paper).
     Stop words are removed before phrases are formed, so "chain of thought" is counted as "chain thought".
     """
-    df = con.execute(papers_sql("strftime(submitted, '%Y-%m') ym, title, title || '. ' || abstract txt, authors[1] a1, primary_cat")).df()
+    df = con.execute(papers_sql(PAPER_COLS)).df()
     recent, prior = windows(con, months)
-    # Memory: fitting 2-4-grams on all docs at once builds tens of millions of strings.
-    # Find candidates in 10k-doc chunks of the recent window (seen twice in a chunk), then count only those everywhere.
     ym = df.ym.values
     rec_mask = np.isin(ym, recent); pri_mask = np.isin(ym, prior)
     vol = rec_mask.sum() / max(pri_mask.sum(), 1)
-    rec_txt = df.txt.values[rec_mask]
-    cand = set()
-    for i in range(0, len(rec_txt), 10000):
-        cand.update(CountVectorizer(min_df=2, **KW).fit(rec_txt[i:i + 10000]).vocabulary_)
-    print(f"S3: {len(cand)} candidate phrases from {len(rec_txt)} recent papers; volume ratio {vol:.2f}", file=sys.stderr)
-    vec = CountVectorizer(vocabulary=sorted(cand), **KW)
-    X = vec.transform(df.txt)
-    rc = np.asarray(X[rec_mask].sum(0)).ravel()
-    names = vec.get_feature_names_out()
-    named = np.array([any(t in NAMES or any(ch.isdigit() for ch in t) for t in k.split()) for k in names])
-    cols = np.where((rc >= min_recent) & ~named)[0]
-    X = X[:, cols].tocsc(); vocab = np.array(names)[cols]
+    vocab = np.array(candidate_vocab(df, recent, min_recent))
+    print(f"S3: {len(vocab)} phrases from {rec_mask.sum()} recent papers; volume ratio {vol:.2f}", file=sys.stderr)
+    # same counts as before the extraction: binary columns do not depend on which other columns exist
+    X = CountVectorizer(vocabulary=list(vocab), **KW).transform(df.txt).tocsc()
     T = CountVectorizer(vocabulary=list(vocab), **KW).transform(df.title.values[rec_mask])
     title_n = np.asarray(T.sum(0)).ravel()
 

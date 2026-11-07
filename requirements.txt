@@ -1,0 +1,11 @@
+# Exact pins: map.py relies on pynndescent's neighbor_graph contract (self at column 0)
+# and UMAP's precomputed_knn path, both version-specific.
+datamapplot==0.7.3
+duckdb==2.0.0
+hdbscan==0.8.44
+numpy==2.5.4
+pandas==2.3.3
+pyarrow==26.0.1
+pynndescent==0.7.0
+scikit-learn==1.9.1
+umap-learn==0.5.12
