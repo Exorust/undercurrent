@@ -5,145 +5,195 @@
 <link rel="icon" href="data:,">
 <style>
 /* Critical defaults: the skeleton does not wait for Tailwind or web fonts. */
-:root{--color-bg:#dddddd;--color-panel:#ffffff;--color-map:#0e1116;--color-border:#c9cbd0;--color-text:#091528;--color-muted:#70747e;--color-violet:#7000ff;--color-green:#1dec86;--color-blue:#1c63ec;--color-red:#ff6157;--color-a:#7000ff;--color-a-map:#9d6bff;--color-b:#1dec86;--color-hover:#f3f4f5;--color-divider:#e8e9ec;--color-tint:rgba(9,21,40,0.06);--color-error:rgba(255,97,87,0.12);--color-g1:#2f62b8;--color-g2:#5a86c8;--color-g3:#8ea3c0;--color-g4:#8c8c8c;--color-g5:#c8a57a;--color-g6:#e3883a;--color-g7:#ff6a1a;--color-nodata:#333333}
+:root{color-scheme:dark;--color-bg:#161616;--color-tile:rgba(255,255,255,.05);--color-well:rgba(255,255,255,.04);--color-hair:rgba(255,255,255,.06);--color-solid:#1f1f1f;--color-pop:#242424;--color-map:#101010;--color-border:rgba(255,255,255,.12);--color-btn:rgba(255,255,255,.07);--color-sel:rgba(255,255,255,.12);--color-text:#e8e8e8;--color-muted:#9a9a9a;--color-green:#8fd18f;--color-green-dk:#5f8f5f;--color-orange:#e0763c;--color-orange-tint:rgba(224,118,60,.18);--color-a:#8fd18f;--color-a-map:#8fd18f;--color-b:#f0f0f0;--color-hover:rgba(255,255,255,.04);--color-panel:#1f1f1f;--color-divider:rgba(255,255,255,.06);--color-tint:rgba(255,255,255,.06);--color-error:#2a1a1a;--color-g1:#2f62b8;--color-g2:#5a86c8;--color-g3:#8ea3c0;--color-g4:#8c8c8c;--color-g5:#c8a57a;--color-g6:#e3883a;--color-g7:#ff6a1a;--color-nodata:#333333}
 html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text)}
 [hidden]{display:none!important}
 #app{display:grid;height:100vh;padding:0 12px 12px 0;row-gap:12px;grid-template-columns:232px minmax(0,1fr) 412px;grid-template-rows:44px minmax(0,1fr) 280px}
 header{grid-column:1/-1;border:0;background:transparent}
 #left{grid-area:2/1/4/2;background:transparent;border:0}
-#mapwrap{grid-area:2/2;position:relative}
+#mapwrap{grid-area:2/2;position:relative;background:#101010}
 #tabs{grid-area:3/2}
-#insp{grid-area:2/3/4/4;background:var(--color-panel);margin-left:12px;border:0}
+#insp{grid-area:2/3/4/4;background:rgba(255,255,255,.05);margin-left:12px;border:0}
 #loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--color-muted)}
 </style>
-<link id="fontsCss" rel="stylesheet" media="print" onload="this.dataset.loaded='1'" onerror="this.dataset.loaded='1'" href="https://fonts.googleapis.com/css2?family=Liter&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<link id="fontsCss" rel="stylesheet" media="print" onload="this.dataset.loaded='1'" onerror="this.dataset.loaded='1'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.5"></script>
 <style type="text/tailwindcss">
 @theme static {
-  --color-bg: #dddddd;
-  --color-panel: #ffffff;
-  --color-map: #0e1116;
-  --color-border: #c9cbd0;
-  --color-text: #091528;
-  --color-muted: #70747e;
-  --color-violet: #7000ff;
-  --color-green: #1dec86;
-  --color-blue: #1c63ec;
-  --color-red: #ff6157;
-  --color-a: #7000ff;
-  --color-a-map: #9d6bff;
-  --color-b: #1dec86;
-  --color-hover: #f3f4f5;
-  --color-divider: #e8e9ec;
-  --color-tint: rgba(9,21,40,0.06);
-  --color-error: rgba(255,97,87,0.12);
+  --color-bg: #161616;
+  --color-tile: rgba(255,255,255,.05);
+  --color-well: rgba(255,255,255,.04);
+  --color-hair: rgba(255,255,255,.06);
+  --color-solid: #1f1f1f;
+  --color-pop: #242424;
+  --color-map: #101010;
+  --color-border: rgba(255,255,255,.12);
+  --color-btn: rgba(255,255,255,.07);
+  --color-sel: rgba(255,255,255,.12);
+  --color-text: #e8e8e8;
+  --color-muted: #9a9a9a;
+  --color-green: #8fd18f;
+  --color-green-dk: #5f8f5f;
+  --color-orange: #e0763c;
+  --color-orange-tint: rgba(224,118,60,.18);
+  --color-a: #8fd18f;
+  --color-a-map: #8fd18f;
+  --color-b: #f0f0f0;
+  --color-hover: rgba(255,255,255,.04);
+  --color-panel: #1f1f1f;
+  --color-divider: rgba(255,255,255,.06);
+  --color-tint: rgba(255,255,255,.06);
+  --color-error: #2a1a1a;
   --color-g1: #2f62b8; --color-g2: #5a86c8; --color-g3: #8ea3c0; --color-g4: #8c8c8c; --color-g5: #c8a57a; --color-g6: #e3883a; --color-g7: #ff6a1a;
   --color-nodata: #333333;
-  --font-sans: "Liter", system-ui, sans-serif; --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --font-sans: "Inter", system-ui, sans-serif; --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 </style>
 <style>
 /* plain CSS (unlayered, so it wins over Tailwind's preflight layer); critical tokens also exist before the @theme block runs */
 html,body{height:100%;margin:0;overflow:hidden}
-body{background:var(--color-bg);color:var(--color-text);font:13px/1.4 "Liter",system-ui,sans-serif}
+/* F40 page: near-black with a faint aurora (teal top-left, violet top-right, burnt orange bottom-centre) behind the tiles */
+body{background:radial-gradient(60% 55% at 8% 0%,rgba(70,150,150,.10),transparent 70%),radial-gradient(55% 50% at 95% 4%,rgba(120,90,170,.09),transparent 70%),radial-gradient(60% 50% at 50% 105%,rgba(200,90,70,.08),transparent 70%),radial-gradient(70% 60% at 50% 45%,#1c1c1c,#161616 75%) #161616;color:var(--color-text);font:13px/1.4 "Inter",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 *{box-sizing:border-box}
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.14) transparent}
 .mono,td.n,.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-size:12px}
 .muted{color:var(--color-muted)} .small{font-size:12px} .tiny{font-size:11px}
-a{color:var(--color-blue);text-decoration:none} a:hover{text-decoration:underline}
-button,select,input{appearance:none;font:inherit;color:inherit;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;transition:background-color .1s}
-button{padding:3px 9px;cursor:pointer;font-size:12px;line-height:18px}
-button:hover:not(:disabled),select:hover,tr[tabindex]:hover,.chip:hover{background:var(--color-hover)}
+a{color:var(--color-text);text-decoration:none;text-underline-offset:3px} a:hover{text-decoration:underline;text-decoration-color:var(--color-orange)}
+.plist a{color:#f2f2f2}
+button,select,input{appearance:none;font:inherit;color:inherit;background:var(--color-btn);border:1px solid var(--color-border);border-radius:10px;transition:background-color .1s,border-color .1s}
+button{padding:3px 10px;cursor:pointer;font-size:12px;line-height:18px}
+button:not(.chip):not(#qswitch button):not(#levelBox button):not(.dd>div button):not(#savedList button):not(#zoomBtns button):not(#infoBtn):not(.slot button):not(th button):not(#tabbar button){text-transform:uppercase;letter-spacing:.04em}
+button:hover:not(:disabled),select:hover{background:rgba(255,255,255,.11)}
+tr[tabindex]:hover,.chip:hover{background:var(--color-hover)}
 button:disabled{cursor:not-allowed;color:var(--color-muted);border-style:dashed;background:transparent}
-button.pri{border-color:var(--color-border);color:var(--color-text)}
-button.on,button[aria-pressed=true],button[aria-checked=true]{background:var(--color-text);color:var(--color-panel);border-color:var(--color-border)}
-:focus-visible{outline:2px solid var(--color-violet);outline-offset:2px}
-input[type=text],input[type=search],select{padding:4px 8px;font-size:12px;width:100%}
+button.on,button[aria-pressed=true],button[aria-checked=true]{background:var(--color-sel);color:var(--color-text);border-color:var(--color-border)}
+:focus-visible{outline:2px solid var(--color-orange);outline-offset:2px}
+input[type=text],input[type=search],select{padding:4px 8px;font-size:12px;width:100%;background:var(--color-well);border-color:rgba(255,255,255,.08)}
+input[type=text]:focus,input[type=search]:focus{border-color:rgba(255,255,255,.2)}
 select{padding-right:20px;background-image:linear-gradient(45deg,transparent 50%,var(--color-muted) 50%),linear-gradient(135deg,var(--color-muted) 50%,transparent 50%);background-position:calc(100% - 11px) 50%,calc(100% - 7px) 50%;background-size:4px 4px;background-repeat:no-repeat}
+select option{background:var(--color-pop);color:var(--color-text)}
 input::placeholder{color:var(--color-muted)}
-input[type=radio],input[type=checkbox]{width:12px;height:12px;margin:0 6px 0 0;vertical-align:-1px;border-color:var(--color-muted);flex:none}
-input[type=radio]{border-radius:50%} input[type=radio]:checked{box-shadow:inset 0 0 0 2px var(--color-panel);background:var(--color-text)}
-input[type=checkbox]:checked{background:var(--color-text);box-shadow:inset 0 0 0 2px var(--color-panel)}
-input[role=switch]{width:24px;height:14px;border-radius:7px;background:radial-gradient(circle at 6px 50%,var(--color-muted) 3.5px,transparent 4.5px),var(--color-panel);box-shadow:none}
-input[role=switch]:checked{background:radial-gradient(circle at 17px 50%,var(--color-text) 3.5px,transparent 4.5px),var(--color-panel);border-color:var(--color-border);box-shadow:none}
+input[type=radio],input[type=checkbox]{width:12px;height:12px;margin:0 6px 0 0;vertical-align:-1px;border-color:rgba(255,255,255,.3);background:transparent;flex:none}
+input[type=radio]{border-radius:50%} input[type=radio]:checked{box-shadow:inset 0 0 0 2px #1d1d1d;background:var(--color-text);border-color:var(--color-text)}
+input[type=checkbox]{border-radius:3px}
+input[type=checkbox]:checked{background:var(--color-text);box-shadow:inset 0 0 0 2px #1d1d1d;border-color:var(--color-text)}
+input[role=switch]{width:24px;height:14px;border-radius:7px;background:radial-gradient(circle at 6px 50%,var(--color-muted) 3.5px,transparent 4.5px),var(--color-well);border-color:rgba(255,255,255,.14);box-shadow:none}
+input[role=switch]:checked{background:radial-gradient(circle at 17px 50%,var(--color-green) 3.5px,transparent 4.5px),rgba(143,209,143,.16);border-color:rgba(143,209,143,.45);box-shadow:none}
 input:disabled+span,label:has(input:disabled){color:var(--color-muted)}
-input[type=range]{width:100%;height:4px;background:var(--color-border);border:0;padding:0}
+input[type=range]{width:100%;height:4px;background:var(--color-sel);border:0;padding:0;border-radius:2px}
 input[type=range]::-webkit-slider-thumb{appearance:none;width:12px;height:12px;border-radius:50%;background:var(--color-text)}
 details>summary{list-style:none;cursor:pointer} details>summary::-webkit-details-marker{display:none}
-.seg{display:inline-flex} .seg button{border-radius:0;margin-left:-1px} .seg button:first-child{border-radius:8px 0 0 8px;margin:0} .seg button:last-child{border-radius:0 8px 8px 0}
-h4{margin:12px 0 5px;font-size:12px;letter-spacing:0;text-transform:none;color:var(--color-muted);font-weight:400}
-.gr{display:inline-block;min-width:44px;text-align:center;border-radius:6px;padding:0 4px;color:var(--color-text);font-weight:600;font-size:12px;font-family:"JetBrains Mono",monospace}
-.new{display:inline-block;background:var(--color-g7);color:var(--color-text);font-weight:700;border-radius:6px;padding:0 4px;font-size:11px}
-.chip{display:inline-block;border:1px solid var(--color-border);border-radius:9px;padding:0 7px;font-size:11px;margin:1px 4px 1px 0;color:var(--color-text);background:transparent;line-height:16px}
-.rank{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--color-panel);color:var(--color-text);font-size:11px;text-align:center;line-height:16px;font-weight:700}
+.seg{display:inline-flex} .seg button{border-radius:0;margin-left:-1px} .seg button:first-child{border-radius:10px 0 0 10px;margin:0} .seg button:last-child{border-radius:0 10px 10px 0}
+.seg button:not([aria-pressed=true]):not([aria-checked=true]){background:var(--color-well);color:var(--color-muted)}
+h4{margin:12px 0 5px;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--color-muted);font-weight:500}
+/* thin line icons (Lucide-style paths, stroke 1.5) drawn as masks in currentColor, so labels keep their DOM text */
+h4[data-i]::before{content:"";display:inline-block;width:14px;height:14px;margin-right:7px;vertical-align:-2.5px;background:currentColor;-webkit-mask:var(--ic) center/14px 14px no-repeat;mask:var(--ic) center/14px 14px no-repeat;opacity:.9}
+[data-i=layers]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m12 2 10 5-10 5L2 7z'/%3E%3Cpath d='m2 17 10 5 10-5'/%3E%3Cpath d='m2 12 10 5 10-5'/%3E%3C/svg%3E")}
+[data-i=palette]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22a10 10 0 1 1 10-10c0 2.8-2.2 4-4.5 4H16a2 2 0 0 0-1.5 3.3A1.6 1.6 0 0 1 12 22z'/%3E%3Ccircle cx='7.5' cy='11' r='1'/%3E%3Ccircle cx='11' cy='7' r='1'/%3E%3Ccircle cx='16' cy='8.5' r='1'/%3E%3C/svg%3E")}
+[data-i=trend]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 7 13.5 15.5 8.5 10.5 2 17'/%3E%3Cpath d='M16 7h6v6'/%3E%3C/svg%3E")}
+[data-i=merge]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='18' cy='18' r='3'/%3E%3Ccircle cx='6' cy='6' r='3'/%3E%3Cpath d='M6 21V9a9 9 0 0 0 9 9'/%3E%3C/svg%3E")}
+[data-i=search]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m21 21-4.3-4.3'/%3E%3C/svg%3E")}
+[data-i=compare]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M8 3 4 7l4 4'/%3E%3Cpath d='M4 7h16'/%3E%3Cpath d='m16 21 4-4-4-4'/%3E%3Cpath d='M20 17H4'/%3E%3C/svg%3E")}
+[data-i=bookmark]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m19 21-7-4-7 4V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z'/%3E%3C/svg%3E")}
+[data-i=file]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'/%3E%3Cpath d='M14 2v6h6'/%3E%3Cpath d='M16 13H8'/%3E%3Cpath d='M16 17H8'/%3E%3C/svg%3E")}
+[data-i=clock]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M12 6v6l4 2'/%3E%3C/svg%3E")}
+[data-i=hash]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9h16M4 15h16M10 3 8 21M16 3l-2 18'/%3E%3C/svg%3E")}
+[data-i=calendar]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E")}
+[data-i=bulb]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6M10 22h4'/%3E%3Cpath d='M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z'/%3E%3C/svg%3E")}
+/* growth badge: step colour as text on a well, hairline in that colour */
+.gr{display:inline-block;min-width:44px;text-align:center;border-radius:8px;padding:0 5px;color:var(--gc,var(--color-text));background:var(--color-well);border:1px solid color-mix(in srgb,var(--gc,var(--color-muted)) 40%,transparent);font-weight:500;font-size:12px;line-height:17px;font-family:"JetBrains Mono",monospace}
+/* "new" tag: outline pill with an orange dot */
+.new{display:inline-flex;align-items:center;gap:4px;background:transparent;color:var(--color-orange);border:1px solid rgba(224,118,60,.5);border-radius:9999px;padding:0 6px 0 5px;font-size:11px;line-height:15px;font-weight:500;letter-spacing:.04em;text-transform:uppercase}
+.new::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--color-orange);flex:none}
+.chip{display:inline-block;border:1px solid var(--color-hair);border-radius:10px;padding:0 7px;font-size:11px;margin:1px 4px 1px 0;color:var(--color-text);background:var(--color-well);line-height:16px}
+.rank{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--color-sel);color:var(--color-text);font-size:11px;text-align:center;line-height:16px;font-weight:600}
 /* layout */
 #app{display:grid;height:100vh;padding:0 12px 12px 0;row-gap:12px;grid-template-columns:232px minmax(0,1fr) 412px;grid-template-rows:44px minmax(0,1fr) var(--tabs-h,280px)}
 header{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:0 12px;border:0;background:transparent;white-space:nowrap;min-width:0}
 header .hrow{display:contents}
-#hname{font-size:15px;font-weight:700;order:1} #qswitch{order:2} #winDD{order:3;position:relative} #winLabel{order:4;font-size:12px;color:var(--color-muted);overflow:hidden;text-overflow:ellipsis} #winLabel b{color:var(--color-text);font-weight:500} #infoBtn{order:5}
-#status{order:9;margin-left:auto;font-size:12px;color:var(--color-muted)}
+#hname{font-size:15px;font-weight:600;letter-spacing:.01em;order:1} #qswitch{order:2} #winDD{order:3;position:relative} #winLabel{order:4;font-size:12px;color:var(--color-muted);overflow:hidden;text-overflow:ellipsis} #winLabel b{color:var(--color-text);font-weight:500} #infoBtn{order:5}
+/* status: outline pill with a coloured dot */
+#crumb{order:0;display:inline-flex;align-items:center;gap:8px;margin-right:-4px;font:500 12px/1 "JetBrains Mono",ui-monospace,monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--color-muted)}
+#crumb a{color:var(--color-muted);text-decoration:none} #crumb a:hover{color:var(--color-text);text-decoration:none} #crumb .sep{opacity:.6}
+#hname{color:var(--color-text);text-decoration:none} a#hname[href]:hover{color:var(--color-text);text-decoration:underline;text-decoration-color:var(--color-orange)}
+#ghLink{order:10;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;border-radius:6px;color:var(--color-muted);text-decoration:none} #ghLink:hover{color:var(--color-text)}
+header:has(#status[hidden]) #ghLink{margin-left:auto}
+#status{order:9;margin-left:auto;font-size:11px;color:var(--color-muted);display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.14);border-radius:9999px;padding:2px 10px 2px 8px;text-transform:uppercase;letter-spacing:.04em;line-height:16px}
+#statusDot{order:-1;font-size:9px;line-height:1}
 #infoBtn{width:18px;height:18px;padding:0;border-radius:50%;font-size:11px;line-height:16px;flex:none}
-#left{grid-row:2/4;grid-column:1;border:0;padding:10px;min-height:0;overflow-y:auto;overflow-x:hidden;background:transparent}
+/* left column: a 232 px tile drawn inside transparent side borders, so the box keeps 232 px and the tile clears the edge and the map */
+#left{grid-row:2/4;grid-column:1;border:0;padding:12px 7px;min-height:0;overflow-y:auto;overflow-x:hidden;background:transparent}
 #left h4{margin:16px 0 6px}
+#left>div:first-child h4{margin-top:2px}
 #left #compareBox>.slot:first-of-type{margin-top:0}
 #mapwrap{grid-row:2;grid-column:2;position:relative;overflow:hidden;background:var(--color-map);border:0}
+#mapwrap::after{content:"";position:absolute;inset:0;border-radius:16px;box-shadow:inset 0 0 0 1px var(--color-hair),inset 0 1px 0 rgba(255,255,255,.06);pointer-events:none;z-index:4}
 #map{position:absolute;inset:0;width:100%;height:100%}
-#map:focus-visible{outline:2px solid var(--color-panel)!important;outline-offset:-2px}
+#map:focus-visible{outline:2px solid #ffffff!important;outline-offset:-2px}
 #tabs{grid-row:3;grid-column:2;display:grid;grid-template-rows:32px minmax(0,1fr);position:relative;min-height:0}
-#insp{grid-row:2/4;grid-column:3;margin-left:12px;border:0;overflow:auto;background:var(--color-panel);min-height:0}
+#insp{grid-row:2/4;grid-column:3;margin-left:12px;border:0;overflow:auto;background:var(--color-tile);min-height:0}
 #inspTop:empty,#abBlock:empty{display:none}
-#inspTop{height:64px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--color-border)}
-#abBlock{padding:10px 14px;border-bottom:1px solid var(--color-border);background:var(--color-panel)}
+#inspTop{height:64px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--color-hair)}
+#abBlock{padding:10px 14px;border-bottom:1px solid var(--color-hair);background:transparent}
 #inspBody{padding:12px 14px;position:relative}
 #inspBody.busy>*:not(.prog):not(#slowLine){opacity:.5}
-#zoomBtns{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px}
-#zoomBtns button{width:26px;height:26px;padding:0;background:var(--color-panel)}
-#mapLassoSlot{position:absolute;left:10px;top:10px}
+#zoomBtns{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px;z-index:5}
+#zoomBtns button{width:26px;height:26px;padding:0;background:rgba(28,28,28,.92)}
+#zoomBtns button:hover{background:#2a2a2a}
+#mapLassoSlot{position:absolute;left:10px;top:10px;z-index:5}
+#mapLassoSlot button{background:rgba(28,28,28,.92)}
 #loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;font-size:12px;color:var(--color-muted)}
-#loading .bar{width:240px;height:4px;background:var(--color-border);margin-top:6px;border-radius:2px;overflow:hidden} #loading .bar i{display:block;height:100%;width:0;background:var(--color-text)}
+#loading .bar{width:240px;height:4px;background:var(--color-sel);margin-top:6px;border-radius:2px;overflow:hidden} #loading .bar i{display:block;height:100%;width:0;background:var(--color-green)}
 #caption{position:absolute;left:12px;bottom:8px;font-size:11px;color:var(--color-muted);pointer-events:none}
-#tip{position:absolute;pointer-events:none;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;padding:4px 8px;font-size:12px;max-width:360px;display:none;z-index:5;white-space:normal}
+#tip{position:absolute;pointer-events:none;background:#111;color:var(--color-text);border:1px solid var(--color-hair);border-radius:8px;padding:4px 8px;font-size:12px;max-width:360px;display:none;z-index:6;white-space:normal;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 #lassoSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 body.lasso #lassoSvg{pointer-events:auto;cursor:crosshair}
-#handle{position:absolute;left:0;right:0;top:0;height:6px;cursor:row-resize;z-index:3}
-#tabbar{display:flex;align-items:flex-end;gap:2px;padding:0 8px;border-bottom:1px solid var(--color-border)}
-#tabbar button{border:1px solid transparent;border-bottom:0;border-radius:8px 8px 0 0;background:transparent;color:var(--color-muted);padding:5px 12px}
-#tabbar button[aria-selected=true]{color:var(--color-panel);border-color:var(--color-border);background:var(--color-bg);margin-bottom:-1px}
-.prog{position:absolute;left:0;top:0;height:1px;width:100%;background:linear-gradient(90deg,transparent,var(--color-text),transparent);background-size:200px 1px;animation:prog 1s linear infinite;display:none}
+#handle{position:absolute;left:0;right:0;top:0;height:6px;cursor:row-resize;z-index:3;background:transparent}
+#handle::after{content:"";display:block;width:36px;height:2px;margin:2px auto;background:rgba(255,255,255,.16);border-radius:2px}
+#tabbar{display:flex;align-items:flex-end;gap:2px;padding:0 8px;border-bottom:1px solid var(--color-hair)}
+#tabbar button{border:0!important;border-radius:8px 8px 0 0!important;background:transparent;color:var(--color-muted);padding:3px 12px;font-size:13px;height:31px;text-transform:uppercase;letter-spacing:.04em}
+#tabbar button[aria-selected=true]{color:var(--color-text);background:transparent;box-shadow:inset 0 -2px var(--color-orange);margin-bottom:0}
+.prog{position:absolute;left:0;top:0;height:1px;width:100%;background:linear-gradient(90deg,transparent,var(--color-orange),transparent);background-size:200px 1px;animation:prog 1s linear infinite;display:none}
 .prog.on{display:block} @keyframes prog{from{background-position:-200px 0}to{background-position:100% 0}}
-#tabbody{overflow:auto;position:relative;min-height:0}
-.tabhead{padding:5px 10px;font-size:12px;color:var(--color-muted);border-bottom:1px solid var(--color-border)}
+#tabbody{overflow:auto;position:relative;min-height:0;margin:0 1px}
+.tabhead{padding:5px 10px;font-size:12px;color:var(--color-muted);border-bottom:1px solid var(--color-hair)}
 table{border-collapse:collapse;width:100%;font-size:13px}
-thead{position:sticky;top:0;z-index:1;background:var(--color-panel)}
-th{text-align:left;font-weight:500;color:var(--color-muted);padding:0 4px;border:0;font-size:12px;background:var(--color-panel);white-space:nowrap}
-th button{border:0;background:transparent;color:inherit;padding:4px 4px;font-size:12px}
-td{padding:3px 8px;border-bottom:1px solid var(--color-divider);vertical-align:top}
-td.n,th.n{text-align:right} tr[tabindex]{cursor:pointer} tr.hl{background:var(--color-hover);outline:1px solid var(--color-muted)}
+thead{position:sticky;top:0;z-index:1;background:var(--color-solid)}
+th{text-align:left;font-weight:500;color:var(--color-muted);padding:0 4px;border:0;font-size:12px;background:var(--color-solid);white-space:nowrap;text-transform:uppercase;letter-spacing:.04em}
+th button{border:0;background:transparent;color:inherit;padding:4px 4px;font-size:12px;text-transform:uppercase;letter-spacing:.04em}
+td{padding:3px 8px;border-bottom:1px solid var(--color-hair);vertical-align:top}
+td.n,th.n{text-align:right} tr[tabindex]{cursor:pointer} tr.hl{background:rgba(255,255,255,.06);outline:1px solid rgba(255,255,255,.22)}
 .sub2{font-size:12px;color:var(--color-muted)}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px;margin:6px 0}.kv>span:nth-child(odd){color:var(--color-muted)}
-.plist>div{padding:4px 0;border-bottom:1px solid var(--color-divider)}.plist small{color:var(--color-muted);display:block;font-size:12px}
-.def{background:var(--color-hover);border:1px solid var(--color-border);border-radius:8px;padding:6px 8px;font-size:12px;color:var(--color-muted);margin:6px 0}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:2px 12px;font-size:13px;margin:6px 0;align-items:baseline}.kv>span:nth-child(odd){color:var(--color-muted)}
+#inspBody .kv,#abBlock .kv{background:var(--color-well);border-radius:10px;padding:8px 10px}
+.kv .big{font:400 22px/1.15 "Inter",system-ui,sans-serif;color:var(--color-text);letter-spacing:-.01em}
+.kv .unit{font-size:12px;color:var(--color-muted)}
+/* headline growth factor: larger, regular weight, sage-to-orange gradient text */
+#inspBody b.gr.num{font:400 20px/1.2 "Inter",system-ui,sans-serif;padding:1px 9px;margin:4px 6px 4px 0;vertical-align:-2px;background:linear-gradient(90deg,#8fd18f,#e0763c);-webkit-background-clip:text;background-clip:text;color:transparent;box-shadow:inset 0 0 0 100px transparent}
+.wellbox{background:var(--color-well);border-radius:10px;padding:6px 5px 4px;margin:6px 0;width:max-content;max-width:100%}
+.plist>div{padding:5px 0;border-bottom:1px solid var(--color-hair)}.plist small{color:var(--color-muted);display:block;font-size:12px}
+.def{background:var(--color-well);border:1px solid var(--color-hair);border-radius:10px;padding:6px 8px;font-size:12px;color:var(--color-muted);margin:6px 0}
 .slot{display:flex;align-items:center;gap:6px;font-size:12px;margin:4px 0;min-width:0}
-.slot b{width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:var(--color-text);font-size:11px;flex:none}
-.slot .lbl{flex:1;border:1px dashed var(--color-border);border-radius:8px;padding:2px 6px;color:var(--color-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.slot b{width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:#161616;font-size:11px;flex:none}
+.slot .lbl{flex:1;border:1px dashed var(--color-border);border-radius:10px;padding:2px 6px;color:var(--color-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .slot .lbl.set{border-style:solid;color:var(--color-text)}
 .slot button{padding:0 5px}
-.dd{position:relative} .dd>div{position:absolute;z-index:20;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;padding:4px;min-width:220px;max-height:300px;overflow:auto;right:0}
+.dd{position:relative} .dd>div{position:absolute;z-index:20;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;padding:4px;min-width:220px;max-height:300px;overflow:auto;right:0;box-shadow:0 8px 24px rgba(0,0,0,.45)}
 .dd>div button{display:block;width:100%;text-align:left;border:0;background:transparent;white-space:normal}
 #legendBox .row{display:flex;align-items:center;gap:6px;font-size:12px;line-height:1.55}
-#legendBox s{display:inline-block;width:18px;height:10px;text-decoration:none;flex:none}
+#legendBox s{display:inline-block;width:18px;height:10px;text-decoration:none;flex:none;border-radius:3px}
 #legendBox em{margin-left:auto;color:var(--color-muted);font-style:normal;font-family:"JetBrains Mono",monospace;font-size:12px}
-#savedList>div{font-size:12px;padding:3px 0;border-bottom:1px solid var(--color-border);display:flex;gap:4px;align-items:flex-start}
+#savedList>div{font-size:12px;padding:3px 0;border-bottom:1px solid var(--color-hair);display:flex;gap:4px;align-items:flex-start}
 #savedList>div>button:first-child{flex:1;text-align:left;border:0;background:transparent;padding:0;white-space:normal}
-#sugg{position:absolute;z-index:30;left:0;right:0;top:100%;margin:2px 0 0;padding:4px;list-style:none;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;max-height:260px;overflow:auto}
-#sugg li{padding:3px 6px;font-size:12px;border-radius:4px;cursor:pointer} #sugg li[aria-selected=true]{background:var(--color-text);color:var(--color-panel)} #sugg li:hover{background:var(--color-hover);color:var(--color-text)}
-#banner{position:fixed;left:0;right:0;top:44px;height:32px;z-index:40;background:var(--color-error);border-bottom:1px solid var(--color-red);color:var(--color-text);font-size:12px;display:flex;align-items:center;padding:0 12px}
-#infoPop{position:fixed;z-index:50;width:360px;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;padding:10px 12px;font-size:12px;max-height:70vh;overflow:auto}
+#sugg{position:absolute;z-index:30;left:0;right:0;top:100%;margin:2px 0 0;padding:4px;list-style:none;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;max-height:260px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#sugg li{padding:3px 6px;font-size:12px;border-radius:6px;cursor:pointer} #sugg li[aria-selected=true]{background:var(--color-sel);color:var(--color-text)} #sugg li:hover{background:rgba(255,255,255,.07);color:var(--color-text)}
+#banner{position:fixed;left:0;right:0;top:44px;height:32px;z-index:40;background:var(--color-solid);border-left:3px solid var(--color-orange);border-bottom:1px solid var(--color-hair);color:var(--color-text);font-size:12px;display:flex;align-items:center;padding:0 12px}
+#infoPop{position:fixed;z-index:50;width:360px;background:var(--color-pop);border:1px solid var(--color-border);border-radius:12px;padding:10px 12px;font-size:12px;max-height:70vh;overflow:auto;box-shadow:0 12px 32px rgba(0,0,0,.5)}
 #infoPop p{margin:0 0 6px}
-#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:var(--color-hover);border:1px solid var(--color-border);border-radius:8px;padding:8px 12px;font-size:13px}
-#bench{position:fixed;right:8px;bottom:8px;z-index:70;background:var(--color-panel);font:11px "JetBrains Mono",monospace;padding:6px;white-space:pre}
-.err{background:var(--color-error);color:var(--color-text);border-radius:8px;padding:8px;margin:6px 0}
-.bars rect.w{fill:var(--color-hover)}
-#lightRow{display:block;margin-top:3px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:60;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;padding:8px 12px;font-size:13px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+#bench{position:fixed;right:8px;bottom:8px;z-index:70;background:var(--color-solid);font:11px "JetBrains Mono",monospace;padding:6px;white-space:pre}
+.err{background:#2a1a1a;color:#dddddd;border-radius:10px;padding:8px;margin:6px 0}
+#lightRow{display:block;margin-top:5px}
 #leftNote{margin-top:12px;font-size:11px;color:var(--color-muted);white-space:normal}
 .savedSum{display:none}
 /* below 1500 px: left column folds into a 2-row header; A/B and saved go to the inspector top */
@@ -153,26 +203,28 @@ td.n,th.n{text-align:right} tr[tabindex]{cursor:pointer} tr.hl{background:var(--
   header{display:grid;grid-template-rows:36px 36px;padding:0 10px;gap:0}
   header .hrow{display:flex;align-items:center;gap:10px;min-width:0}
   #winLabel{white-space:normal;line-height:14px;max-height:30px;font-size:11px;flex:1 1 200px;min-width:120px}
-  #searchBox{width:240px;position:relative;order:3} #hname{order:1} #qswitch{order:2}
+  #searchBox{width:240px;position:relative;order:3} #crumb{order:0} #hname{order:1} #qswitch{order:2}
+  header{position:relative} #hrow1{padding-right:32px} #ghLink{position:absolute;right:0;top:6px}
   #winDD{order:1} #winLabel{order:2} #infoBtn{order:3} #levelBox{order:4} #colourBox{order:5} #layersBox{order:6} #legendBox{order:7} #searchBox h4,#modeRow{display:none}
   #levelBox h4,#colourBox h4,#legendBox h4,#lightRow,#largeLine{display:none}
   #levelBox button{padding:2px 6px} #levelBox button span{display:inline!important}
   #colourBox .opts{display:flex;gap:2px} #colourBox label{padding:1px 6px;font-size:11px;white-space:nowrap}
-  #colourBox label:has(input:checked){color:var(--color-panel)} #colourBox input{position:absolute;opacity:0;width:1px}
+  #colourBox input{position:absolute;opacity:0;width:1px}
   #legendBox{width:320px;height:20px;flex:none} #legendBox .rows{display:flex;height:20px;gap:2px;align-items:center}
   #legendBox .row{flex:1;gap:2px;font-size:11px;line-height:20px} #legendBox .row span.t,#legendBox .row .lnum{display:none} #legendBox s{width:14px} #legendBox em{margin:0;font-size:11px}
   #legendBox .txt{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #layersBox{position:relative} #layersBox>summary{display:block!important;border:1px solid var(--color-border);border-radius:8px;padding:2px 8px;font-size:12px}
-  #layersBox>div{position:absolute;z-index:30;top:26px;left:0;width:240px;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;padding:8px}
+  #layersBox{position:relative} #layersBox>summary{display:block!important;border:1px solid var(--color-border);border-radius:10px;padding:2px 8px;font-size:12px}
+  #layersBox>div{position:absolute;z-index:30;top:26px;left:0;width:240px;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
   #compareBox{display:flex;align-items:center;gap:8px;flex:1;min-width:0} #compareBox h4{display:none} #compareBox .slot{flex:1;margin:0}
-  #savedBox>summary.savedSum{display:block;border:1px solid var(--color-border);border-radius:8px;padding:2px 8px;font-size:12px}
-  #savedBox h4{display:none} #savedBox{position:relative} #savedBox>div{position:absolute;right:0;top:26px;z-index:30;width:280px;background:var(--color-panel);border:1px solid var(--color-border);border-radius:8px;padding:6px}
+  #savedBox>summary.savedSum{display:block;border:1px solid var(--color-border);border-radius:10px;padding:2px 8px;font-size:12px}
+  #savedBox h4{display:none} #savedBox{position:relative} #savedBox>div{position:absolute;right:0;top:26px;z-index:30;width:280px;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
+  #legendRows{padding:0!important;background:transparent!important} #legendBox .row .new{margin-right:2px;padding:0 5px 0 4px}
 }
 #layersBox>summary{display:none}
 /* below 1200 px: the inspector is a drawer */
 @media (max-width:1199px){
   #app{grid-template-columns:0 minmax(0,1fr) 0}
-  #insp{position:fixed;right:0;top:72px;bottom:0;width:380px;z-index:35;transform:translateX(100%);border-left:1px solid var(--color-border);box-shadow:-8px 0 24px var(--color-tint)}
+  #insp{position:fixed;right:0;top:72px;bottom:0;width:380px;z-index:35;transform:translateX(100%);border-left:1px solid var(--color-border);box-shadow:-8px 0 24px rgba(0,0,0,.5)}
   body.drawer #insp{transform:none}
   #qswitch button{padding:3px 6px}
 }
@@ -180,72 +232,76 @@ td.n,th.n{text-align:right} tr[tabindex]{cursor:pointer} tr.hl{background:var(--
 button,select,input,.slot .lbl,#winSum,
 #layersBox>summary,#savedBox>summary,summary[role=button]{font-size:13px!important}
 button,.slot .lbl,#winSum,
-#layersBox>summary,#savedBox>summary,summary[role=button]{border:1px solid var(--color-border)!important;border-radius:8px!important}
+#layersBox>summary,#savedBox>summary,summary[role=button]{border:1px solid var(--color-border)!important;border-radius:10px!important}
 #winDD>summary,th button{border:0!important}
+#tabbar button{border:0!important;border-radius:8px 8px 0 0!important}
 #colourBox label,#layersBox label,#legendBox label,#legendBox .row{border:0;background:transparent}
 #colourBox label,#layersBox label{display:inline-block;padding:1px 4px}
 #compareBox .lbl:not(.set){min-width:48px;flex-shrink:0}
-button.on:hover:not(:disabled),button[aria-pressed=true]:hover:not(:disabled),button[aria-checked=true]:hover:not(:disabled){background:var(--color-text);filter:brightness(1.2)}
-/* F37 cards and light chrome. The inspector scrolls within its rounded clip. */
+button.on:hover:not(:disabled),button[aria-pressed=true]:hover:not(:disabled),button[aria-checked=true]:hover:not(:disabled){background:rgba(255,255,255,.16)}
+/* F40 glass tiles. The inspector scrolls within its rounded clip. */
 #mapwrap,#tabs,#insp{border-radius:16px;overflow:hidden;min-width:0}
-#tabs,#insp{background:var(--color-panel)}
+#tabs,#insp{background:var(--color-tile);box-shadow:inset 0 0 0 1px var(--color-hair),inset 0 1px 0 rgba(255,255,255,.06)}
 #insp{overflow-y:auto}
-#handle{background:var(--color-panel)}
-#handle::after{content:"";display:block;width:36px;height:2px;margin:2px auto;background:var(--color-border);border-radius:2px}
-#inspBody h3{font-size:22px!important;line-height:1.2;font-weight:400}
-h4,#hname{font-weight:400}
-#tabbar button{font-size:13px;padding:3px 12px;border:0!important;border-radius:8px 8px 0 0!important;height:31px}
-#tabbar button[aria-selected=true]{color:var(--color-text);background:var(--color-panel);box-shadow:inset 0 -2px var(--color-violet);margin-bottom:0}
-#tabbar button:hover,th button:hover,.dd>div button:hover,#zoomBtns button:hover,.plist>div:hover,#savedList>div:hover{background:var(--color-hover)}
-#legendRows,#legendBox #lightRow{background:transparent}
+#left,#tabs,#insp{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#left{background:var(--color-tile);background-clip:padding-box;border-left:10px solid transparent;border-right:12px solid transparent;border-radius:26px 28px 28px 26px/16px;box-shadow:inset 0 0 0 1px var(--color-hair),inset 0 1px 0 rgba(255,255,255,.06)}
+#inspBody h3{font-size:22px!important;line-height:1.2;font-weight:400;letter-spacing:-.01em}
+#hname{font-weight:600}
+#tabbar button:hover,th button:hover,.dd>div button:hover,.plist>div:hover,#savedList>div:hover{background:var(--color-hover)}
+#legendRows{background:var(--color-well);border-radius:10px;padding:5px 5px}
+#left #legendBox .row{gap:5px;letter-spacing:-.005em} #left #legendBox s{width:14px}
+#left #levelBox button{padding:3px 7px}
+.winsum{background:var(--color-well);border-radius:10px;padding:8px 10px;margin:6px 0!important;color:var(--color-muted)}
+.hlnum{font:400 22px/1.15 "Inter",system-ui,sans-serif;letter-spacing:-.01em;background:linear-gradient(90deg,#8fd18f,#e0763c);-webkit-background-clip:text;background-clip:text;color:transparent;margin:0 2px;vertical-align:-2px}
+#legendBox #lightRow{background:transparent}
 #left #savedList{display:flex;flex-direction:column;gap:6px}
-#left #savedList>div:has(button[data-act=loadSaved]){background:#fff;border:0;border-radius:12px;padding:10px 12px}
-#left #savedList>div:has(button[data-act=loadSaved]):hover{background:#f3f4f5}
+#left #savedList>div:has(button[data-act=loadSaved]){background:var(--color-well);border:0;border-radius:10px;padding:8px 10px}
+#left #savedList>div:has(button[data-act=loadSaved]):hover{background:rgba(255,255,255,.07)}
 #left #savedList button[data-act=loadSaved]{min-width:0;border:0!important;border-radius:0!important;background:transparent}
-#left #savedList button[data-act=delSaved]{flex:0 0 24px;width:24px;height:24px;padding:0;display:grid;place-items:center;border:0!important;border-radius:50%!important;background:transparent;color:#091528}
-#left #savedList button[data-act=delSaved]:hover{background:rgba(255,97,87,0.12)}
-#tabbar,.tabhead,#inspTop,#abBlock,#savedList>div{border-color:var(--color-divider)}
-#winSum,#layersBox>summary,#savedBox>summary,.slot .lbl{background:var(--color-panel)}
-button[data-act=ideas]:not(:disabled),button[data-act=sendIdeas]{background:var(--color-violet);color:var(--color-panel);border-color:var(--color-violet)!important}
-button[data-act=save]{background:var(--color-green);color:var(--color-text);border-color:var(--color-green)!important}
-button[data-act=delConfirm]{background:var(--color-error);color:var(--color-red);border-color:var(--color-red)!important}
-button[data-act=ideas]:hover:not(:disabled),button[data-act=sendIdeas]:hover,button[data-act=save]:hover{filter:brightness(.94)}
-.chip,.pill{display:inline-block;border:0!important;border-radius:9999px!important;padding:2px 8px;font:12px/16px "Liter",system-ui,sans-serif!important;color:var(--color-text);background:var(--color-tint);vertical-align:middle}
+#left #savedList button[data-act=delSaved]{flex:0 0 24px;width:24px;height:24px;padding:0;display:grid;place-items:center;border:0!important;border-radius:50%!important;background:transparent;color:var(--color-muted)}
+#left #savedList button[data-act=delSaved]:hover{background:rgba(224,118,60,.15);color:var(--color-orange)}
+#winSum,#layersBox>summary,#savedBox>summary{background:var(--color-btn)}
+.slot .lbl{background:var(--color-well)}
+/* primary actions: orange tint, orange hairline, orange uppercase label */
+button.pri:not(:disabled),button[data-act=ideas]:not(:disabled),button[data-act=sendIdeas],button[data-act=save]{background:var(--color-orange-tint);color:var(--color-orange);border-color:var(--color-orange)!important}
+button.pri:hover:not(:disabled),button[data-act=ideas]:hover:not(:disabled),button[data-act=sendIdeas]:hover,button[data-act=save]:hover{background:rgba(224,118,60,.28)}
+button[data-act=delConfirm]{background:transparent;color:var(--color-orange);border-color:rgba(224,118,60,.6)!important}
+.chip,.pill{display:inline-block;border:1px solid var(--color-hair)!important;border-radius:10px!important;padding:1px 8px;font:12px/16px "Inter",system-ui,sans-serif!important;color:var(--color-text);background:var(--color-well);vertical-align:middle}
+.chip:hover{background:rgba(255,255,255,.08)}
 .chip::before,.pill::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--dot,var(--color-muted));margin-right:5px;vertical-align:1px}
-.pill{background:color-mix(in srgb,var(--dot,var(--color-muted)) 20%,transparent)}
-.pill[data-status=new],.pill[data-side=A]{--dot:var(--color-violet)}
-.pill[data-status=forming],.pill[data-side=B]{--dot:var(--color-green)}
-.pill[data-status=steady],.pill[data-side=bridge]{--dot:var(--color-blue)}
-.pill[data-status=fading]{--dot:var(--color-red)}
-#slotA b{color:var(--color-panel)}
-#slotB b{color:var(--color-text)}
-.bars{max-width:100%}
-.bars rect.w{fill:var(--color-tint)}
-#loading,#caption{color:var(--color-panel);text-shadow:0 1px 3px var(--color-map)}
-#loading .bar i{background:var(--color-panel)}
-#colourBox label:has(input:focus-visible){outline:2px solid var(--color-violet);outline-offset:2px}
+/* status / side pills: outline pill with a dot, only the two accents and greys */
+.pill{background:transparent;border-radius:9999px!important;border-color:color-mix(in srgb,var(--dot,var(--color-muted)) 50%,transparent)!important;color:var(--pc,var(--color-text));text-transform:uppercase;letter-spacing:.04em;font-size:11px!important}
+.pill[data-status=new]{--dot:var(--color-orange);--pc:var(--color-orange)}
+.pill[data-status=forming]{--dot:var(--color-green);--pc:var(--color-green)}
+.pill[data-status=steady]{--dot:var(--color-muted);--pc:var(--color-muted)}
+.pill[data-status=fading]{--dot:var(--color-muted);--pc:var(--color-muted);opacity:.6}
+.pill[data-side=A]{--dot:var(--color-a)} .pill[data-side=B]{--dot:var(--color-b)} .pill[data-side=bridge]{--dot:var(--color-muted)}
+.bars{max-width:100%;display:block}
+#loading,#caption{color:var(--color-text);text-shadow:0 1px 3px var(--color-map)}
+#colourBox label:has(input:focus-visible){outline:2px solid var(--color-orange);outline-offset:2px}
 @media (max-width:1499px){
   header{padding:0;gap:0}
   header .hrow{gap:8px}
   #winLabel{min-width:80px}
-  #colourBox label{background:#fff;border:1px solid #c9cbd0;border-radius:8px;font-size:13px;line-height:18px;padding:2px 6px}
-  #colourBox label:has(input:checked){background:var(--color-text);color:var(--color-panel)}
+  #colourBox label{background:var(--color-well);border:1px solid var(--color-border);border-radius:10px;font-size:13px;line-height:18px;padding:2px 6px;color:var(--color-muted)}
+  #colourBox label:has(input:checked){background:var(--color-sel);color:var(--color-text)}
   #compareBox{gap:4px} #compareBox .slot{gap:4px}
   #inspTop{padding:0 8px;gap:4px}
 }
 @media (max-width:1199px){
-  #insp{right:12px;top:84px;bottom:12px;margin-left:0;transform:translateX(calc(100% + 12px));border:0}
+  #insp{right:12px;top:84px;bottom:12px;margin-left:0;transform:translateX(calc(100% + 12px));border:0;background:rgba(30,30,30,.97)}
   #hrow2{gap:4px} #winLabel{min-width:0;flex-basis:0}
   #levelBox button{padding:2px 4px} #colourBox label{padding:1px 3px}
 }
-@media (prefers-reduced-motion: reduce){.prog{animation:none;background:var(--color-text)}}
+@media (prefers-reduced-motion: reduce){.prog{animation:none;background:var(--color-orange)}}
 </style>
 </head>
 <body>
 <div id="app">
 <header>
   <div class="hrow" id="hrow1">
-    <span id="hname">undercurrent</span>
+    <span id="crumb"><a id="crumbLink">charoori</a><span class="sep" aria-hidden="true">/</span></span>
+    <a id="hname">undercurrent</a>
     <span class="seg" id="qswitch" role="group" aria-label="Question">
       <button id="q1" data-act="preset" data-p="1" aria-pressed="true">What is arriving</button><button id="q2" data-act="preset" data-p="2" aria-pressed="false">How topics connect</button>
     </span>
@@ -268,25 +324,26 @@ button[data-act=ideas]:hover:not(:disabled),button[data-act=sendIdeas]:hover,but
     </details>
     <span id="winLabel"></span>
     <button id="infoBtn" data-act="info" aria-label="How the numbers are computed" aria-expanded="false">i</button>
+    <a id="ghLink" target="_blank" rel="noopener" aria-label="undercurrent on GitHub" title="undercurrent on GitHub"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
   </div>
 </header>
 
 <nav id="left" aria-label="Controls">
-  <div id="levelBox"><h4>Level</h4>
+  <div id="levelBox"><h4 data-i="layers">Level</h4>
     <span class="seg" role="radiogroup" aria-label="Level">
       <button role="radio" data-act="level" data-l="2" aria-checked="false">areas <span style="display:block">(20)</span></button><button role="radio" data-act="level" data-l="1" aria-checked="true">topics <span style="display:block">(116)</span></button><button role="radio" data-act="level" data-l="0" aria-checked="false">sub-topics <span style="display:block">(368)</span></button>
     </span></div>
-  <div id="colourBox"><h4>Colour by</h4>
+  <div id="colourBox"><h4 data-i="palette">Colour by</h4>
     <div class="opts small" role="radiogroup" aria-label="Colour by" style="line-height:1.8">
       <label><input type="radio" name="colour" value="growth" checked>Growth</label><br>
       <label><input type="radio" name="colour" value="topic">Topic</label><br>
       <label><input type="radio" name="colour" value="date">Date</label><br>
       <label id="distLabel" title="Set A first"><input type="radio" name="colour" value="dist" disabled>Distance to A</label>
     </div></div>
-  <div id="legendBox"><h4 id="legendHead">Growth vs CS, topics</h4><div class="rows" id="legendRows"></div>
+  <div id="legendBox"><h4 id="legendHead" data-i="trend">Growth vs CS, topics</h4><div class="rows" id="legendRows"></div>
     <label id="lightRow" class="small muted"><input type="checkbox" id="lightness">Lightness only</label>
     <div id="largeLine" class="tiny muted" hidden></div></div>
-  <details id="layersBox" open><summary>layers ▾</summary><div><h4>Map layers</h4>
+  <details id="layersBox" open><summary>layers ▾</summary><div><h4 data-i="merge">Map layers</h4>
     <div class="small" style="line-height:1.9">
       <label><input type="checkbox" role="switch" id="tNodes">topic nodes</label><br>
       <label><input type="checkbox" role="switch" id="tBridges">bridge links</label><br>
@@ -295,18 +352,18 @@ button[data-act=ideas]:hover:not(:disabled),button[data-act=sendIdeas]:hover,but
     <label class="tiny muted" for="edgeN" style="display:block;margin-top:4px">edges shown: <span id="edgeCount" class="mono">40</span></label>
     <input type="range" id="edgeN" min="10" max="200" step="1" value="40" aria-label="Number of edges">
   </div></details>
-  <div id="searchBox" style="position:relative"><h4>Search</h4>
+  <div id="searchBox" style="position:relative"><h4 data-i="search">Search</h4>
     <input type="search" id="q" placeholder="/ phrase or title…" autocomplete="off" aria-label="Search phrase or title" role="combobox" aria-expanded="false" aria-controls="sugg">
     <ul id="sugg" role="listbox" hidden></ul>
     <div id="modeRow" class="tiny muted" role="radiogroup" aria-label="Search mode" style="margin-top:3px">
       <label><input type="radio" name="smode" value="phrase" checked>phrase (title+abstract)</label> <label><input type="radio" name="smode" value="title">title</label></div>
   </div>
-  <div id="compareBox"><h4>Compare</h4>
+  <div id="compareBox"><h4 data-i="compare">Compare</h4>
     <div class="slot" id="slotA"></div><div class="slot" id="slotB"></div>
     <button id="swapBtn" data-act="swap" aria-label="Swap A and B" title="Swap A and B">⇄</button>
   </div>
   <div id="lassoHome"><div id="lassoWrap" style="margin-top:6px"><button id="lassoBtn" data-act="lasso" aria-pressed="false">Lasso (L)</button></div></div>
-  <details id="savedBox" open><summary class="savedSum">Saved ▾</summary><div><h4>Saved</h4><div id="savedList"><div class="muted">none yet</div></div></div></details>
+  <details id="savedBox" open><summary class="savedSum">Saved ▾</summary><div><h4 data-i="bookmark">Saved</h4><div id="savedList"><div class="muted">none yet</div></div></div></details>
   <div id="leftNote"></div>
 </nav>
 
@@ -356,6 +413,7 @@ const LEVEL_NAME = {0: 'sub-topics', 1: 'topics', 2: 'areas'}, LEVEL_ONE = {0: '
 const ARXIV = 'https:' + '//arxiv.org/abs/'; // ponytail: split so the F36.1 URL grep lists only the four loaded libraries (an outbound link is not a loaded library)
 const RM = matchMedia('(prefers-reduced-motion: reduce)'), COMPACT = matchMedia('(max-width: 1499px)'), NARROW = matchMedia('(max-width: 1199px)');
 const $ = id => document.getElementById(id);
+$('crumbLink').href = 'https:' + '//charoori.com/'; $('ghLink').href = 'https:' + '//github.com/Exorust/undercurrent'; // same split: outbound links, not loaded libraries
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const fmt = v => Number(v).toLocaleString('en-US');
 const pct = v => (v * 100).toFixed(1) + '%';
@@ -559,7 +617,7 @@ async function sapi(path, body) {
   throw sErr(404, `${p} is ${LOCAL_ONLY}`);
 }
 function staticUI() {  // hide what needs the server; one line says where it lives
-  $('status').hidden = true; $('savedBox').hidden = true;
+  $('status').hidden = true; $('savedBox').hidden = true; $('hname').setAttribute('href', '../');
   const cu = document.querySelector('[data-act=win][data-n=custom]'); cu.hidden = true; cu.title = 'Custom windows are ' + LOCAL_ONLY;
   $('leftNote').textContent = `Web snapshot. Saving, ideas between any A and B, custom windows and full-text search are ${LOCAL_ONLY}.`;
 }
@@ -644,7 +702,7 @@ function updateMask() {
 // ---------- deck ----------
 let DK = null, VS = null, Z0 = 0, LBL = [], badgeFade = {o: 1};
 let pointsReady = false, overlaysReady = false, dataReady = false;
-const LABEL_FONT = {family: 'Liter, sans-serif', weight: 400, atlasSize: 64, lineHeight: 1.15};
+const LABEL_FONT = {family: 'Inter, sans-serif', weight: 400, atlasSize: 64, lineHeight: 1.15};
 const labelMeasure = document.createElement('canvas').getContext('2d');
 const zf = () => VS ? Math.pow(2, VS.zoom - Z0) : 1;
 function fitView() {
@@ -702,8 +760,8 @@ async function loadMapFonts() {
   });
   css.media = 'all';
   await loaded;
-  // computeLabels stays gated by overlaysReady until Liter has loaded; points never wait.
-  try { await Promise.all([document.fonts.load('400 14px Liter'), document.fonts.load('600 11px "JetBrains Mono"')]); } catch (e) {}
+  // computeLabels stays gated by overlaysReady until Inter has loaded; points never wait.
+  try { await Promise.all([document.fonts.load('400 14px Inter'), document.fonts.load('600 11px "JetBrains Mono"')]); } catch (e) {}
   overlaysReady = true; queueLabels();
 }
 // frame timer for F17.2 / F35.3: rAF deltas, max over the last 2 s
@@ -768,7 +826,7 @@ function render() {
     const mids = [];
     for (const e of edges) { const mid = [(e.src[0] + e.dst[0]) / 2, (e.src[1] + e.dst[1]) / 2]; if (e.rank) mids.push({...e, mid}); if (e.status === 'new') mids.push({...e, mid, rank: 0}); }
     layers.push(new deck.ScatterplotLayer({id: 'edgebadges', data: mids.filter(m => m.rank), getPosition: d => d.mid, radiusUnits: 'pixels', getRadius: 8, getFillColor: [255, 255, 255, 255], pickable: true}));
-    layers.push(new deck.TextLayer({id: 'edgebadgetext', data: mids, getPosition: d => d.mid, getText: d => d.rank ? String(d.rank) : 'new', getPixelOffset: d => d.rank ? [0, 0] : [0, 14], getSize: 11, fontWeight: 400, fontFamily: 'Liter, sans-serif',
+    layers.push(new deck.TextLayer({id: 'edgebadgetext', data: mids, getPosition: d => d.mid, getText: d => d.rank ? String(d.rank) : 'new', getPixelOffset: d => d.rank ? [0, 0] : [0, 14], getSize: 11, fontWeight: 400, fontFamily: 'Inter, sans-serif',
       getColor: [0, 0, 0, 255], background: true, getBackgroundColor: d => d.rank ? [0, 0, 0, 0] : hex2rgb(G[6]), backgroundPadding: [3, 1], characterSet: 'auto'}));
   }
   if (S.phrases && S.links) {
@@ -785,7 +843,7 @@ function render() {
     if (S.ev) for (const c of [S.ev.c1, S.ev.c2]) { const nd = nodes.find(d => d.c === c); if (nd) ring.push({pos: nd.pos, r: nd.r + 3, c: W_RGB, w: 2}); }
     if (ring.length) layers.push(new deck.ScatterplotLayer({id: 'noderings', data: ring, getPosition: d => d.pos, radiusUnits: 'pixels', getRadius: d => d.r, filled: false, stroked: true, getLineColor: d => d.c, lineWidthUnits: 'pixels', getLineWidth: d => d.w}));
   }
-  if (tags.length) layers.push(new deck.TextLayer({id: 'slottags', data: tags, getPosition: d => d.p, getText: d => d.t, getColor: d => d.c, getSize: 14, fontWeight: 400, fontFamily: 'Liter, sans-serif', getPixelOffset: [0, -10], outlineWidth: 2, outlineColor: [17, 17, 17, 255], fontSettings: {sdf: true}, characterSet: 'AB'}));
+  if (tags.length) layers.push(new deck.TextLayer({id: 'slottags', data: tags, getPosition: d => d.p, getText: d => d.t, getColor: d => d.c, getSize: 14, fontWeight: 400, fontFamily: 'Inter, sans-serif', getPixelOffset: [0, -10], outlineWidth: 2, outlineColor: [17, 17, 17, 255], fontSettings: {sdf: true}, characterSet: 'AB'}));
   // badges (arriving view) and labels
   if (S.colour === 'growth' && !S.grey && lv === 1) {
     const bt = badgeTopics().map((t, i) => ({c: t.c, rank: i + 1, pos: centroid(1, t.c)}));
@@ -1128,7 +1186,7 @@ function badgeInk(hex) {
 function gCell(t) {
   if (t.is_new) return '<span class="new" title="New: 30 or more papers in this window, fewer than 5 in the prior window.">new</span>';
   const ci = clusterInfo(t); if (ci.step === 'nd') return '<span class="muted small">too few</span>';
-  return `<span class="gr" style="background:${ci.hex};color:${badgeInk(ci.hex)}">×${t.growth.toFixed(2)}</span>`;
+  return `<span class="gr" style="--gc:${ci.hex}">×${t.growth.toFixed(2)}</span>`;
 }
 function chip(a) {
   const tip = a.is_new ? `New sub-topic: started inside this window (onset ${monthName(a.onset)}), 30 or more papers now, fewer than 5 before.` : `Arriving: onset ${monthName(a.onset)}, ${fmt(a.recent)} papers now vs ${fmt(a.prior)} before, ×${(a.growth || 0).toFixed(1)} after correction.`;
@@ -1151,7 +1209,7 @@ function renderTopics() {
 const areaOf = (lv, c) => { if (lv === 2) return ''; let l = S.labels[lv] && S.labels[lv][c]; if (!l) return ''; if (lv === 0) { l = S.labels[1] && S.labels[1][l.parent]; if (!l) return ''; } return lblOf(2, l.parent); };
 function renderTopicsHL() { document.querySelectorAll('#topicsTable tbody tr').forEach(tr => tr.classList.toggle('hl', [S.A, S.B, S.cur].some(s => s && s.kind === 'topic' && s.level === S.level && s.c === +tr.dataset.c))); }
 const statusOf = e => e.status === 'new' ? 'new' : e.status === 'low' ? '' : e.growth >= 1.41 ? 'forming' : e.growth <= 0.71 ? 'fading' : 'steady';
-function linkGCell(e) { return e.status === 'new' ? '<span class="new" title="New link: 10 or more bridge papers in this window, fewer than 3 in the prior window.">new</span>' : e.growth == null ? '' : `<span class="gr" style="background:${growthHex(e.growth)};color:${badgeInk(growthHex(e.growth))}">×${e.growth.toFixed(2)}</span>`; }
+function linkGCell(e) { return e.status === 'new' ? '<span class="new" title="New link: 10 or more bridge papers in this window, fewer than 3 in the prior window.">new</span>' : e.growth == null ? '' : `<span class="gr" style="--gc:${growthHex(e.growth)}">×${e.growth.toFixed(2)}</span>`; }
 function renderLinks() {
   const el = $('pLinks'), L = S.links;
   if (!L) { el.innerHTML = '<div class="tabhead">Loading links…</div>'; syncPreset(); return; }
@@ -1212,11 +1270,13 @@ function renderSlots() {
 }
 
 // ---------- inspector ----------
+let barsSeq = 0;
 function bars(months, sel) {
-  const x = winIdx(), n = S.E + 1, w = 360 / n, mx = Math.max(1, ...months.slice(0, n));
-  let h = `<svg class="bars" width="360" height="44" role="img" aria-label="Papers per month"><rect class="w" x="${x.a * w}" y="0" width="${(x.b - x.a + 1) * w}" height="44"/>`;
-  for (let i = 0; i < n; i++) { const v = months[i] || 0, bh = Math.max(1, 40 * v / mx); h += `<rect x="${i * w + 1}" y="${44 - bh}" width="${w - 2}" height="${bh}" fill="var(--color-muted)"><title>${mLabel(i)}: ${fmt(v)} papers</title></rect>`; }
-  return h + '</svg>';
+  const x = winIdx(), n = S.E + 1, w = 360 / n, mx = Math.max(1, ...months.slice(0, n)), gid = 'ucbg' + (++barsSeq);
+  let h = `<div class="wellbox"><svg class="bars" width="360" height="44" role="img" aria-label="Papers per month"><defs><linearGradient id="${gid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd18f"/><stop offset="1" stop-color="#5f8f5f"/></linearGradient></defs><rect class="w" x="${x.a * w}" y="0" width="${(x.b - x.a + 1) * w}" height="44" rx="4" fill="rgba(255,255,255,.05)"/>`;
+  for (let i = 1; i < n; i++) if (S.MS[i] && S.MS[i].endsWith('-01')) h += `<line x1="${i * w}" x2="${i * w}" y1="0" y2="44" stroke="rgba(255,255,255,.16)" stroke-dasharray="1 3"/>`;
+  for (let i = 0; i < n; i++) { const v = months[i] || 0, bh = Math.max(1, 40 * v / mx); h += `<rect x="${i * w + 1}" y="${44 - bh}" width="${w - 2}" height="${bh}" rx="1" fill="url(#${gid})" opacity="${i >= x.a && i <= x.b ? 1 : 0.4}"><title>${mLabel(i)}: ${fmt(v)} papers</title></rect>`; }
+  return h + '</svg></div>';
 }
 function plist(ps) { return `<div class="plist">${ps.map(p => `<div><a href="${ARXIV}${esc(p.id)}" target="_blank" rel="noopener">${esc(p.title)}</a><small>arXiv:${esc(p.id)} · ${monthName(p.month)} · ${fmt(p.citations ?? 0)} citations</small></div>`).join('')}</div>`; }
 function selHeader(s) {
@@ -1250,17 +1310,17 @@ function selView(s) {
     if (j.n === 0) h += `<p>${fmt(j.n_unembedded)} ${j.n_unembedded === 1 ? 'paper matches' : 'papers match'}. None are on the map (no embedding). Stats and paper lists are below; map highlight is not available.</p>`;
   }
   const g = j.growth || {}, r = g.recent ?? 0, p = g.prior ?? 0;
-  h += `<div class="kv"><span>papers in window:</span><span class="num">${fmt(r)} (prior ${fmt(p)})</span></div>`;
+  h += `<div class="kv"><span>papers in window:</span><span class="num"><span class="big">${fmt(r)}</span> <span class="unit">(prior ${fmt(p)})</span></span></div>`;
   if (g.is_new) h += `<div><span class="new">new</span> <span class="small muted">30 or more papers now, fewer than 5 before</span></div>`;
   else if (g.growth == null || (r < 30 && p < 30)) h += `<div class="muted">too few papers to rate (${fmt(r)} now, ${fmt(p)} before)</div>`;
-  else { const raw = (r + 1) / (p + 1); h += `<div><b style="background:${growthHex(g.growth)};color:${badgeInk(growthHex(g.growth))}" class="num gr">×${g.growth.toFixed(1)}</b> after correction (raw ×${raw.toFixed(1)}; all CS grew ×${v.toFixed(2)})</div>`; }
+  else { const raw = (r + 1) / (p + 1); h += `<div><b style="--gc:${growthHex(g.growth)}" class="num gr">×${g.growth.toFixed(1)}</b> after correction (raw ×${raw.toFixed(1)}; all CS grew ×${v.toFixed(2)})</div>`; }
   h += `<div class="tiny muted">${winText()}</div>${bars(j.months || [], s)}`;
   const T = s.kind === 'topic' && S.topics[s.level] && S.topics[s.level].topics.find(t => t.c === s.c);
-  if (T && T.arriving && T.arriving.length) h += `<h4>Arriving sub-topics</h4>${T.arriving.map(chip).join('')}`;
-  h += `<h4>Distinctive phrases</h4>` + (j.n >= 30 && j.terms && j.terms.length ? j.terms.slice(0, 20).map(t => `<button class="chip" data-act="phrase" data-ph="${esc(t.term)}" title="share in selection ${(100 * t.share_sel).toFixed(0)}% vs ${(100 * t.share_all).toFixed(1)}% in all papers (z ${(+t.z).toFixed(1)})">${esc(t.term)} <span class="muted">${t.k}</span></button>`).join('') : j.terms_local ? '<div class="muted small">Distinctive phrases are in the local version</div>' : '<div class="muted small">too few papers for distinctive phrases</div>');
-  h += `<h4>Top cited</h4>${plist(j.top_cited || [])}<h4>Newest</h4>${plist(j.newest || [])}`;
+  if (T && T.arriving && T.arriving.length) h += `<h4 data-i="trend">Arriving sub-topics</h4>${T.arriving.map(chip).join('')}`;
+  h += `<h4 data-i="hash">Distinctive phrases</h4>` + (j.n >= 30 && j.terms && j.terms.length ? j.terms.slice(0, 20).map(t => `<button class="chip" data-act="phrase" data-ph="${esc(t.term)}" title="share in selection ${(100 * t.share_sel).toFixed(0)}% vs ${(100 * t.share_all).toFixed(1)}% in all papers (z ${(+t.z).toFixed(1)})">${esc(t.term)} <span class="muted">${t.k}</span></button>`).join('') : j.terms_local ? '<div class="muted small">Distinctive phrases are in the local version</div>' : '<div class="muted small">too few papers for distinctive phrases</div>');
+  h += `<h4 data-i="file">Top cited</h4>${plist(j.top_cited || [])}<h4 data-i="clock">Newest</h4>${plist(j.newest || [])}`;
   const nb = (j.topics || []).filter(t => t.level === 1 && !(s.kind === 'topic' && s.level === 1 && t.c === s.c)).slice(0, 10);
-  if (nb.length) h += `<h4>Links to other topics</h4><div class="small">${nb.map(t => `<div><a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> · ${Math.round(100 * t.nbr_share)}% of neighbours</div>`).join('')}</div>`;
+  if (nb.length) h += `<h4 data-i="merge">Links to other topics</h4><div class="small">${nb.map(t => `<div><a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> · ${Math.round(100 * t.nbr_share)}% of neighbours</div>`).join('')}</div>`;
   return h;
 }
 function selButtons(s) {
@@ -1274,19 +1334,19 @@ function selButtons(s) {
 }
 function summaryView() {
   const T1 = S.topics[1], w = T1 && T1.window;
-  let h = `<h4 style="margin-top:0">This window</h4><h3 style="margin:0 0 4px;font-size:16px">This window: ${S.MS.length ? winText() : '…'}</h3>`;
+  let h = `<h4 style="margin-top:0" data-i="calendar">This window</h4><h3 style="margin:0 0 4px;font-size:16px">This window: ${S.MS.length ? winText() : '…'}</h3>`;
   if (!w) return h + '<p class="muted small">Loading…</p>';
-  h += `<p class="small" style="margin:2px 0">CS papers in window ${fmt(w.vol_recent)} · prior ${fmt(w.vol_prior)} (all CS ×${w.vol_ratio.toFixed(2)})</p>`;
-  h += '<h4>Fastest-growing topics</h4>' + badgeTopics().map((t, i) => `<div style="line-height:1.9"><span class="rank">${i + 1}</span> <a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> ${gCell(t)}</div>`).join('');
+  h += `<p class="small winsum" style="margin:2px 0">CS papers in window <span class="hlnum">${fmt(w.vol_recent)}</span> · prior ${fmt(w.vol_prior)} (all CS ×${w.vol_ratio.toFixed(2)})</p>`;
+  h += '<h4 data-i="trend">Fastest-growing topics</h4>' + badgeTopics().map((t, i) => `<div style="line-height:1.9"><span class="rank">${i + 1}</span> <a href="#" data-act="topicLink" data-c="${t.c}">${esc(t.label)}</a> ${gCell(t)}</div>`).join('');
   const arr = []; for (const t of T1.topics) for (const a of t.arriving || []) arr.push({...a, parent: t.label});
   arr.sort((a, b) => (b.is_new - a.is_new) || (b.growth || 0) - (a.growth || 0));
-  h += '<h4>Arriving sub-topics, all CS</h4>' + (arr.length ? arr.slice(0, 10).map(a => `<div class="small" style="padding:2px 0"><a href="#" data-act="sub" data-c="${a.c}">${esc(a.label)}</a> · ${esc(a.parent)} · onset ${monthName(a.onset)} · ${a.is_new ? '<span class="new">new</span>' : '×' + a.growth.toFixed(1)}</div>`).join('') : '<div class="muted small">none in this window</div>');
+  h += '<h4 data-i="trend">Arriving sub-topics, all CS</h4>' + (arr.length ? arr.slice(0, 10).map(a => `<div class="small" style="padding:2px 0"><a href="#" data-act="sub" data-c="${a.c}">${esc(a.label)}</a> · ${esc(a.parent)} · onset ${monthName(a.onset)} · ${a.is_new ? '<span class="new">new</span>' : '×' + a.growth.toFixed(1)}</div>`).join('') : '<div class="muted small">none in this window</div>');
   return h + '<p class="tiny muted" style="margin-top:14px">Click a topic, press L to lasso, or / to search.</p>';
 }
 function evidenceView() {
   const ev = S.ev, e = ev.link, lv = ev.level, n1 = lblOf(lv, e.c1), n2 = lblOf(lv, e.c2), d = ev.data, T = (S.meta && S.meta.bridge_T) || 4;
   const st = statusOf(e);
-  let h = `<a href="#" data-act="back" class="small">← back</a><h4>Link evidence</h4><h3 style="margin:0 0 4px;font-size:16px">${esc(n1)} ↔ ${esc(n2)}</h3>`;
+  let h = `<a href="#" data-act="back" class="small">← back</a><h4 data-i="merge">Link evidence</h4><h3 style="margin:0 0 4px;font-size:16px">${esc(n1)} ↔ ${esc(n2)}</h3>`;
   if (st) h += `<span class="pill" data-status="${st}">${st}</span>`;
   if (e.status === 'low') h += `<p>${fmt(e.n_bridge)} bridge papers in this window: too few to compute link growth. Strength is shown.</p><div class="kv"><span>strength</span><span class="num">${e.strength.toFixed(3)}</span></div>`;
   else h += `<div class="kv"><span>bridge papers in window:</span><span class="num">${fmt(e.n_bridge)}</span><span>in prior window:</span><span class="num">${fmt(e.n_prior ?? e.n_bridge_prior ?? (d && (d.n_prior ?? d.n_bridge_prior)) ?? NaN)}</span><span>share now</span><span class="num">${pct(e.share_now)}</span><span>share before</span><span class="num">${pct(e.share_prior)}</span><span>link growth</span><span class="num">${e.status === 'new' ? 'new' : '×' + e.growth.toFixed(2)}</span><span>strength</span><span class="num">${e.strength.toFixed(3)}</span></div>`;
@@ -1295,12 +1355,12 @@ function evidenceView() {
   const bs = [...d.bridges].sort(ev.newest ? (a, b) => String(b.month).localeCompare(String(a.month)) : (a, b) => (b.citations || 0) - (a.citations || 0)).slice(0, 30);
   const pg = bs.slice(ev.page * 10, ev.page * 10 + 10);
   const split = b => { const own = b.row != null ? P.lvl[lv][b.row] : null; return own === e.c2 ? `${b.k1} of 14 neighbours in ${n1}` : `${b.k2} of 14 neighbours in ${n2}`; };
-  h += `<h4>Bridge papers · ${ev.newest ? 'newest first' : 'most cited'} · ${bs.length ? ev.page * 10 + 1 : 0}–${ev.page * 10 + pg.length} of ${fmt(d.n_bridge ?? bs.length)}</h4>
+  h += `<h4 data-i="file">Bridge papers · ${ev.newest ? 'newest first' : 'most cited'} · ${bs.length ? ev.page * 10 + 1 : 0}–${ev.page * 10 + pg.length} of ${fmt(d.n_bridge ?? bs.length)}</h4>
     <div style="display:flex;gap:6px;margin-bottom:4px"><button data-act="evSort" aria-pressed="${!!ev.newest}">newest first</button><button data-act="evPage" data-d="-1" ${ev.page ? '' : 'disabled'}>prev</button><button data-act="evPage" data-d="1" ${(ev.page + 1) * 10 < bs.length ? '' : 'disabled'}>next</button></div>
     <div class="plist">${pg.map(b => `<div><a href="${ARXIV}${esc(b.id)}" target="_blank" rel="noopener">${esc(b.title)}</a><small>arXiv:${esc(b.id)} · ${monthName(b.month)} · ${split(b)}</small></div>`).join('') || '<div class="muted">no bridge papers in this window</div>'}</div>`;
-  h += `<h4>Shared rising phrases · all 36 months</h4>` + (d.phrases && d.phrases.length ? d.phrases.map(p => `<button class="chip" data-act="phrase" data-ph="${esc(p.phrase)}">${esc(p.phrase)} <span class="muted">${p.n1} / ${p.n2} papers</span></button>`).join('') + ' <span class="tiny muted">all 36 months</span>' : '<div class="muted small">no shared rising phrases</div>');
+  h += `<h4 data-i="hash">Shared rising phrases · all 36 months</h4>` + (d.phrases && d.phrases.length ? d.phrases.map(p => `<button class="chip" data-act="phrase" data-ph="${esc(p.phrase)}">${esc(p.phrase)} <span class="muted">${p.n1} / ${p.n2} papers</span></button>`).join('') + ' <span class="tiny muted">all 36 months</span>' : '<div class="muted small">no shared rising phrases</div>');
   const pre = ST && SX.ideas.find(g => g.level === lv && g.window === curWin() && g.c1 === Math.min(e.c1, e.c2) && g.c2 === Math.max(e.c1, e.c2));
-  if (pre) h += `<h4>Ideas for this pair (precomputed)</h4>` + ideasHTML({ideas: pre.ideas, created: pre.created, window: SX.meta.windows[pre.window], shown: pre.shown});
+  if (pre) h += `<h4 data-i="bulb">Ideas for this pair (precomputed)</h4>` + ideasHTML({ideas: pre.ideas, created: pre.created, window: SX.meta.windows[pre.window], shown: pre.shown});
   h += `<div style="margin-top:12px;display:flex;gap:6px;flex-wrap:wrap"><button data-act="evAB" class="pri">Set as A and B</button><button data-act="evMap" aria-pressed="${!!ev.onMap}">${ev.onMap ? 'Hide bridge papers' : 'Show bridge papers on map'}</button></div>`;
   return h;
 }
@@ -1326,7 +1386,7 @@ function renderAB() {
   const el = $('abBlock');
   if (!(S.A && S.B)) { el.innerHTML = S.ideasWait ? ideasArea() : ''; return; }
   const d = S.dist;
-  let h = `<h4 style="margin-top:0">A vs B</h4><div class="small"><span style="color:var(--color-a);font-weight:700">A</span> ${esc(S.A.label)}<br><span style="color:var(--color-b);font-weight:700">B</span> ${esc(S.B.label)}</div>`;
+  let h = `<h4 style="margin-top:0" data-i="compare">A vs B</h4><div class="small"><span style="color:var(--color-a);font-weight:700">A</span> ${esc(S.A.label)}<br><span style="color:var(--color-b);font-weight:700">B</span> ${esc(S.B.label)}</div>`;
   h += d ? `<div class="kv"><span>cosine distance</span><span class="num">${d.cos_dist.toFixed(3)}</span><span>overlap</span><span class="num">${fmt(d.overlap)} papers</span><span>bridge papers between them:</span><span class="num">${d.n_bridges == null ? 'local only' : fmt(d.n_bridges)}</span></div><div class="plist small">${(d.bridges || []).slice(0, 5).map(p => `<div><a href="${ARXIV}${esc(p.id)}" target="_blank" rel="noopener">${esc(p.title)}</a></div>`).join('')}</div>` : '<p class="muted small">computing distance…</p>';
   h += (ST ? `<div style="margin-top:8px"><span title="Ideas between A and B are ${LOCAL_ONLY}"><button data-act="ideas" class="pri" disabled>Ideas between A and B</button></span></div>`
     : `<div style="margin-top:8px"><button data-act="ideas" class="pri">Ideas between A and B</button></div>`) + ideasArea();
@@ -1447,8 +1507,8 @@ function syncControlTabOrder() {
     delete el.dataset.controlTab;
   });
   if (!COMPACT.matches) return;
-  const groups = ['qswitch', 'winDD', 'infoBtn', 'levelBox', 'colourBox', 'legendBox', 'layersBox', 'searchBox', 'compareBox', 'lassoWrap', 'savedBox'];
-  const selector = 'button, input, select, summary, [tabindex]';
+  const groups = ['crumb', 'hname', 'qswitch', 'winDD', 'infoBtn', 'levelBox', 'colourBox', 'legendBox', 'layersBox', 'searchBox', 'compareBox', 'lassoWrap', 'savedBox'];
+  const selector = 'button, input, select, summary, [tabindex], a[href]';
   groups.forEach((id, i) => {
     const group = $(id), controls = group.matches(selector) ? [group] : group.querySelectorAll(selector);
     for (const el of controls) {
@@ -1466,6 +1526,7 @@ function layout() {
   if (c) {
     $('hrow1').insertBefore($('searchBox'), $('status'));
     for (const id of ['levelBox', 'colourBox', 'layersBox', 'legendBox']) $('hrow2').append($(id));
+    $('hrow2').append($('ghLink')); // the GitHub link stays last in the header tab sequence
     $('inspTop').append($('compareBox'), $('savedBox')); $('mapLassoSlot').append($('lassoWrap'));
     $('layersBox').open = false; $('savedBox').open = false;
   } else {
@@ -1496,7 +1557,7 @@ document.addEventListener('click', e => {
     const tr = e.target.closest('tr[data-c]'); if (tr && tr.closest('#pTopics') && !e.target.closest('button')) return selectTopic(S.level, +tr.dataset.c);
     const lr = e.target.closest('tr[data-li]'); if (lr) return openEvidence(S.linkRows[+lr.dataset.li]);
     const pr = e.target.closest('tr[data-ph], #sugg li'); if (pr) { $('q').value = pr.dataset.ph; return runSearch(pr.dataset.ph, 'phrase'); }
-    const ir = e.target.closest('tr[data-ig]'); if (ir) { const g = ideaGroups().find(x => x.key === ir.dataset.ig); if (g) { S.view = 'ideas'; $('inspBody').innerHTML = `<h4 style="margin-top:0">Ideas: ${esc(g.a || 'A')} ↔ ${esc(g.b || 'B')}</h4>` + ideasHTML({ideas: g.ideas, created: g.created, window: g.window, shown: []}); if (NARROW.matches) document.body.classList.add('drawer'); } }
+    const ir = e.target.closest('tr[data-ig]'); if (ir) { const g = ideaGroups().find(x => x.key === ir.dataset.ig); if (g) { S.view = 'ideas'; $('inspBody').innerHTML = `<h4 style="margin-top:0" data-i="bulb">Ideas: ${esc(g.a || 'A')} ↔ ${esc(g.b || 'B')}</h4>` + ideasHTML({ideas: g.ideas, created: g.created, window: g.window, shown: []}); if (NARROW.matches) document.body.classList.add('drawer'); } }
     return;
   }
   const a = t.dataset.act, d = t.dataset;
