@@ -1,4 +1,9 @@
+report/points.bin
+pm/evidence/
 data/
 .venv/
 __pycache__/
 report/*.html
+site/
+.DS_Store
+.vercel/

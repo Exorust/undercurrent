@@ -24,7 +24,7 @@ def main():
     con = duckdb.connect(str(DB), read_only=True)
     n, lo, hi = con.execute("select count(*), min(submitted), max(submitted) from papers").fetchone()
     live = "run_tag='live' and run_date=(select max(run_date) from signals where run_tag='live')"
-    L = [f"# field-radar report {dt.date.today()}", "",
+    L = [f"# undercurrent report {dt.date.today()}", "",
          f"{n:,} arXiv CS papers, {lo:%Y-%m} to {hi:%Y-%m}. Growth compares the last 6 full months with the 6 before, corrected for the growth of CS as a whole.", ""]
     bt = ROOT / "BACKTEST.md"
     if bt.exists():

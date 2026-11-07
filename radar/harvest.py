@@ -39,7 +39,7 @@ def fetch_vecs(con, sql):
 def fetch(url, tries=12):
     for i in range(tries):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "field-radar/0.1"})
+            req = urllib.request.Request(url, headers={"User-Agent": "undercurrent/0.1"})
             with urllib.request.urlopen(req, timeout=120) as r:
                 return r.read()
         except urllib.error.HTTPError as e:

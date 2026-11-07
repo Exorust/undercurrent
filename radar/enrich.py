@@ -18,7 +18,7 @@ create table if not exists embeddings (id text primary key, vec float[768]);
 
 def post(ids, tries=8):
     body = json.dumps({"ids": [f"ARXIV:{i}" for i in ids]}).encode()
-    hdr = {"Content-Type": "application/json", "User-Agent": "field-radar/0.1"}
+    hdr = {"Content-Type": "application/json", "User-Agent": "undercurrent/0.1"}
     if k := os.environ.get("S2_API_KEY"): hdr["x-api-key"] = k
     for i in range(tries):
         try:

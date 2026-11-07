@@ -25,7 +25,7 @@ CATS = "cs.*,math.NA,eess.SY"
 def get(url, tries=8):
     for i in range(tries):
         try:
-            req = urllib.request.Request(url, headers={"User-Agent": "field-radar/0.1"})
+            req = urllib.request.Request(url, headers={"User-Agent": "undercurrent/0.1"})
             with urllib.request.urlopen(req, timeout=90) as r:
                 return r.read()
         except Exception as e:
