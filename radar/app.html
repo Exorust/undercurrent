@@ -13,6 +13,9 @@ html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text
 #tabs{visibility:hidden}
 #loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--color-muted)}
 </style>
+<script>/* F46: display settings before first paint (uc.settings; the main script keeps them live) */
+(function(){var r=document.documentElement,s={};try{s=JSON.parse(localStorage.getItem('uc.settings')||'{}')||{};}catch(e){}var b={s:13,m:14,l:16}[s.text]||14;r.style.setProperty('--tscale',String(b/14));r.style.fontSize=b+'px';r.dataset.text={s:1,m:1,l:1}[s.text]?s.text:'m';if(s.contrast==='on'||s.contrast==='off')r.dataset.contrast=s.contrast;if(s.motion==='on'||s.motion==='off')r.dataset.motion=s.motion;})();
+</script>
 <link id="fontsCss" rel="stylesheet" media="print" onload="this.dataset.loaded='1'" onerror="this.dataset.loaded='1'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500;600&display=swap">
 <script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.5"></script>
 <style type="text/tailwindcss">
@@ -273,9 +276,6 @@ kbd{font:500 12px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--color-mu
 #leftNote{flex:none;margin:6px 6px 8px;font-size:12px;line-height:1.4;color:var(--color-muted)}
 #leftNote:empty{display:none}
 #sideFoot{flex:none;display:flex;align-items:center;gap:6px;padding:8px 0 0 0;border-top:1px solid var(--color-hair)}
-#side #viewBtn{flex:1;display:flex;align-items:center;gap:11px;height:34px;padding:0 10px;border:1px solid transparent!important;background:transparent;color:var(--color-text);text-align:left}
-#side #viewBtn i{color:var(--color-muted)}
-#side #viewBtn:hover,#side #viewBtn[aria-expanded=true]{background:var(--color-hover)}
 #status{font-size:12px;color:var(--color-muted);display:inline-flex;align-items:center;gap:5px;border:1px solid #e6e5e1;border-radius:9999px;padding:1px 8px 1px 6px;line-height:16px;max-width:110px;overflow:hidden;white-space:nowrap}
 #statusHost{overflow:hidden;text-overflow:ellipsis}
 #ghLink{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:10px;color:var(--color-muted);text-decoration:none}
@@ -341,10 +341,9 @@ button.chipbtn[aria-pressed=true]{background:var(--color-orange-tint);color:var(
 #handle{height:8px;z-index:3}
 thead,th{background:#ffffff}
 /* popovers */
-#viewPop{position:fixed;z-index:50;width:268px;max-height:calc(100vh - 24px);overflow:auto;background:var(--color-pop);border:1px solid var(--color-border);border-radius:14px;padding:4px 12px 12px;box-shadow:0 12px 32px rgba(0,0,0,.08)}
-#viewPop h3,.section-label{margin:12px 0 6px}
-#viewPop #layersBox>summary{display:none}
-#viewPop #largeLine{margin-top:8px}
+#viewPanel h3,.section-label{margin:12px 0 6px}
+#viewPanel #layersBox>summary{display:none}
+#viewPanel #largeLine{margin-top:8px}
 #scrim{display:none}
 /* rail: verbs as icons with tooltips, selections as coloured dots */
 body.rail #side{padding:12px 8px 10px}
@@ -353,7 +352,6 @@ body.rail #logoRow{justify-content:center;padding:0}
 body.rail #side button.verb{justify-content:center;padding:0}
 body.rail .slot{justify-content:center;padding:0;margin-top:4px}
 body.rail #sideFoot{flex-direction:column;gap:4px}
-body.rail #side #viewBtn{flex:none;width:34px;padding:0;justify-content:center}
 body.side-over #side{position:fixed;left:0;top:0;bottom:0;width:248px;z-index:46;background:#f7f7f5;box-shadow:inset 0 0 0 1px var(--color-hair),0 16px 48px rgba(0,0,0,.08)}
 body.side-over #scrim{display:block;position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.35)}
 #selBar{position:sticky;top:0;z-index:2;display:flex;gap:6px;flex-wrap:wrap;margin:-12px -14px 10px;padding:10px 14px;background:#ffffff;border-bottom:1px solid var(--color-hair)}
@@ -370,8 +368,8 @@ body.side-over #scrim{display:block;position:fixed;inset:0;z-index:45;background
 #crumb{gap:4px;font:400 12px/1 Inter,system-ui,sans-serif;letter-spacing:0;text-transform:none}
 #logoRow{padding-left:4px;gap:2px}
 #crumb #hname{font:400 20px/1 "Instrument Serif",serif;letter-spacing:0;text-transform:none;flex:none}
-#side button.verb,#side #viewBtn{height:36px;font-size:14px!important;border-radius:8px!important}
-#side button.verb i,#side button.verb[aria-pressed=true] i,#side button.verb.on i,#side #viewBtn i{color:var(--color-secondary)}
+#side button.verb{height:36px;font-size:14px!important;border-radius:8px!important}
+#side button.verb i,#side button.verb[aria-pressed=true] i,#side button.verb.on i{color:var(--color-secondary)}
 .slot,.sitem{min-height:36px;font-size:14px;border-radius:8px}
 #side .sitem button.sn{font-size:14px!important}
 .slot:has(.sn:focus),.slot.selected{background:var(--color-selected)}
@@ -475,7 +473,7 @@ tr.hl{background:var(--color-selected)}
 #tourCard.dock{left:0!important;right:0;bottom:0;top:auto!important;width:auto;border-radius:16px 16px 0 0;padding:14px 16px calc(14px + env(safe-area-inset-bottom))}
 #tourCard.dock.top{top:0!important;bottom:auto;border-radius:0 0 16px 16px}
 #tourCard.dock .tptr,#tourCard.center .tptr{display:none}
-@media (prefers-reduced-motion: reduce){.prog{animation:none;background:var(--color-orange)} #tourCard,#tourSpot{transition:none}}
+@media (prefers-reduced-motion: reduce){:where(:root:not([data-motion=off])) .prog{animation:none;background:var(--color-orange)} :where(:root:not([data-motion=off])) :is(#tourCard,#tourSpot){transition:none}}
 
 /* Viewport and WCAG 2.2 adjustments; internal panels retain their hairlines. */
 .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);clip-path:inset(50%);white-space:nowrap;border:0}
@@ -506,7 +504,7 @@ body.rail .slot .sn .sk{display:none}
 #hintWrap{max-height:calc(100% - 120px);overflow:auto}
 
 #sugg{max-height:min(340px,calc(100dvh - 220px))}
-#infoPop,#viewPop{max-width:calc(100vw - 16px)}
+#infoPop{max-width:calc(100vw - 16px)}
 #toast{max-width:calc(100vw - 16px);width:max-content}
 #banner{height:auto;min-height:32px;max-height:40dvh;overflow:auto}
 #tourCard{max-height:calc(100dvh - 16px);overflow:auto}
@@ -533,15 +531,22 @@ body.rail .slot .sn .sk{display:none}
   #insp{height:64dvh}
   #winDD>div{max-height:calc(100dvh - 140px)}
 }
+/* F46: high contrast and reduced motion follow the system unless Settings forces them (data-contrast / data-motion on <html>) */
 @media (prefers-contrast:more){
-  :root{--color-hair:#bdbcb8;--color-border:#bdbcb8;--color-divider:#bdbcb8;--color-muted:#3d3d3d}
-  *,*::before,*::after{border-color:#bdbcb8}
-  :root #app :is(#side,#titleControls,#mapwrap,#insp) button,:root :is(#viewPop,#infoPop,#toast,#tourCard) button,:root .chip,:root .pill,:root #modeRow label{border:1px solid #1c1c1c!important}
-  td,.plist>div{border-bottom-color:#bdbcb8}
+  :root:not([data-contrast=off]){--color-hair:#bdbcb8;--color-border:#bdbcb8;--color-divider:#bdbcb8;--color-muted:#3d3d3d}
+  :where(:root:not([data-contrast=off])) :is(*,*::before,*::after){border-color:#bdbcb8}
+  :where(:root:not([data-contrast=off])) #app :is(#side,#titleControls,#mapwrap,#insp) button,:where(:root:not([data-contrast=off])) :is(#infoPop,#toast,#tourCard,#settings) button,:where(:root:not([data-contrast=off])) :is(.chip,.pill,#modeRow label){border:1px solid #1c1c1c!important}
+  :where(:root:not([data-contrast=off])) :is(td,.plist>div){border-bottom-color:#bdbcb8}
 }
+:root[data-contrast=on]{--color-hair:#bdbcb8;--color-border:#bdbcb8;--color-divider:#bdbcb8;--color-muted:#3d3d3d}
+:where(:root[data-contrast=on]) :is(*,*::before,*::after){border-color:#bdbcb8}
+:where(:root[data-contrast=on]) #app :is(#side,#titleControls,#mapwrap,#insp) button,:where(:root[data-contrast=on]) :is(#infoPop,#toast,#tourCard,#settings) button,:where(:root[data-contrast=on]) :is(.chip,.pill,#modeRow label){border:1px solid #1c1c1c!important}
+:where(:root[data-contrast=on]) :is(td,.plist>div){border-bottom-color:#bdbcb8}
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+  :where(:root:not([data-motion=off])) :is(*,*::before,*::after){animation:none!important;transition:none!important;scroll-behavior:auto!important}
 }
+:where(:root[data-motion=on]) :is(*,*::before,*::after){animation:none!important;transition:none!important;scroll-behavior:auto!important}
+:where(:root[data-motion=on]) .prog{background:var(--color-orange)}
 /* F45: agent controls use the existing light inspector palette. */
 #agentIdeas p{margin:6px 0}
 .idea-facet{margin:8px 0}
@@ -555,6 +560,72 @@ body.rail .slot .sn .sk{display:none}
 #agentMcp summary{min-height:28px;padding:4px 0;text-decoration:underline}
 #agentMcp pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--color-well);padding:8px;border-radius:8px;font-size:12px}
 #agentMcp a{display:inline-block;min-height:28px;padding:4px 0;text-decoration:underline}
+/* ---------- F46 resizable panels: sizes come from uc.layout via --sw-user / --iw-user on <html> ---------- */
+#app{position:relative}
+@media (min-width:1500px){body:not(.rail) #app{--sw:var(--sw-user,248px)} #app{--iw:var(--iw-user,376px)}}
+@media (min-width:1200px) and (max-width:1499px){#app{--iw:var(--iw-user,360px)}}
+.grip{position:absolute;z-index:30;top:0;bottom:0;width:6px;padding:0;margin:0;border:0;background:transparent;cursor:col-resize;touch-action:none}
+.grip::after{content:"";position:absolute;top:0;bottom:0;left:50%;width:1px;transform:translateX(-50%);background:transparent;transition:background-color .1s}
+.grip:hover::after,.grip:focus-visible::after,.grip.drag::after{background:#1c1c1c}
+.grip:focus-visible{outline:2px solid #1c1c1c!important;outline-offset:0}
+#sideGrip{grid-column:1/2;grid-row:1/4;right:-3px}
+#inspGrip{grid-column:3/4;grid-row:1/4;left:-3px}
+@media (pointer:coarse){.grip{width:8px} #sideGrip{right:-4px} #inspGrip{left:-4px} #handle{height:12px!important}}
+@media (max-width:1199px){#inspGrip,#sideGrip{display:none}}
+body.rail #sideGrip,body.side-over #sideGrip{display:none}
+#handle{height:8px;cursor:row-resize;touch-action:none;outline-offset:-2px!important}
+#handle::after{content:"";position:absolute;left:0;right:0;top:0;width:auto;height:1px;margin:0;border-radius:0;background:transparent;transition:background-color .1s}
+#handle::before{content:"";display:block;width:36px;height:2px;margin:3px auto 0;background:#bdbcb8;border-radius:2px}
+#handle:hover::after,#handle:focus-visible::after,#handle.drag::after{background:#1c1c1c}
+body.resizing,body.resizing *{user-select:none!important;-webkit-user-select:none!important}
+body.resizing.col,body.resizing.col *{cursor:col-resize!important}
+body.resizing.row,body.resizing.row *{cursor:row-resize!important}
+/* ---------- view rows in the sidebar, their controls as an inspector panel ---------- */
+#viewRows{display:flex;flex-direction:column;gap:2px;padding:0 0 10px;border-bottom:1px solid var(--color-hair);flex:none}
+#viewRows h2.sech{margin:12px 10px 4px}
+#side button.verb .vv{flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--color-muted)}
+#side button.verb[aria-expanded=true]{background:var(--color-selected)}
+body.rail .vv{display:none!important}
+#insp.vp>#inspTop,#insp.vp>#abBlock,#insp.vp>#inspBody{display:none!important}
+#viewPanel{padding:12px 14px 20px}
+#viewPanel .vpback{display:inline-block;min-height:24px;padding:2px 0}
+#viewPanel #vpTitle{margin:6px 0 4px;font:400 22px/1.2 "Inter",system-ui,sans-serif;letter-spacing:-.01em}
+#viewPanel #vpTitle:focus{outline:none}
+#viewPanel #vpTitle:focus-visible{outline:2px solid #1c1c1c}
+#viewPanel h2.sech{display:none}
+#viewPanel .vexp{margin:6px 0;font-size:12px;line-height:1.45;color:var(--color-muted)}
+#viewPanel #levelBox .seg{margin-top:6px}
+#viewPanel #colourBox .opts{margin-top:6px}
+#viewPanel #lightRow{margin-top:12px}
+#viewPanel #layersBox>div>.small{margin-top:6px}
+/* ---------- F46 settings ---------- */
+#side #setBtn{flex:1;min-width:0;display:flex;align-items:center;gap:11px;height:36px;padding:0 10px;border:1px solid transparent!important;background:transparent;color:var(--color-text);text-align:left;font-size:14px!important;border-radius:8px!important}
+#side #setBtn i{color:var(--color-secondary)}
+#side #setBtn:hover,#side #setBtn[aria-expanded=true]{background:var(--color-hover)}
+body.rail #side #setBtn{flex:none;width:34px;padding:0;justify-content:center}
+[data-i=gear]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12.2 2h-.4a2 2 0 0 0-2 2v.2a2 2 0 0 1-1 1.7l-.4.3a2 2 0 0 1-2 0l-.2-.1a2 2 0 0 0-2.7.7l-.2.4a2 2 0 0 0 .7 2.7l.2.1a2 2 0 0 1 1 1.7v.6a2 2 0 0 1-1 1.7l-.2.1a2 2 0 0 0-.7 2.7l.2.4a2 2 0 0 0 2.7.7l.2-.1a2 2 0 0 1 2 0l.4.3a2 2 0 0 1 1 1.7v.2a2 2 0 0 0 2 2h.4a2 2 0 0 0 2-2v-.2a2 2 0 0 1 1-1.7l.4-.3a2 2 0 0 1 2 0l.2.1a2 2 0 0 0 2.7-.7l.2-.4a2 2 0 0 0-.7-2.7l-.2-.1a2 2 0 0 1-1-1.7v-.6a2 2 0 0 1 1-1.7l.2-.1a2 2 0 0 0 .7-2.7l-.2-.4a2 2 0 0 0-2.7-.7l-.2.1a2 2 0 0 1-2 0l-.4-.3a2 2 0 0 1-1-1.7V4a2 2 0 0 0-2-2z'/%3E%3Ccircle cx='12' cy='12' r='3'/%3E%3C/svg%3E")}
+#setScrim{position:fixed;inset:0;z-index:900;background:rgba(28,28,28,.35)}
+#settings{position:fixed;z-index:901;left:50%;top:50%;transform:translate(-50%,-50%);width:min(600px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow:auto;background:#ffffff;color:var(--color-text);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.14);padding:0 20px 18px}
+#settings:focus,#settings:focus-visible{outline:none!important}
+#settings .sethead{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 -20px;padding:14px 14px 10px 20px;background:#ffffff;border-bottom:1px solid var(--color-hair)}
+#settings #setTitle{margin:0;font:500 17px/1.25 "Inter",system-ui,sans-serif;letter-spacing:-.01em;color:var(--color-text)}
+#settings h2.sech{margin:18px 0 8px;font-size:12px;font-weight:500;color:var(--color-muted)}
+#settings .srow{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:36px;padding:3px 0;border-bottom:1px solid var(--color-divider);font-size:14px}
+#settings .srow>span:first-child{flex:1;min-width:0}
+#settings .seg{flex-wrap:wrap;justify-content:flex-end}
+#settings .seg button{padding:3px 10px;min-height:28px}
+#settings .snote{margin:6px 0 0;font-size:12px;color:var(--color-muted);line-height:1.45}
+#settings .sbtnrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:6px 0}
+#settings .sbtnrow button{padding:4px 12px}
+#settings table{font-size:13px;margin-top:6px}
+#settings table th,#settings table td{padding:4px 8px;border-bottom:1px solid var(--color-divider);text-align:left;background:#ffffff;font-weight:400}
+#settings table th[scope=row]{white-space:nowrap}
+#settings kbd{display:inline-block;min-width:20px;padding:2px 5px;border:1px solid var(--color-hair);border-radius:6px;text-align:center;color:var(--color-text);background:var(--color-well)}
+#settings pre{white-space:pre-wrap;overflow-wrap:anywhere;background:var(--color-well);padding:8px;border-radius:8px;font-size:12px;margin:4px 0}
+#settings .mcpl{margin:10px 0 2px;font-size:13px}
+#setConfirm{margin:6px 0;padding:8px 10px;border-radius:10px;background:#fff4ec;font-size:13px}
+#setConfirm button[data-act=setClearSavedYes]{background:var(--color-text);color:#ffffff;border-color:var(--color-text)!important}
+@media (max-width:520px){#settings .srow{flex-direction:column;align-items:flex-start;gap:4px} #settings .seg{justify-content:flex-start}}
 </style>
 </head>
 <body>
@@ -572,6 +643,12 @@ body.rail .slot .sn .sk{display:none}
     <button class="verb nu" id="vConnect" aria-label="Connections" data-act="connections" aria-pressed="false" title="Connections (2)"><i data-i="merge"></i><span class="vl">Connections</span><kbd>2</kbd></button>
     <button class="verb nu" id="tourBtn" aria-label="Tour" data-act="tour" title="Tour"><i data-i="help"></i><span class="vl">Tour</span><kbd></kbd></button>
   </div>
+  <div id="viewRows" role="group" aria-labelledby="viewHead">
+    <h2 class="sech" id="viewHead">View</h2>
+    <button class="verb nu" id="vLevel" data-act="viewPanel" data-v="level" aria-expanded="false" aria-controls="viewPanel" title="Level"><i data-i="layers"></i><span class="vl">Level</span><span class="vv" id="vLevelVal">topics</span></button>
+    <button class="verb nu" id="vColour" data-act="viewPanel" data-v="colour" aria-expanded="false" aria-controls="viewPanel" title="Colour by"><i data-i="palette"></i><span class="vl">Colour by</span><span class="vv" id="vColourVal">growth</span></button>
+    <button class="verb nu" id="vLayers" data-act="viewPanel" data-v="layers" aria-expanded="false" aria-controls="viewPanel" title="Map layers"><i data-i="merge"></i><span class="vl">Map layers</span><span class="vv" id="vLayersVal">0 on</span></button>
+  </div>
   <div id="selSec">
     <h2 class="sech">Selections</h2>
     <div id="compareBox">
@@ -584,7 +661,7 @@ body.rail .slot .sn .sk{display:none}
   </div>
   <div id="leftNote"></div>
   <div id="sideFoot">
-    <button id="viewBtn" aria-label="View settings" class="nu" data-act="view" aria-haspopup="dialog" aria-expanded="false" title="View: level, colour, layers"><i data-i="sliders"></i><span class="vl">View</span></button>
+    <button id="setBtn" aria-label="Settings" class="nu" data-act="settings" aria-haspopup="dialog" aria-expanded="false" title="Settings (,)"><i data-i="gear"></i><span class="vl">Settings</span></button>
     <span id="status">server: <span id="statusHost"></span> <span id="statusDot">●</span></span>
     <a id="ghLink" target="_blank" rel="noopener" aria-label="undercurrent on GitHub" title="undercurrent on GitHub"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
   </div>
@@ -648,7 +725,7 @@ body.rail .slot .sn .sk{display:none}
     </div>
   </div>
   <section id="tabs" role="region" aria-label="Tables" inert>
-    <div id="handle" title="Drag to resize; double-click to close"></div>
+    <div id="handle" role="separator" aria-orientation="horizontal" aria-label="Resize table" aria-valuemin="25" aria-valuemax="85" aria-valuenow="50" tabindex="0" title="Drag to resize; double-click or Enter resets"></div>
     <div id="sheetHead">
       <div id="tabbar" role="tablist" aria-label="Tables">
         <button role="tab" data-act="tab" data-t="topics" aria-selected="true">Topics</button><button role="tab" data-act="tab" data-t="links" aria-selected="false">Links</button><button role="tab" data-act="tab" data-t="phrases" aria-selected="false">Phrases</button><button role="tab" data-act="tab" data-t="ideas" aria-selected="false">Ideas</button>
@@ -666,36 +743,87 @@ body.rail .slot .sn .sk{display:none}
 <aside id="insp" aria-label="Details">
   <button id="drawerClose" class="ib nu" data-act="drawerClose" aria-label="Close inspector" title="Close (Esc)"><i data-i="x"></i></button>
   <div id="inspTop"></div><div id="abBlock"></div><div id="inspBody"></div>
+  <section id="viewPanel" aria-labelledby="vpTitle" hidden>
+    <a href="#" data-act="vpBack" class="small vpback">← Back</a>
+    <h2 id="vpTitle" tabindex="-1">Level</h2>
+    <div id="levelBox" data-vp="level"><h2 class="sech" data-i="layers">Level</h2>
+      <span class="seg" role="radiogroup" aria-label="Level">
+        <button role="radio" data-act="level" data-l="2" aria-checked="false">areas <span style="display:block">(20)</span></button><button role="radio" data-act="level" data-l="1" aria-checked="true">topics <span style="display:block">(116)</span></button><button role="radio" data-act="level" data-l="0" aria-checked="false">sub-topics <span style="display:block">(368)</span></button>
+      </span>
+      <p class="vexp">Areas: the broadest fields. Topics: research topics, the default for growth and links. Sub-topics: narrow clusters inside a topic.</p></div>
+    <div id="colourBox" data-vp="colour"><h2 class="sech" data-i="palette">Colour by</h2>
+      <div class="opts small" role="radiogroup" aria-label="Colour by" style="line-height:1.8">
+        <label><input type="radio" name="colour" value="growth" checked>Growth</label><br>
+        <label><input type="radio" name="colour" value="topic">Topic</label><br>
+        <label><input type="radio" name="colour" value="date">Date</label><br>
+        <label id="distLabel" title="Set A first"><input type="radio" name="colour" value="dist" disabled>Distance to A</label>
+      </div>
+      <p class="vexp">Growth: orange grows faster than CS, blue shrinks.</p>
+      <p class="vexp">Topic: one colour per area. Date: darker points are newer.</p>
+      <p class="vexp">Distance to A: lighter points are nearer to A (set A first).</p></div>
+    <label id="lightRow" class="small muted" data-vp="colour"><input type="checkbox" id="lightness">Lightness only</label>
+    <p class="vexp" data-vp="colour">Lightness only: growth as light to dark grey, for colour-blind reading or print.</p>
+    <details id="layersBox" data-vp="layers" open><summary>layers ▾</summary><div><h2 class="sech" data-i="merge">Map layers</h2>
+      <div class="small" style="line-height:1.9">
+        <label><input type="checkbox" role="switch" id="tNodes">topic nodes</label><br>
+        <label><input type="checkbox" role="switch" id="tBridges">bridge links</label><br>
+        <label title="Phrase links use all 36 months and do not follow the window. A phrase links two topics when 10+ papers and 20%+ of its papers are in each, and it spans at most 4 topics."><input type="checkbox" role="switch" id="tPhrases">Phrase links (all 36 months)</label>
+      </div>
+      <p class="vexp">Topic nodes: one circle per topic, sized by papers in the window.</p>
+      <p class="vexp">Bridge links: lines between topics that share bridge papers; width = bridge papers.</p>
+      <p class="vexp">Phrase links: dashed lines for rising phrases shared by two topics, over all 36 months.</p>
+      <label class="tiny muted" for="edgeN" style="display:block;margin-top:8px">edges shown: <span id="edgeCount" class="mono">40</span></label>
+      <input type="range" id="edgeN" min="10" max="200" step="1" value="40" aria-label="Number of edges">
+      <p class="vexp">Edges shown: how many of the strongest topic pairs get a bridge line.</p>
+    </div></details>
+    <div id="largeLine" class="tiny muted" hidden></div>
+  </section>
 </aside>
+<div id="sideGrip" class="grip" role="separator" aria-orientation="vertical" aria-label="Resize sidebar" aria-valuemin="200" aria-valuemax="400" aria-valuenow="248" tabindex="0" title="Drag to resize; double-click or Enter resets"></div>
+<div id="inspGrip" class="grip" role="separator" aria-orientation="vertical" aria-label="Resize details panel" aria-valuemin="300" aria-valuemax="640" aria-valuenow="376" tabindex="0" title="Drag to resize; double-click or Enter resets"></div>
 </div>
 <div id="scrim" data-act="scrim"></div>
-<div id="viewPop" role="dialog" aria-modal="false" aria-label="View settings" hidden>
-  <div id="levelBox"><h2 class="sech" data-i="layers">Level</h2>
-    <span class="seg" role="radiogroup" aria-label="Level">
-      <button role="radio" data-act="level" data-l="2" aria-checked="false">areas <span style="display:block">(20)</span></button><button role="radio" data-act="level" data-l="1" aria-checked="true">topics <span style="display:block">(116)</span></button><button role="radio" data-act="level" data-l="0" aria-checked="false">sub-topics <span style="display:block">(368)</span></button>
-    </span></div>
-  <div id="colourBox"><h2 class="sech" data-i="palette">Colour by</h2>
-    <div class="opts small" role="radiogroup" aria-label="Colour by" style="line-height:1.8">
-      <label><input type="radio" name="colour" value="growth" checked>Growth</label><br>
-      <label><input type="radio" name="colour" value="topic">Topic</label><br>
-      <label><input type="radio" name="colour" value="date">Date</label><br>
-      <label id="distLabel" title="Set A first"><input type="radio" name="colour" value="dist" disabled>Distance to A</label>
-    </div></div>
-  <label id="lightRow" class="small muted"><input type="checkbox" id="lightness">Lightness only</label>
-  <details id="layersBox" open><summary>layers ▾</summary><div><h2 class="sech" data-i="merge">Map layers</h2>
-    <div class="small" style="line-height:1.9">
-      <label><input type="checkbox" role="switch" id="tNodes">topic nodes</label><br>
-      <label><input type="checkbox" role="switch" id="tBridges">bridge links</label><br>
-      <label title="Phrase links use all 36 months and do not follow the window. A phrase links two topics when 10+ papers and 20%+ of its papers are in each, and it spans at most 4 topics."><input type="checkbox" role="switch" id="tPhrases">Phrase links (all 36 months)</label>
-    </div>
-    <label class="tiny muted" for="edgeN" style="display:block;margin-top:4px">edges shown: <span id="edgeCount" class="mono">40</span></label>
-    <input type="range" id="edgeN" min="10" max="200" step="1" value="40" aria-label="Number of edges">
-  </div></details>
-  <div id="largeLine" class="tiny muted" hidden></div>
-</div>
 <div id="banner" role="region" aria-label="Server status" hidden></div>
 <div id="infoPop" role="dialog" aria-modal="false" aria-label="How the numbers are computed" hidden></div>
 <div id="toast" role="region" aria-label="Notifications" hidden></div>
+<div id="setScrim" data-act="setClose" hidden></div>
+<div id="settings" role="dialog" aria-modal="true" aria-labelledby="setTitle" tabindex="-1" hidden>
+  <div class="sethead"><h2 id="setTitle">Settings</h2><button id="setClose" class="ib nu" data-act="setClose" aria-label="Close settings" title="Close (Esc)"><i data-i="x"></i></button></div>
+  <h2 class="sech">Display</h2>
+  <div class="srow"><span id="slText">Text size</span><span class="seg" role="radiogroup" aria-labelledby="slText"><button role="radio" data-act="set" data-k="text" data-v="s">Small</button><button role="radio" data-act="set" data-k="text" data-v="m">Normal</button><button role="radio" data-act="set" data-k="text" data-v="l">Large</button></span></div>
+  <div class="srow"><span id="slPoint">Point size</span><span class="seg" role="radiogroup" aria-labelledby="slPoint"><button role="radio" data-act="set" data-k="point" data-v="s">Small</button><button role="radio" data-act="set" data-k="point" data-v="m">Normal</button><button role="radio" data-act="set" data-k="point" data-v="l">Large</button></span></div>
+  <div class="srow"><span id="slLabels">Label density</span><span class="seg" role="radiogroup" aria-labelledby="slLabels"><button role="radio" data-act="set" data-k="labels" data-v="few">Fewer</button><button role="radio" data-act="set" data-k="labels" data-v="normal">Normal</button><button role="radio" data-act="set" data-k="labels" data-v="more">More</button></span></div>
+  <div class="srow"><span id="slContrast">High contrast</span><span class="seg" role="radiogroup" aria-labelledby="slContrast"><button role="radio" data-act="set" data-k="contrast" data-v="system">System</button><button role="radio" data-act="set" data-k="contrast" data-v="on">On</button><button role="radio" data-act="set" data-k="contrast" data-v="off">Off</button></span></div>
+  <div class="srow"><span id="slMotion">Reduced motion</span><span class="seg" role="radiogroup" aria-labelledby="slMotion"><button role="radio" data-act="set" data-k="motion" data-v="system">System</button><button role="radio" data-act="set" data-k="motion" data-v="on">On</button><button role="radio" data-act="set" data-k="motion" data-v="off">Off</button></span></div>
+  <h2 class="sech">Defaults when the map opens</h2>
+  <div class="srow"><span id="slWin">Window</span><span class="seg" role="radiogroup" aria-labelledby="slWin"><button role="radio" data-act="set" data-k="win" data-v="3">3 months</button><button role="radio" data-act="set" data-k="win" data-v="6">6 months</button><button role="radio" data-act="set" data-k="win" data-v="12">12 months</button></span></div>
+  <div class="srow"><span id="slLevel">Level</span><span class="seg" role="radiogroup" aria-labelledby="slLevel"><button role="radio" data-act="set" data-k="level" data-v="2">Areas</button><button role="radio" data-act="set" data-k="level" data-v="1">Topics</button><button role="radio" data-act="set" data-k="level" data-v="0">Sub-topics</button></span></div>
+  <div class="srow"><span id="slColour">Colour by</span><span class="seg" role="radiogroup" aria-labelledby="slColour"><button role="radio" data-act="set" data-k="colour" data-v="growth">Growth</button><button role="radio" data-act="set" data-k="colour" data-v="topic">Topic</button><button role="radio" data-act="set" data-k="colour" data-v="date">Date</button></span></div>
+  <div class="srow"><span id="slView">Question</span><span class="seg" role="radiogroup" aria-labelledby="slView"><button role="radio" data-act="set" data-k="view" data-v="1">What is arriving</button><button role="radio" data-act="set" data-k="view" data-v="2">How topics connect</button></span></div>
+  <p class="snote">Applied the next time the map opens. Link parameters (?win=, ?level=, ?colour=, ?view=) take precedence.</p>
+  <h2 class="sech">Panels</h2>
+  <div class="sbtnrow"><button data-act="setReset">Reset panel sizes</button><span class="snote" style="margin:0">Drag the edges of the sidebar, the details panel and the table to resize them.</span></div>
+  <h2 class="sech">Help</h2>
+  <div class="sbtnrow"><button data-act="setTour">Restart the tour</button></div>
+  <table id="setKeys"><caption class="sr-only">Keyboard shortcuts</caption><tbody>
+    <tr><th scope="row"><kbd>/</kbd></th><td>Search</td></tr>
+    <tr><th scope="row"><kbd>L</kbd></th><td>Lasso an area</td></tr>
+    <tr><th scope="row"><kbd>C</kbd></th><td>Compare A and B</td></tr>
+    <tr><th scope="row"><kbd>A</kbd> <kbd>B</kbd></th><td>Put the current selection in slot A or B</td></tr>
+    <tr><th scope="row"><kbd>1</kbd> <kbd>2</kbd></th><td>What is arriving / How topics connect</td></tr>
+    <tr><th scope="row"><kbd>[</kbd> <kbd>]</kbd></th><td>Shorter / longer window</td></tr>
+    <tr><th scope="row"><kbd>+</kbd> <kbd>-</kbd> <kbd>0</kbd></th><td>Zoom in, zoom out, fit (map focused)</td></tr>
+    <tr><th scope="row"><kbd>,</kbd></th><td>Settings</td></tr>
+    <tr><th scope="row"><kbd>Esc</kbd></th><td>Close the open panel, or clear the last selection</td></tr>
+  </tbody></table>
+  <h2 class="sech">Your data</h2>
+  <div class="sbtnrow"><button data-act="setClearRecent">Clear recent selections</button><button id="setClearSavedBtn" data-act="setClearSaved">Clear saved selections</button></div>
+  <div id="setConfirm" hidden></div>
+  <p class="snote" id="setDataNote">Settings, panel sizes and recent selections are stored only in this browser.</p>
+  <h2 class="sech">Agents</h2>
+  <p class="snote" style="margin-top:0">Connect undercurrent to Claude Code, Codex or Cursor through its free, read-only MCP server.</p>
+  <div id="setMcp"></div>
+</div>
 
 <script async id="deckjs" src="https://cdn.jsdelivr.net/npm/deck.gl@9.1.15/dist.min.js"></script>
 <script async id="animejs" src="https://cdn.jsdelivr.net/npm/animejs@4.5.0/dist/bundles/anime.umd.min.js"></script>
@@ -712,7 +840,7 @@ const A_RGB = mapTokenRGB('--color-a-map'), B_RGB = mapTokenRGB('--color-b'), W_
 const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const LEVEL_NAME = {0: 'sub-topics', 1: 'topics', 2: 'areas'}, LEVEL_ONE = {0: 'Sub-topic', 1: 'Topic', 2: 'Area'};
 const ARXIV = 'https:' + '//arxiv.org/abs/'; // ponytail: split so the F36.1 URL grep lists only the four loaded libraries (an outbound link is not a loaded library)
-const RM = matchMedia('(prefers-reduced-motion: reduce)'), COMPACT = matchMedia('(max-width: 1499px)'), NARROW = matchMedia('(max-width: 1199px)'), PHONE = matchMedia('(max-width: 700px)');
+const RMQ = matchMedia('(prefers-reduced-motion: reduce)'), RM = {get matches() { const m = document.documentElement.dataset.motion; return m === 'on' ? true : m === 'off' ? false : RMQ.matches; }}, COMPACT = matchMedia('(max-width: 1499px)'), NARROW = matchMedia('(max-width: 1199px)'), PHONE = matchMedia('(max-width: 700px)');
 const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 const $ = id => document.getElementById(id);
 $('crumbLink').href = 'https:' + '//charoori.com/'; $('ghLink').href = 'https:' + '//github.com/Exorust/undercurrent'; // same split: outbound links, not loaded libraries
@@ -1132,7 +1260,7 @@ function render() {
   const f = zf(), layers = [], lv = S.level, T = S.topics[lv];
   layers.push(new deck.ScatterplotLayer({
     id: 'points', parameters: {blend: true, blendColorSrcFactor: 'src-alpha', blendColorDstFactor: 'one-minus-src-alpha', blendAlphaSrcFactor: 'one', blendAlphaDstFactor: 'one-minus-src-alpha'}, data: {length: P.colours.length / 4, attributes: {getPosition: {value: P.xyDraw, size: 2}, getFillColor: {value: P.colours, size: 4, normalized: true}}},
-    radiusUnits: 'pixels', getRadius: 1, radiusScale: Math.min(4, Math.pow(f, 0.5)), radiusMinPixels: 0.8, radiusMaxPixels: 4, stroked: false, pickable: false,
+    radiusUnits: 'pixels', getRadius: 1, radiusScale: Math.min(4, Math.pow(f, 0.5)) * PT_K(), radiusMinPixels: 0.8 * PT_K(), radiusMaxPixels: 4 * PT_K(), stroked: false, pickable: false,
   }));
   // Always submit points alone until their first frame has drawn and fonts are ready.
   if (!overlaysReady || !S.MS.length) { DK.setProps({layers}); return; }
@@ -1217,14 +1345,16 @@ function wrapText(t, max) { const w = t.split(' '), out = []; let c = ''; for (c
 function computeLabels() {
   if (!DK || !R.deckReady || !overlaysReady || !S.labels[2]) { LBL = []; return; }
   const vp = DK.getViewports()[0]; if (!vp) return;
-  const f = zf(), W = vp.width, H = vp.height, cand = [], selC = new Set();
+  const f = zf(), W = vp.width, H = vp.height, cand = [], selC = new Set(), LD = LBL_DENSITY[SET.labels] || LBL_DENSITY.normal, ts = TSCALE();
   for (const s of [S.A, S.B, S.cur]) if (s && s.kind === 'topic') selC.add(s.level + ':' + s.c);
   const recent = lv => { const T = S.topics[lv]; const m = {}; if (T) for (const t of T.topics) m[t.c] = t.recent; return m; };
   if (f < 2) {
     if (innerWidth >= 600 && S.colour === 'growth' && !S.grey && S.level === 1) badgeTopics().forEach(t => { const g = t.is_new ? ' new' : ` ×${t.growth.toFixed(1)}`; cand.push({pos: centroid(1, t.c), text: t.label + g, size: 12, col: [28, 28, 28, 255], anchor: 'start', off: [13, 0], prio: 1e12, weight: 500, fixed: true}); });
-    for (const l of Object.values(S.labels[2])) cand.push({pos: [l.cx, l.cy], text: wrapText(l.label, 20), size: 14, col: [28, 28, 28, 255], anchor: 'middle', off: [0, 0], prio: l.n, weight: 600});
+    for (const l of Object.values(S.labels[2])) cand.push({pos: [l.cx, l.cy], text: wrapText(l.label, 20), size: Math.round(14 * ts), col: [28, 28, 28, 255], anchor: 'middle', off: [0, 0], prio: l.n, weight: 600});
+    // Label density "More": topic names fill the gaps between area names (lower priority than every area)
+    if (SET.labels === 'more' && S.labels[1]) for (const l of Object.values(S.labels[1])) cand.push({pos: [l.cx, l.cy], text: l.label, size: Math.max(12, Math.round(12 * ts)), col: [95, 95, 95, 255], anchor: 'middle', off: [0, 0], prio: l.n - 1e9, weight: 500});
   } else {
-    const lv = f <= 5 ? 1 : 0, rc = recent(lv), size = 12;
+    const lv = f <= 5 ? 1 : 0, rc = recent(lv), size = Math.max(12, Math.round(12 * ts));
     for (const l of Object.values(S.labels[lv])) cand.push({pos: [l.cx, l.cy], text: l.label, size, col: [28, 28, 28, 255], anchor: 'middle', off: [0, 0], prio: (selC.has(lv + ':' + l.c) ? 1e12 : 0) + (rc[l.c] ?? l.n), weight: 500});
   }
   const atFit = f <= 1.2;
@@ -1244,14 +1374,14 @@ function computeLabels() {
     const rowHeight = c.size * 1.2, h = rowHeight * (1 + (lines.length - 1) * LABEL_FONT.lineHeight);
     const x0 = (c.anchor === 'start' ? px : px - w / 2) + c.off[0], y0 = py - h / 2 + c.off[1];
     let box = [x0, y0, x0 + w, y0 + h];
-    const overlaps = b => kept.some(k => b[0] < k.box[2] && b[2] > k.box[0] && b[1] < k.box[3] && b[3] > k.box[1]);
+    const pd = LD.pad, overlaps = b => kept.some(k => b[0] - pd < k.box[2] && b[2] + pd > k.box[0] && b[1] - pd < k.box[3] && b[3] + pd > k.box[1]);
     if (atFit && !c.fixed) {
       // Fixed badges already occupy their boxes. Try the nearest free area position.
       const dx = Math.max(0, Math.min(W - w, x0)) - x0;
       const baseDy = Math.max(0, Math.min(Hb - h, y0)) - y0;
       const line = Math.ceil(rowHeight * LABEL_FONT.lineHeight) + 1;
       let placed = false;
-      for (const step of [0, 1, -1, 2, -2]) {
+      for (const step of LD.steps) {
         const dy = baseDy + step * line, y = y0 + dy;
         const shifted = [x0 + dx, y, x0 + dx + w, y + h];
         if (y >= 0 && y + h <= Hb && !overlaps(shifted) && !underComposer(shifted)) {
@@ -1263,7 +1393,7 @@ function computeLabels() {
       if (box[2] < 0 || box[0] > W || box[3] < 0 || box[1] > H) continue;
       if (overlaps(box) || underComposer(box)) continue;
     } else if (underComposer(box)) continue;
-    c.box = box; kept.push(c); if (kept.length >= 60) break;
+    c.box = box; kept.push(c); if (kept.length >= LD.cap) break;
   }
   LBL = kept;
 }
@@ -1364,7 +1494,7 @@ function makeSel(spec, sel, opts = {}) {
     else if (!S.firstNoted) { S.firstNoted = true; note('Selected. It is also A, ready to compare.'); }
   }
   else S.cur = sel;
-  S.focus = sel; S.view = 'sel'; S.ev = null;
+  S.focus = sel; S.view = 'sel'; S.ev = null; closeViewPanel(false);
   if (NARROW.matches) document.body.classList.add('drawer');
   if (sideOpen) { sideOpen = false; layout(); }
   if (S.colour === 'dist' && sel === S.A) loadDist();
@@ -1412,7 +1542,7 @@ function selTo(who, to) {
 function overview() {
   announce('Overview. Selections cleared.');
   S.cmp = null; if (S.mode === 'lasso') setLasso(false);
-  S.ev = null; S.cur = S.B = S.A = null; S.dist = null; S.focus = null; S.view = 'summary'; S.ideasUI = null;
+  S.ev = null; S.cur = S.B = S.A = null; S.dist = null; S.focus = null; S.view = 'summary'; S.ideasUI = null; closeViewPanel(false);
   if (S.colour === 'dist') S.colour = 'growth';
   document.body.classList.remove('drawer');
   applyPreset(1); closeSheet();
@@ -1555,7 +1685,7 @@ async function loadPhrases() {
 async function boot() {
   $('statusHost').textContent = location.host || 'file'; if (ST) staticUI();
   if (!ST && location.protocol === 'file:') { banner('file'); $('loading').textContent = 'Map unavailable: open the page through the server.'; return; }
-  layout(); renderSlots(); renderRecent(); renderHint();
+  applyDefaults(); layout(); renderSlots(); renderRecent(); renderHint();
   if (params.get('sheet')) openSheet(params.get('sheet'), true);  // e.g. ?sheet=topics, so tools/shot.cjs --click-topic finds the rows
   const pts = loadPoints().catch(e => { $('loading').textContent = 'Could not load map points: ' + e.message; throw e; });
   if (ST) SX.ptsReady = pts;
@@ -1627,6 +1757,7 @@ function syncPreset() {
   if (!m(2)) $('tbLinks').classList.remove('invite');
   $('vOverview').classList.toggle('on', m(1) && !S.A && !S.B && !S.cur);
   const E = drawnEdges(); $('edgeCount').textContent = `${E.edges.length} of ${E.avail} pairs`;
+  syncViewRows();
 }
 function setTab(t) {
   S.tab = t; document.querySelectorAll('[data-act=tab]').forEach(b => { b.setAttribute('aria-selected', String(b.dataset.t === t)); b.tabIndex = b.dataset.t === t ? 0 : -1; });
@@ -1887,9 +2018,9 @@ function shownPreview() {  // the 28 papers the server will send (mirrors arch �
 const IDEA_MAP = 'https://charoori.com/undercurrent/map/';
 const IDEA_FACETS = {A: 'Mechanism', B: 'Purpose'};
 const MCP_SETUP = [
-  ['Claude Code', 'claude mcp add --transport http undercurrent https://charoori.com/undercurrent/api/mcp'],
-  ['Codex (~/.codex/config.toml)', '[mcp_servers.undercurrent]\nurl = "https://charoori.com/undercurrent/api/mcp"'],
-  ['Cursor (.cursor/mcp.json)', '{"mcpServers":{"undercurrent":{"url":"https://charoori.com/undercurrent/api/mcp"}}}'],
+  ['Claude Code', 'claude mcp add --transport http undercurrent https://charoori.com/undercurrent/api/mcp/'],
+  ['Codex (~/.codex/config.toml)', '[mcp_servers.undercurrent]\nurl = "https://charoori.com/undercurrent/api/mcp/"'],
+  ['Cursor (.cursor/mcp.json)', '{"mcpServers":{"undercurrent":{"url":"https://charoori.com/undercurrent/api/mcp/"}}}'],
 ];
 const ideaText = v => String(v ?? '').replace(/\u2014/g, ' - ').replace(/[\r\n]+/g, ' ');
 function ideaName(s) {
@@ -2032,7 +2163,7 @@ function nearestPhrases(q) {
 // ---------- evidence ----------
 async function openEvidence(e) {
   if (S.view !== 'evidence') S.prevView = {view: S.view, focus: S.focus};
-  S.ev = {c1: e.c1, c2: e.c2, level: S.level, link: e, data: null, page: 0}; S.view = 'evidence'; $('insp').scrollTop = 0;
+  closeViewPanel(false); S.ev = {c1: e.c1, c2: e.c2, level: S.level, link: e, data: null, page: 0}; S.view = 'evidence'; $('insp').scrollTop = 0;
   if (NARROW.matches) document.body.classList.add('drawer');
   renderInspector(); renderLinks(); render();
   try { const d = await api(`/link?level=${S.level}&c1=${e.c1}&c2=${e.c2}&${winQS()}`); if (S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2) { S.ev.data = d; renderInspector(); } } catch (err) { if (ST && S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2) { S.ev.err = err.message; renderInspector(); } }
@@ -2128,8 +2259,8 @@ function layout() {
   const b = $('sideBtn'), open = !rail && !(phone && !sideOpen);
   b.setAttribute('aria-expanded', String(open)); b.setAttribute('aria-label', open ? 'Collapse sidebar' : 'Expand sidebar'); b.title = open ? 'Collapse sidebar' : 'Expand sidebar';
   if (!NARROW.matches) document.body.classList.remove('drawer');
-  if (!$('viewPop').hidden) toggleView(false);
   if (DK) queueLabels();
+  applyLayout();
 }
 function toggleSide() {
   if (COMPACT.matches || PHONE.matches) sideOpen = !sideOpen;
@@ -2137,40 +2268,54 @@ function toggleSide() {
   layout();
 }
 for (const mq of [COMPACT, NARROW, PHONE]) mq.addEventListener('change', () => { sideOpen = false; document.body.classList.remove('drawer'); layout(); });
-function toggleView(open) {
-  const p = $('viewPop'), b = $('viewBtn'); open = open ?? p.hidden; p.hidden = !open; b.setAttribute('aria-expanded', String(open));
-  if (!open) return;
-  const r = b.getBoundingClientRect(), rail = document.body.classList.contains('rail');
-  p.style.left = Math.max(8, Math.min(innerWidth - 276, rail ? r.right + 10 : r.left)) + 'px';
-  const bottom = Math.max(8, innerHeight - (rail ? r.bottom : r.top - 8));
-  p.style.bottom = bottom + 'px'; p.style.top = 'auto'; p.style.maxHeight = Math.max(80, innerHeight - bottom - 8) + 'px';
+// ---------- view rows (sidebar) -> controls as an inspector panel ----------
+const VIEW_TITLE = {level: 'Level', colour: 'Colour by', layers: 'Map layers'};
+let VP = null, vpDrawerBefore = false;
+function syncViewRows() {
+  const col = S.grey ? 'grey (links view)' : S.colour === 'dist' ? 'distance to A' : S.colour, on = [S.nodes, S.bridges, S.phrases].filter(Boolean).length;
+  const vals = {level: LEVEL_NAME[S.level], colour: col + (S.lightness && S.colour === 'growth' && !S.grey ? ', lightness' : ''), layers: on + ' on'};
+  for (const [k, id] of [['level', 'vLevel'], ['colour', 'vColour'], ['layers', 'vLayers']]) {
+    const b = $(id); if (!b) continue; const v = vals[k];
+    if ($(id + 'Val').textContent !== v) $(id + 'Val').textContent = v;
+    b.setAttribute('aria-label', `${VIEW_TITLE[k]}: ${v}`); b.title = `${VIEW_TITLE[k]}: ${v}`;
+    b.setAttribute('aria-expanded', String(VP === k)); b.classList.toggle('on', VP === k);
+  }
 }
-
-// sheet resize handle: 120 px .. map height - 40; double-click closes
-(() => {
-  const h = $('handle'), tabs = $('tabs'), mw = $('mapwrap');
-  h.addEventListener('pointerdown', e => { h.setPointerCapture(e.pointerId); const y0 = e.clientY, b0 = tabs.getBoundingClientRect().height; tabs.style.transition = 'none'; h.onpointermove = ev => { tabs.style.setProperty('--sheet-h', Math.max(120, Math.min(mw.clientHeight - 40, b0 + y0 - ev.clientY)) + 'px'); }; });
-  h.addEventListener('pointerup', () => { h.onpointermove = null; tabs.style.transition = ''; queueLabels(); });
-  h.addEventListener('dblclick', closeSheet);
-})();
+function openViewPanel(k, focus = true) {
+  if (VP === k) return closeViewPanel();
+  if (!VP) vpDrawerBefore = document.body.classList.contains('drawer');
+  VP = k; const p = $('viewPanel');
+  p.querySelectorAll('[data-vp]').forEach(el => { el.hidden = el.dataset.vp !== k; });
+  $('vpTitle').textContent = VIEW_TITLE[k]; p.hidden = false; $('insp').classList.add('vp'); $('insp').scrollTop = 0;
+  if (NARROW.matches) document.body.classList.add('drawer');
+  if (sideOpen) { sideOpen = false; layout(); }
+  syncViewRows(); if (focus) $('vpTitle').focus({preventScroll: true});
+}
+function closeViewPanel(focusRow = true) {
+  if (!VP) return; const k = VP; VP = null;
+  $('viewPanel').hidden = true; $('insp').classList.remove('vp');
+  if (NARROW.matches && !vpDrawerBefore) document.body.classList.remove('drawer');
+  syncViewRows();
+  if (focusRow) { const b = $({level: 'vLevel', colour: 'vColour', layers: 'vLayers'}[k]); if (b && onScreen(b)) b.focus({preventScroll: true}); }
+}
+R.viewPanel = () => VP;
 
 // ---------- events ----------
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-act]');
   const pop = $('infoPop'); if (!pop.hidden && !e.target.closest('#infoPop') && !(t && t.dataset.act === 'info')) closeInfo();
-  if (!$('viewPop').hidden && !e.target.closest('#viewPop') && !(t && t.dataset.act === 'view')) toggleView(false);
   if (!$('sugg').hidden && !e.target.closest('#searchBox')) hideSugg();
   if (!t) {
     const tr = e.target.closest('tr[data-c]'); if (tr && tr.closest('#pTopics') && !e.target.closest('button')) return selectTopic(S.level, +tr.dataset.c);
     const lr = e.target.closest('tr[data-li]'); if (lr) return openEvidence(S.linkRows[+lr.dataset.li]);
     const sg = e.target.closest('#sugg li[role=option]'); if (sg) return pickSugg(sg);
     const pr = e.target.closest('tr[data-ph]'); if (pr) { $('q').value = pr.dataset.ph; return runSearch(pr.dataset.ph, 'phrase'); }
-    const ir = e.target.closest('tr[data-ig]'); if (ir) { const g = ideaGroups().find(x => x.key === ir.dataset.ig); if (g) { S.view = 'ideas'; $('inspBody').innerHTML = `<h2 style="margin-top:0" data-i="bulb">Ideas: ${esc(g.a || 'A')} ↔ ${esc(g.b || 'B')}</h2>` + ideasHTML({ideas: g.ideas, created: g.created, window: g.window, shown: []}); if (NARROW.matches) document.body.classList.add('drawer'); } }
+    const ir = e.target.closest('tr[data-ig]'); if (ir) { const g = ideaGroups().find(x => x.key === ir.dataset.ig); if (g) { closeViewPanel(false); S.view = 'ideas'; $('inspBody').innerHTML = `<h2 style="margin-top:0" data-i="bulb">Ideas: ${esc(g.a || 'A')} ↔ ${esc(g.b || 'B')}</h2>` + ideasHTML({ideas: g.ideas, created: g.created, window: g.window, shown: []}); if (NARROW.matches) document.body.classList.add('drawer'); } }
     return;
   }
   const a = t.dataset.act, d = t.dataset;
   if (t.tagName === 'A') e.preventDefault();
-  if (sideOpen && t.closest('#verbs')) { sideOpen = false; layout(); }  // rail overlay / phone sheet closes after a verb
+  if (sideOpen && t.closest('#verbs,#viewRows')) { sideOpen = false; layout(); }  // rail overlay / phone sheet closes after a verb
   switch (a) {
     case 'ideaFacet': IDEA_FACETS[d.side] = d.facet; t.closest('.seg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === t))); updateIdeaLinks(); break;
     case 'copyIdea': copyAgentText(ideaPrompt(), t, 'Idea prompt copied'); break;
@@ -2185,13 +2330,14 @@ document.addEventListener('click', e => {
     case 'compare': startCompare(); break;
     case 'connections': applyPreset($('q2').getAttribute('aria-pressed') === 'true' ? 1 : 2); break;
     case 'tour': document.dispatchEvent(new CustomEvent('uc:tour', {detail: {tour: 'first'}})); break;  // F42 adds the cue cards
-    case 'view': toggleView(); break;
+    case 'viewPanel': openViewPanel(d.v); break;
+    case 'vpBack': closeViewPanel(); break;
     case 'sheet': toggleSheet(d.t); break;
     case 'sheetClose': closeSheet(); break;
-    case 'drawerClose': document.body.classList.remove('drawer'); break;
+    case 'drawerClose': closeViewPanel(false); document.body.classList.remove('drawer'); break;
     case 'winChip': { const w = $('winDD'); w.open = !w.open; if (w.open) w.querySelector('summary').focus(); break; }
     case 'selTo': selTo(d.who, d.to); break;
-    case 'selFocus': { const s2 = d.who === 'cur' ? S.cur : S[d.who]; if (s2) { S.focus = s2; announceSelection(s2); S.view = 'sel'; S.ev = null; $('insp').scrollTop = 0; if (NARROW.matches) document.body.classList.add('drawer'); renderInspector(); } break; }
+    case 'selFocus': { const s2 = d.who === 'cur' ? S.cur : S[d.who]; if (s2) { closeViewPanel(false); S.focus = s2; announceSelection(s2); S.view = 'sel'; S.ev = null; $('insp').scrollTop = 0; if (NARROW.matches) document.body.classList.add('drawer'); renderInspector(); } break; }
     case 'recent': runRecent(+d.i, d.slot); break;
     case 'recentX': RECENT.splice(+d.i, 1); lsSet('uc.recent', JSON.stringify(RECENT)); renderRecent(); break;
     case 'win': if (d.n === 'custom') { $('customBox').hidden = false; } else { $('winDD').open = false; setWindow({n: +d.n}); } break;
@@ -2234,7 +2380,7 @@ document.addEventListener('click', e => {
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.name === 'colour') setColour(t.value);
-  else if (t.id === 'lightness') { S.lightness = t.checked; renderLegend(); recolour(); renderTopics(); render(); }
+  else if (t.id === 'lightness') { S.lightness = t.checked; renderLegend(); recolour(); renderTopics(); render(); syncViewRows(); }
   else if (t.id === 'tNodes') { S.nodes = t.checked; render(); syncPreset(); }
   else if (t.id === 'tBridges') { S.bridges = t.checked; render(); syncPreset(); }
   else if (t.id === 'tPhrases') { S.phrases = t.checked; render(); syncPreset(); }
@@ -2259,16 +2405,16 @@ function openInfo() {
   <p><b>"new".</b> A sub-topic or topic: 30 or more papers now, fewer than 5 before. A link: 10 or more bridge papers now, fewer than 3 before.</p>
   <p><b>Track record.</b> ${esc(m.backtest_line || '')}</p>
   <p><b>kNN precision.</b> recall@14 ${m.knn_recall14 != null ? m.knn_recall14 : '–'}${m.knn_bridge_agree != null ? `, bridge agreement ${m.knn_bridge_agree}%` : ''} against an exact search.</p>
-  <p class="muted">Colour mode resets to growth on reload.</p>`;
+  <p class="muted">Colour mode resets to growth on reload (or to the default chosen in Settings).</p>`;
   pop.style.left = Math.max(8, Math.min(innerWidth - 368, r.left - 170)) + 'px'; pop.style.top = (r.bottom + 6) + 'px'; pop.style.maxHeight = Math.max(80, innerHeight - r.bottom - 14) + 'px'; pop.hidden = false; $('infoBtn').setAttribute('aria-expanded', 'true');
 }
 function closeInfo() { $('infoPop').hidden = true; $('infoBtn').setAttribute('aria-expanded', 'false'); }
 function escLayer() {  // innermost first; F43.5: sheet -> lasso/compare -> current -> B -> A -> overview preset
   if (!$('infoPop').hidden) return closeInfo();
-  if (!$('viewPop').hidden) { toggleView(false); return $('viewBtn').focus(); }
   const dd = document.querySelector('details.dd[open]'); if (dd) { dd.open = false; return; }
   if (!$('sugg').hidden) return hideSugg();
   if (sideOpen) { sideOpen = false; return layout(); }
+  if (VP) return closeViewPanel();
   if (S.sheet) return closeSheet();
   if (S.mode === 'lasso') return setLasso(false);
   if (S.cmp) { S.cmp = null; return renderHint(); }
@@ -2307,6 +2453,7 @@ document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const onMap = t === $('map'), k = e.key;
   if (k === '/') { e.preventDefault(); return focusSearch(); }
+  if (k === ',') { e.preventDefault(); return openSettings(); }
   if (k === 'l' || k === 'L') return setLasso(S.mode !== 'lasso');
   if (k === 'c' || k === 'C') return startCompare();
   if (k === 'a' || k === 'A') return setSlot('A');
@@ -2404,7 +2551,7 @@ function tourStart(id) {
   if (TOUR.active) tourEnd(false);
   tourDom(); lsSet('uc.toured', '1');
   if (params.has('tour')) { params.delete('tour'); const qs = params.toString(); try { history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {} }
-  hideSugg(); closeInfo(); if (!$('viewPop').hidden) toggleView(false); const dd = document.querySelector('details.dd[open]'); if (dd) dd.open = false;
+  hideSugg(); closeInfo(); closeViewPanel(false); const dd = document.querySelector('details.dd[open]'); if (dd) dd.open = false;
   if (S.mode === 'lasso') setLasso(false);
   Object.assign(TOUR, {active: true, id, steps: TOURS[id], step: 0, prevFocus: document.activeElement, sheetBefore: !!S.sheet, pick: null});
   for (const k of ['tourBlock', 'tourSpot', 'tourCard']) $(k).hidden = false;
@@ -2514,6 +2661,170 @@ document.addEventListener('uc:tour', e => tourStart((e.detail && e.detail.tour) 
     else if (performance.now() - t0 > 90000) clearInterval(iv);
   }, 150);
 })();
+// ---------- F46 settings (uc.settings) ----------
+const SET_DEF = {text: 'm', point: 'm', labels: 'normal', contrast: 'system', motion: 'system', win: 6, level: 1, colour: 'growth', view: 1};
+const SET_OK = {text: ['s', 'm', 'l'], point: ['s', 'm', 'l'], labels: ['few', 'normal', 'more'], contrast: ['system', 'on', 'off'], motion: ['system', 'on', 'off'], win: [3, 6, 12], level: [0, 1, 2], colour: ['growth', 'topic', 'date'], view: [1, 2]};
+let SET = {...SET_DEF};
+try { const o = JSON.parse(lsGet('uc.settings') || '{}') || {}; for (const k in SET_OK) if (SET_OK[k].includes(o[k])) SET[k] = o[k]; } catch (e) {}
+const LBL_DENSITY = {few: {cap: 25, pad: 10, steps: [0, 1, -1]}, normal: {cap: 60, pad: 0, steps: [0, 1, -1, 2, -2]}, more: {cap: 140, pad: -2, steps: [0, 1, -1, 2, -2, 3, -3]}};
+const PT_K = () => ({s: 0.65, m: 1, l: 1.6}[SET.point] || 1);
+const TEXT_PX = {s: 13, m: 14, l: 16};
+const TSCALE = () => (TEXT_PX[SET.text] || 14) / 14;
+// every px font size in the page's own stylesheets scales with --tscale (base 13/14/16 px) and never drops under 12 px
+(() => {
+  const walk = rules => { for (const r of rules) {
+    if (r.cssRules && !r.style) { walk(r.cssRules); continue; }
+    if (!r.style) continue;
+    const v = r.style.getPropertyValue('font-size'), m = v && v.match(/^(\d+(?:\.\d+)?)px$/);
+    if (m) r.style.setProperty('font-size', `max(12px, calc(${m[1]}px * var(--tscale, 1)))`, r.style.getPropertyPriority('font-size'));
+  } };
+  for (const el of document.querySelectorAll('style:not([type])')) try { walk(el.sheet.cssRules); } catch (e) {}
+})();
+function applySettings() {
+  const r = document.documentElement, px = TEXT_PX[SET.text] || 14;
+  r.style.setProperty('--tscale', String(px / 14)); r.style.fontSize = px + 'px'; r.dataset.text = SET.text;
+  if (SET.contrast === 'system') delete r.dataset.contrast; else r.dataset.contrast = SET.contrast;
+  if (SET.motion === 'system') delete r.dataset.motion; else r.dataset.motion = SET.motion;
+  document.querySelectorAll('#settings [data-act=set]').forEach(b => b.setAttribute('aria-checked', String(String(SET[b.dataset.k]) === b.dataset.v)));
+}
+function setSetting(k, v) {
+  if (!SET_OK[k]) return; if (typeof SET_DEF[k] === 'number') v = +v; if (!SET_OK[k].includes(v)) return;
+  SET[k] = v; lsSet('uc.settings', JSON.stringify(SET)); applySettings();
+  if (k === 'point') render();
+  if (k === 'labels' || k === 'text') queueLabels();
+  if (k === 'text') { applyLayout(); if (!TOUR.active) tourPlace(false); }
+  announce('Settings saved');
+}
+function applyDefaults() {  // Defaults when the map opens; ?win= ?level= ?colour= ?view= win over uc.settings
+  const pv = params.get('view'), p = pv === 'connect' || pv === '2' ? 2 : pv === 'arriving' || pv === '1' ? 1 : SET.view;
+  Object.assign(S, PRESETS[p]);
+  const lv = params.has('level') ? +params.get('level') : SET.level; if ([0, 1, 2].includes(lv)) S.level = lv;
+  const col = params.get('colour') || SET.colour; if (p === 1 && SET_OK.colour.includes(col)) S.colour = col;
+  const w = params.has('win') ? +params.get('win') : SET.win; if ([3, 6, 12].includes(w)) S.win = {n: w};
+  const ci = document.querySelector(`input[name=colour][value=${S.colour}]`); if (ci) ci.checked = true;
+  $('tNodes').checked = S.nodes; $('tBridges').checked = S.bridges; $('tPhrases').checked = S.phrases; $('edgeN').value = S.edgeN;
+  document.querySelectorAll('[data-act=level]').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.l === S.level)));
+  setTab(p === 2 ? 'links' : 'topics'); $('tbLinks').classList.toggle('invite', p === 2);
+  syncPreset();
+}
+let setPrevFocus = null;
+function openSettings() {
+  const d = $('settings'); if (!d.hidden) return;
+  if (TOUR.active) tourEnd(false);
+  hideSugg(); closeInfo(); const dd = document.querySelector('details.dd[open]'); if (dd) dd.open = false;
+  setPrevFocus = document.activeElement;
+  $('setMcp').innerHTML = MCP_SETUP.map(([label, command], i) => `<p class="mcpl">${esc(label)}</p><pre><code>${esc(command)}</code></pre><button data-act="copyMcp" data-i="${i}" aria-label="Copy ${esc(label)} setup">Copy</button>`).join('');
+  $('setClearSavedBtn').hidden = !!ST; $('setConfirm').hidden = true; $('setConfirm').innerHTML = '';
+  $('setDataNote').textContent = 'Settings, panel sizes and recent selections are stored only in this browser.' + (ST ? '' : ' Saved selections live in the local server\'s workbench database.');
+  applySettings();
+  $('app').inert = true; $('setScrim').hidden = false; d.hidden = false; $('setBtn').setAttribute('aria-expanded', 'true');
+  d.scrollTop = 0; d.focus({preventScroll: true});
+}
+function closeSettings() {
+  const d = $('settings'); if (d.hidden) return;
+  d.hidden = true; $('setScrim').hidden = true; $('app').inert = false; $('setBtn').setAttribute('aria-expanded', 'false');
+  const f = setPrevFocus; setPrevFocus = null;
+  if (f && f !== document.body && document.contains(f) && onScreen(f)) f.focus({preventScroll: true}); else if (onScreen($('setBtn'))) $('setBtn').focus({preventScroll: true});
+}
+async function clearSavedAll() {
+  const ids = S.saved.map(s => s.sel_id); let failed = 0;
+  for (const id of ids) { try { await api('/selections/delete', {sel_id: id}); } catch (e) { failed++; } }
+  await loadSaved(); renderSlots();
+  const msg = failed ? `Deleted ${ids.length - failed} of ${ids.length}. ${failed} are referenced by ideas and were kept.` : `Deleted ${ids.length} saved selection${ids.length === 1 ? '' : 's'}.`;
+  $('setConfirm').textContent = msg; announce(msg);
+}
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-act]'); if (!t) return; const d = t.dataset;
+  switch (d.act) {
+    case 'settings': openSettings(); break;
+    case 'setClose': closeSettings(); break;
+    case 'set': setSetting(d.k, d.v); break;
+    case 'setReset': resetLayout(); announce('Panel sizes reset'); break;
+    case 'setTour': closeSettings(); document.dispatchEvent(new CustomEvent('uc:tour', {detail: {tour: 'first'}})); break;
+    case 'setClearRecent': RECENT = []; lsSet('uc.recent', '[]'); renderRecent(); announce('Recent selections cleared'); break;
+    case 'setClearSaved': {
+      const c = $('setConfirm'), n = S.saved.length; c.hidden = false;
+      c.innerHTML = n ? `Delete all ${n} saved selection${n === 1 ? '' : 's'}? This cannot be undone. <span class="sbtnrow"><button data-act="setClearSavedYes">Delete all</button><button data-act="setClearSavedNo">Cancel</button></span>` : 'There are no saved selections.';
+      const y = c.querySelector('[data-act=setClearSavedNo]'); if (y) y.focus(); break;
+    }
+    case 'setClearSavedNo': $('setConfirm').hidden = true; $('setClearSavedBtn').focus(); break;
+    case 'setClearSavedYes': clearSavedAll(); break;
+  }
+});
+addEventListener('keydown', e => {  // capture: while Settings is open, page shortcuts do not fire and focus stays inside
+  const d = $('settings'); if (d.hidden) return;
+  if (e.key === 'Escape') { e.preventDefault(); closeSettings(); }
+  else if (e.key === 'Tab') {
+    const f = [...d.querySelectorAll('button,a[href],input,select,textarea,[tabindex="0"]')].filter(x => !x.disabled && onScreen(x));
+    if (!f.length) return; const i = f.indexOf(document.activeElement);
+    if (e.shiftKey && (i <= 0)) { e.preventDefault(); f[f.length - 1].focus(); }
+    else if (!e.shiftKey && (i === f.length - 1 || i < 0)) { e.preventDefault(); f[0].focus(); }
+  }
+  e.stopPropagation();
+}, true);
+applySettings();
+
+// ---------- F46 resizable panels (uc.layout) ----------
+const LAY_LIM = {sw: [200, 400, 248], iw: [300, 640, 376], sh: [25, 85, 50]};
+let LAY = {};
+try { const o = JSON.parse(lsGet('uc.layout') || '{}') || {}; for (const k in LAY_LIM) if (Number.isFinite(o[k])) LAY[k] = Math.max(LAY_LIM[k][0], Math.min(LAY_LIM[k][1], o[k])); } catch (e) {}
+const saveLayout = () => lsSet('uc.layout', JSON.stringify(LAY));
+const MAP_MIN = 480;
+function sideW() { return $('side').getBoundingClientRect().width; }
+function inspW() { return innerWidth >= 1200 ? $('insp').getBoundingClientRect().width : 0; }
+function sideCol() { return document.body.classList.contains('rail') || PHONE.matches ? (PHONE.matches ? 0 : 56) : (innerWidth >= 1500 ? (LAY.sw ?? 248) : 56); }
+function inspCol() { return innerWidth >= 1200 ? (LAY.iw ?? (innerWidth >= 1500 ? 376 : 360)) : 0; }
+function limSide() { return [200, Math.max(200, Math.min(400, innerWidth - inspCol() - MAP_MIN))]; }
+function limInsp() { return [300, Math.max(300, Math.min(640, innerWidth - sideCol() - MAP_MIN))]; }
+function applyLayout() {
+  const r = document.documentElement.style, sg = $('sideGrip'), ig = $('inspGrip'), hd = $('handle');
+  if (!sg) return;
+  const [s0, s1] = limSide(), [i0, i1] = limInsp();
+  if (LAY.sw != null) r.setProperty('--sw-user', Math.max(s0, Math.min(s1, LAY.sw)) + 'px'); else r.removeProperty('--sw-user');
+  if (LAY.iw != null) r.setProperty('--iw-user', Math.max(i0, Math.min(i1, LAY.iw)) + 'px'); else r.removeProperty('--iw-user');
+  if (LAY.sh != null) $('tabs').style.setProperty('--sheet-h', LAY.sh + '%'); else $('tabs').style.removeProperty('--sheet-h');
+  sg.setAttribute('aria-valuemax', String(s1)); ig.setAttribute('aria-valuemax', String(i1));
+  requestAnimationFrame(() => {
+    sg.setAttribute('aria-valuenow', String(Math.round(sideW())));
+    if (innerWidth >= 1200) ig.setAttribute('aria-valuenow', String(Math.round(inspW())));
+    const mh = $('mapwrap').clientHeight, th = $('tabs').getBoundingClientRect().height;
+    hd.setAttribute('aria-valuenow', String(LAY.sh != null ? Math.round(LAY.sh) : mh ? Math.round(100 * th / mh) : 50));
+  });
+}
+function resetLayout() { LAY = {}; try { localStorage.removeItem('uc.layout'); } catch (e) {} applyLayout(); }
+R.layout = () => ({...LAY, side: Math.round(sideW()), insp: Math.round(inspW()), sheet: Math.round($('tabs').getBoundingClientRect().height), map: Math.round($('mapwrap').getBoundingClientRect().width)});
+function grip(el, o) {  // o: {key, axis 'x'|'y', sign, cur(), lim(), def, px2v(px)}
+  let st = null, raf = 0, pend = null;
+  const set = v => { const [a, b] = o.lim(); LAY[o.key] = Math.round(Math.max(a, Math.min(b, v)) * 10) / 10; applyLayout(); };
+  const flush = () => { raf = 0; if (pend != null) { set(pend); pend = null; } };
+  el.addEventListener('pointerdown', e => {
+    if (e.button !== 0) return; e.preventDefault(); el.setPointerCapture(e.pointerId);
+    st = {p: o.axis === 'x' ? e.clientX : e.clientY, v: o.cur()}; el.classList.add('drag'); document.body.classList.add('resizing', o.axis === 'x' ? 'col' : 'row');
+  });
+  el.addEventListener('pointermove', e => {
+    if (!st) return; const d = ((o.axis === 'x' ? e.clientX : e.clientY) - st.p) * o.sign;
+    pend = st.v + o.px2v(d); if (!raf) raf = requestAnimationFrame(flush);
+  });
+  const end = () => { if (!st) return; st = null; if (raf) { cancelAnimationFrame(raf); flush(); } el.classList.remove('drag'); document.body.classList.remove('resizing', 'col', 'row'); saveLayout(); queueLabels(); };
+  el.addEventListener('pointerup', end); el.addEventListener('pointercancel', end); el.addEventListener('lostpointercapture', end);
+  const reset = () => { delete LAY[o.key]; applyLayout(); saveLayout(); queueLabels(); announce(el.getAttribute('aria-label').replace('Resize', 'Reset') + ' size'); };
+  el.addEventListener('dblclick', e => { e.preventDefault(); reset(); });
+  el.addEventListener('keydown', e => {
+    const k = e.key, [a, b] = o.lim(), step = o.px2v(16);
+    const inc = o.axis === 'x' ? {ArrowRight: 1, ArrowLeft: -1} : {ArrowUp: 1, ArrowDown: -1};
+    let v = null;
+    if (k in inc) v = o.cur() + inc[k] * step * o.sign * (o.axis === 'y' ? -1 : 1);
+    else if (k === 'Home') v = a; else if (k === 'End') v = b;
+    else if (k === 'Enter') { e.preventDefault(); e.stopPropagation(); return reset(); }
+    else return;
+    e.preventDefault(); e.stopPropagation(); set(v); saveLayout(); queueLabels();
+  });
+}
+grip($('sideGrip'), {key: 'sw', axis: 'x', sign: 1, cur: () => sideW(), lim: limSide, px2v: d => d});
+grip($('inspGrip'), {key: 'iw', axis: 'x', sign: -1, cur: () => inspW(), lim: limInsp, px2v: d => d});
+grip($('handle'), {key: 'sh', axis: 'y', sign: -1, cur: () => { const mh = $('mapwrap').clientHeight || 1; return 100 * $('tabs').getBoundingClientRect().height / mh; }, lim: () => LAY_LIM.sh, px2v: d => 100 * d / ($('mapwrap').clientHeight || 1)});
+{ let rq = 0; addEventListener('resize', () => { if (!rq) rq = requestAnimationFrame(() => { rq = 0; applyLayout(); }); }); }
+
 boot();
 </script>
 </body></html>
