@@ -8,12 +8,9 @@
 :root{color-scheme:dark;--color-bg:#161616;--color-tile:rgba(255,255,255,.05);--color-well:rgba(255,255,255,.04);--color-hair:rgba(255,255,255,.06);--color-solid:#1f1f1f;--color-pop:#242424;--color-map:#101010;--color-border:rgba(255,255,255,.12);--color-btn:rgba(255,255,255,.07);--color-sel:rgba(255,255,255,.12);--color-text:#e8e8e8;--color-muted:#9a9a9a;--color-green:#8fd18f;--color-green-dk:#5f8f5f;--color-orange:#e0763c;--color-orange-tint:rgba(224,118,60,.18);--color-a:#8fd18f;--color-a-map:#8fd18f;--color-b:#f0f0f0;--color-hover:rgba(255,255,255,.04);--color-panel:#1f1f1f;--color-divider:rgba(255,255,255,.06);--color-tint:rgba(255,255,255,.06);--color-error:#2a1a1a;--color-g1:#2f62b8;--color-g2:#5a86c8;--color-g3:#8ea3c0;--color-g4:#8c8c8c;--color-g5:#c8a57a;--color-g6:#e3883a;--color-g7:#ff6a1a;--color-nodata:#333333}
 html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text)}
 [hidden]{display:none!important}
-#app{display:grid;height:100vh;padding:0 12px 12px 0;row-gap:12px;grid-template-columns:232px minmax(0,1fr) 412px;grid-template-rows:44px minmax(0,1fr) 280px}
-header{grid-column:1/-1;border:0;background:transparent}
-#left{grid-area:2/1/4/2;background:transparent;border:0}
-#mapwrap{grid-area:2/2;position:relative;background:#101010}
-#tabs{grid-area:3/2}
-#insp{grid-area:2/3/4/4;background:rgba(255,255,255,.05);margin-left:12px;border:0}
+#app{display:grid;height:100vh;padding:12px;gap:12px;grid-template-columns:248px minmax(0,1fr) 376px;grid-template-rows:44px minmax(0,1fr)}
+#side{grid-row:1/3;grid-column:1} header{grid-row:1;grid-column:2} #mapwrap{grid-row:2;grid-column:2;position:relative;background:#101010} #insp{grid-row:1/3;grid-column:3}
+#tabs{visibility:hidden}
 #loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--color-muted)}
 </style>
 <link id="fontsCss" rel="stylesheet" media="print" onload="this.dataset.loaded='1'" onerror="this.dataset.loaded='1'" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap">
@@ -62,7 +59,7 @@ a{color:var(--color-text);text-decoration:none;text-underline-offset:3px} a:hove
 .plist a{color:#f2f2f2}
 button,select,input{appearance:none;font:inherit;color:inherit;background:var(--color-btn);border:1px solid var(--color-border);border-radius:10px;transition:background-color .1s,border-color .1s}
 button{padding:3px 10px;cursor:pointer;font-size:12px;line-height:18px}
-button:not(.chip):not(#qswitch button):not(#levelBox button):not(.dd>div button):not(#savedList button):not(#zoomBtns button):not(#infoBtn):not(.slot button):not(th button):not(#tabbar button){text-transform:uppercase;letter-spacing:.04em}
+button:not(.chip):not(.nu):not(#qswitch button):not(#levelBox button):not(.dd>div button):not(#savedList button):not(#zoomBtns button):not(#infoBtn):not(.slot button):not(th button):not(#tabbar button){text-transform:uppercase;letter-spacing:.04em}
 button:hover:not(:disabled),select:hover{background:rgba(255,255,255,.11)}
 tr[tabindex]:hover,.chip:hover{background:var(--color-hover)}
 button:disabled{cursor:not-allowed;color:var(--color-muted);border-style:dashed;background:transparent}
@@ -100,6 +97,14 @@ h4[data-i]::before{content:"";display:inline-block;width:14px;height:14px;margin
 [data-i=hash]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 9h16M4 15h16M10 3 8 21M16 3l-2 18'/%3E%3C/svg%3E")}
 [data-i=calendar]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='2'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E")}
 [data-i=bulb]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6M10 22h4'/%3E%3Cpath d='M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2z'/%3E%3C/svg%3E")}
+[data-i=home]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 10 9-7 9 7v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z'/%3E%3Cpath d='M9 22V12h6v10'/%3E%3C/svg%3E")}
+[data-i=lasso]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 22a5 5 0 0 1-2-4'/%3E%3Cpath d='M3.3 14A6.8 6.8 0 0 1 2 10c0-4.4 4.5-8 10-8s10 3.6 10 8-4.5 8-10 8a12 12 0 0 1-5-1'/%3E%3Ccircle cx='5' cy='16' r='2'/%3E%3C/svg%3E")}
+[data-i=help]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='10'/%3E%3Cpath d='M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3'/%3E%3Cpath d='M12 17h.01'/%3E%3C/svg%3E")}
+[data-i=sidebar]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Cpath d='M9 3v18'/%3E%3C/svg%3E")}
+[data-i=sliders]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 21v-7M4 10V3M12 21v-9M12 8V3M20 21v-5M20 12V3M1 14h6M9 8h6M17 16h6'/%3E%3C/svg%3E")}
+[data-i=menu]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 6h16M4 12h16M4 18h16'/%3E%3C/svg%3E")}
+[data-i=table]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Cpath d='M3 9h18M3 15h18M9 3v18'/%3E%3C/svg%3E")}
+[data-i=x]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 6 6 18M6 6l12 12'/%3E%3C/svg%3E")}
 /* growth badge: step colour as text on a well, hairline in that colour */
 .gr{display:inline-block;min-width:44px;text-align:center;border-radius:8px;padding:0 5px;color:var(--gc,var(--color-text));background:var(--color-well);border:1px solid color-mix(in srgb,var(--gc,var(--color-muted)) 40%,transparent);font-weight:500;font-size:12px;line-height:17px;font-family:"JetBrains Mono",monospace}
 /* "new" tag: outline pill with an orange dot */
@@ -107,31 +112,12 @@ h4[data-i]::before{content:"";display:inline-block;width:14px;height:14px;margin
 .new::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--color-orange);flex:none}
 .chip{display:inline-block;border:1px solid var(--color-hair);border-radius:10px;padding:0 7px;font-size:11px;margin:1px 4px 1px 0;color:var(--color-text);background:var(--color-well);line-height:16px}
 .rank{display:inline-block;width:16px;height:16px;border-radius:50%;background:var(--color-sel);color:var(--color-text);font-size:11px;text-align:center;line-height:16px;font-weight:600}
-/* layout */
-#app{display:grid;height:100vh;padding:0 12px 12px 0;row-gap:12px;grid-template-columns:232px minmax(0,1fr) 412px;grid-template-rows:44px minmax(0,1fr) var(--tabs-h,280px)}
-header{grid-column:1/-1;display:flex;align-items:center;gap:12px;padding:0 12px;border:0;background:transparent;white-space:nowrap;min-width:0}
-header .hrow{display:contents}
-#hname{font-size:15px;font-weight:600;letter-spacing:.01em;order:1} #qswitch{order:2} #winDD{order:3;position:relative} #winLabel{order:4;font-size:12px;color:var(--color-muted);overflow:hidden;text-overflow:ellipsis} #winLabel b{color:var(--color-text);font-weight:500} #infoBtn{order:5}
-/* status: outline pill with a coloured dot */
-#crumb{order:0;display:inline-flex;align-items:center;gap:8px;margin-right:-4px;font:500 12px/1 "JetBrains Mono",ui-monospace,monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--color-muted)}
-#crumb a{color:var(--color-muted);text-decoration:none} #crumb a:hover{color:var(--color-text);text-decoration:none} #crumb .sep{opacity:.6}
 #hname{color:var(--color-text);text-decoration:none} a#hname[href]:hover{color:var(--color-text);text-decoration:underline;text-decoration-color:var(--color-orange)}
-#ghLink{order:10;display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;flex:none;border-radius:6px;color:var(--color-muted);text-decoration:none} #ghLink:hover{color:var(--color-text)}
-header:has(#status[hidden]) #ghLink{margin-left:auto}
-#status{order:9;margin-left:auto;font-size:11px;color:var(--color-muted);display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(255,255,255,.14);border-radius:9999px;padding:2px 10px 2px 8px;text-transform:uppercase;letter-spacing:.04em;line-height:16px}
 #statusDot{order:-1;font-size:9px;line-height:1}
 #infoBtn{width:18px;height:18px;padding:0;border-radius:50%;font-size:11px;line-height:16px;flex:none}
-/* left column: a 232 px tile drawn inside transparent side borders, so the box keeps 232 px and the tile clears the edge and the map */
-#left{grid-row:2/4;grid-column:1;border:0;padding:12px 7px;min-height:0;overflow-y:auto;overflow-x:hidden;background:transparent}
-#left h4{margin:16px 0 6px}
-#left>div:first-child h4{margin-top:2px}
-#left #compareBox>.slot:first-of-type{margin-top:0}
-#mapwrap{grid-row:2;grid-column:2;position:relative;overflow:hidden;background:var(--color-map);border:0}
 #mapwrap::after{content:"";position:absolute;inset:0;border-radius:16px;box-shadow:inset 0 0 0 1px var(--color-hair),inset 0 1px 0 rgba(255,255,255,.06);pointer-events:none;z-index:4}
 #map{position:absolute;inset:0;width:100%;height:100%}
 #map:focus-visible{outline:2px solid #ffffff!important;outline-offset:-2px}
-#tabs{grid-row:3;grid-column:2;display:grid;grid-template-rows:32px minmax(0,1fr);position:relative;min-height:0}
-#insp{grid-row:2/4;grid-column:3;margin-left:12px;border:0;overflow:auto;background:var(--color-tile);min-height:0}
 #inspTop:empty,#abBlock:empty{display:none}
 #inspTop{height:64px;display:flex;align-items:center;gap:8px;padding:0 12px;border-bottom:1px solid var(--color-hair)}
 #abBlock{padding:10px 14px;border-bottom:1px solid var(--color-hair);background:transparent}
@@ -140,11 +126,8 @@ header:has(#status[hidden]) #ghLink{margin-left:auto}
 #zoomBtns{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:4px;z-index:5}
 #zoomBtns button{width:26px;height:26px;padding:0;background:rgba(28,28,28,.92)}
 #zoomBtns button:hover{background:#2a2a2a}
-#mapLassoSlot{position:absolute;left:10px;top:10px;z-index:5}
-#mapLassoSlot button{background:rgba(28,28,28,.92)}
 #loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);text-align:center;font-size:12px;color:var(--color-muted)}
 #loading .bar{width:240px;height:4px;background:var(--color-sel);margin-top:6px;border-radius:2px;overflow:hidden} #loading .bar i{display:block;height:100%;width:0;background:var(--color-green)}
-#caption{position:absolute;left:12px;bottom:8px;font-size:11px;color:var(--color-muted);pointer-events:none}
 #tip{position:absolute;pointer-events:none;background:#111;color:var(--color-text);border:1px solid var(--color-hair);border-radius:8px;padding:4px 8px;font-size:12px;max-width:360px;display:none;z-index:6;white-space:normal;box-shadow:0 4px 16px rgba(0,0,0,.4)}
 #lassoSvg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 body.lasso #lassoSvg{pointer-events:auto;cursor:crosshair}
@@ -173,16 +156,8 @@ td.n,th.n{text-align:right} tr[tabindex]{cursor:pointer} tr.hl{background:rgba(2
 .wellbox{background:var(--color-well);border-radius:10px;padding:6px 5px 4px;margin:6px 0;width:max-content;max-width:100%}
 .plist>div{padding:5px 0;border-bottom:1px solid var(--color-hair)}.plist small{color:var(--color-muted);display:block;font-size:12px}
 .def{background:var(--color-well);border:1px solid var(--color-hair);border-radius:10px;padding:6px 8px;font-size:12px;color:var(--color-muted);margin:6px 0}
-.slot{display:flex;align-items:center;gap:6px;font-size:12px;margin:4px 0;min-width:0}
-.slot b{width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:#161616;font-size:11px;flex:none}
-.slot .lbl{flex:1;border:1px dashed var(--color-border);border-radius:10px;padding:2px 6px;color:var(--color-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
-.slot .lbl.set{border-style:solid;color:var(--color-text)}
-.slot button{padding:0 5px}
 .dd{position:relative} .dd>div{position:absolute;z-index:20;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;padding:4px;min-width:220px;max-height:300px;overflow:auto;right:0;box-shadow:0 8px 24px rgba(0,0,0,.45)}
 .dd>div button{display:block;width:100%;text-align:left;border:0;background:transparent;white-space:normal}
-#legendBox .row{display:flex;align-items:center;gap:6px;font-size:12px;line-height:1.55}
-#legendBox s{display:inline-block;width:18px;height:10px;text-decoration:none;flex:none;border-radius:3px}
-#legendBox em{margin-left:auto;color:var(--color-muted);font-style:normal;font-family:"JetBrains Mono",monospace;font-size:12px}
 #savedList>div{font-size:12px;padding:3px 0;border-bottom:1px solid var(--color-hair);display:flex;gap:4px;align-items:flex-start}
 #savedList>div>button:first-child{flex:1;text-align:left;border:0;background:transparent;padding:0;white-space:normal}
 #sugg{position:absolute;z-index:30;left:0;right:0;top:100%;margin:2px 0 0;padding:4px;list-style:none;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;max-height:260px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.45)}
@@ -196,38 +171,6 @@ td.n,th.n{text-align:right} tr[tabindex]{cursor:pointer} tr.hl{background:rgba(2
 #lightRow{display:block;margin-top:5px}
 #leftNote{margin-top:12px;font-size:11px;color:var(--color-muted);white-space:normal}
 .savedSum{display:none}
-/* below 1500 px: left column folds into a 2-row header; A/B and saved go to the inspector top */
-@media (max-width:1499px){
-  #app{padding-left:12px;grid-template-columns:0 minmax(0,1fr) 392px;grid-template-rows:72px minmax(0,1fr) var(--tabs-h,240px)}
-  #left{display:none} #banner{top:72px}
-  header{display:grid;grid-template-rows:36px 36px;padding:0 10px;gap:0}
-  header .hrow{display:flex;align-items:center;gap:10px;min-width:0}
-  #winLabel{white-space:normal;line-height:14px;max-height:30px;font-size:11px;flex:1 1 200px;min-width:120px}
-  #searchBox{width:240px;position:relative;order:3} #crumb{order:0} #hname{order:1} #qswitch{order:2}
-  header{position:relative} #hrow1{padding-right:32px} #ghLink{position:absolute;right:0;top:6px}
-  #winDD{order:1} #winLabel{order:2} #infoBtn{order:3} #levelBox{order:4} #colourBox{order:5} #layersBox{order:6} #legendBox{order:7} #searchBox h4,#modeRow{display:none}
-  #levelBox h4,#colourBox h4,#legendBox h4,#lightRow,#largeLine{display:none}
-  #levelBox button{padding:2px 6px} #levelBox button span{display:inline!important}
-  #colourBox .opts{display:flex;gap:2px} #colourBox label{padding:1px 6px;font-size:11px;white-space:nowrap}
-  #colourBox input{position:absolute;opacity:0;width:1px}
-  #legendBox{width:320px;height:20px;flex:none} #legendBox .rows{display:flex;height:20px;gap:2px;align-items:center}
-  #legendBox .row{flex:1;gap:2px;font-size:11px;line-height:20px} #legendBox .row span.t,#legendBox .row .lnum{display:none} #legendBox s{width:14px} #legendBox em{margin:0;font-size:11px}
-  #legendBox .txt{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  #layersBox{position:relative} #layersBox>summary{display:block!important;border:1px solid var(--color-border);border-radius:10px;padding:2px 8px;font-size:12px}
-  #layersBox>div{position:absolute;z-index:30;top:26px;left:0;width:240px;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;padding:8px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
-  #compareBox{display:flex;align-items:center;gap:8px;flex:1;min-width:0} #compareBox h4{display:none} #compareBox .slot{flex:1;margin:0}
-  #savedBox>summary.savedSum{display:block;border:1px solid var(--color-border);border-radius:10px;padding:2px 8px;font-size:12px}
-  #savedBox h4{display:none} #savedBox{position:relative} #savedBox>div{position:absolute;right:0;top:26px;z-index:30;width:280px;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;padding:6px;box-shadow:0 8px 24px rgba(0,0,0,.45)}
-  #legendRows{padding:0!important;background:transparent!important} #legendBox .row .new{margin-right:2px;padding:0 5px 0 4px}
-}
-#layersBox>summary{display:none}
-/* below 1200 px: the inspector is a drawer */
-@media (max-width:1199px){
-  #app{grid-template-columns:0 minmax(0,1fr) 0}
-  #insp{position:fixed;right:0;top:72px;bottom:0;width:380px;z-index:35;transform:translateX(100%);border-left:1px solid var(--color-border);box-shadow:-8px 0 24px rgba(0,0,0,.5)}
-  body.drawer #insp{transform:none}
-  #qswitch button{padding:3px 6px}
-}
 /* Uniform controls, including compact-header controls and generated chips. */
 button,select,input,.slot .lbl,#winSum,
 #layersBox>summary,#savedBox>summary,summary[role=button]{font-size:13px!important}
@@ -240,26 +183,16 @@ button,.slot .lbl,#winSum,
 #compareBox .lbl:not(.set){min-width:48px;flex-shrink:0}
 button.on:hover:not(:disabled),button[aria-pressed=true]:hover:not(:disabled),button[aria-checked=true]:hover:not(:disabled){background:rgba(255,255,255,.16)}
 /* F40 glass tiles. The inspector scrolls within its rounded clip. */
-#mapwrap,#tabs,#insp{border-radius:16px;overflow:hidden;min-width:0}
-#tabs,#insp{background:var(--color-tile);box-shadow:inset 0 0 0 1px var(--color-hair),inset 0 1px 0 rgba(255,255,255,.06)}
-#insp{overflow-y:auto}
-#left,#tabs,#insp{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
-#left{background:var(--color-tile);background-clip:padding-box;border-left:10px solid transparent;border-right:12px solid transparent;border-radius:26px 28px 28px 26px/16px;box-shadow:inset 0 0 0 1px var(--color-hair),inset 0 1px 0 rgba(255,255,255,.06)}
+#mapwrap,#insp{border-radius:16px;overflow:hidden;min-width:0}
+#insp{background:var(--color-tile);box-shadow:inset 0 0 0 1px var(--color-hair),inset 0 1px 0 rgba(255,255,255,.06);overflow-y:auto;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
 #inspBody h3{font-size:22px!important;line-height:1.2;font-weight:400;letter-spacing:-.01em}
 #hname{font-weight:600}
 #tabbar button:hover,th button:hover,.dd>div button:hover,.plist>div:hover,#savedList>div:hover{background:var(--color-hover)}
-#legendRows{background:var(--color-well);border-radius:10px;padding:5px 5px}
-#left #legendBox .row{gap:5px;letter-spacing:-.005em} #left #legendBox s{width:14px}
-#left #levelBox button{padding:3px 7px}
+#levelBox button{padding:3px 7px}
 .winsum{background:var(--color-well);border-radius:10px;padding:8px 10px;margin:6px 0!important;color:var(--color-muted)}
 .hlnum{font:400 22px/1.15 "Inter",system-ui,sans-serif;letter-spacing:-.01em;background:linear-gradient(90deg,#8fd18f,#e0763c);-webkit-background-clip:text;background-clip:text;color:transparent;margin:0 2px;vertical-align:-2px}
 #legendBox #lightRow{background:transparent}
-#left #savedList{display:flex;flex-direction:column;gap:6px}
-#left #savedList>div:has(button[data-act=loadSaved]){background:var(--color-well);border:0;border-radius:10px;padding:8px 10px}
-#left #savedList>div:has(button[data-act=loadSaved]):hover{background:rgba(255,255,255,.07)}
-#left #savedList button[data-act=loadSaved]{min-width:0;border:0!important;border-radius:0!important;background:transparent}
-#left #savedList button[data-act=delSaved]{flex:0 0 24px;width:24px;height:24px;padding:0;display:grid;place-items:center;border:0!important;border-radius:50%!important;background:transparent;color:var(--color-muted)}
-#left #savedList button[data-act=delSaved]:hover{background:rgba(224,118,60,.15);color:var(--color-orange)}
+#savedList{display:flex;flex-direction:column;gap:6px}
 #winSum,#layersBox>summary,#savedBox>summary{background:var(--color-btn)}
 .slot .lbl{background:var(--color-well)}
 /* primary actions: orange tint, orange hairline, orange uppercase label */
@@ -271,6 +204,7 @@ button[data-act=delConfirm]{background:transparent;color:var(--color-orange);bor
 .chip::before,.pill::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--dot,var(--color-muted));margin-right:5px;vertical-align:1px}
 /* status / side pills: outline pill with a dot, only the two accents and greys */
 .pill{background:transparent;border-radius:9999px!important;border-color:color-mix(in srgb,var(--dot,var(--color-muted)) 50%,transparent)!important;color:var(--pc,var(--color-text));text-transform:uppercase;letter-spacing:.04em;font-size:11px!important}
+.pill{white-space:nowrap}
 .pill[data-status=new]{--dot:var(--color-orange);--pc:var(--color-orange)}
 .pill[data-status=forming]{--dot:var(--color-green);--pc:var(--color-green)}
 .pill[data-status=steady]{--dot:var(--color-muted);--pc:var(--color-muted)}
@@ -279,35 +213,213 @@ button[data-act=delConfirm]{background:transparent;color:var(--color-orange);bor
 .bars{max-width:100%;display:block}
 #loading,#caption{color:var(--color-text);text-shadow:0 1px 3px var(--color-map)}
 #colourBox label:has(input:focus-visible){outline:2px solid var(--color-orange);outline-offset:2px}
-@media (max-width:1499px){
-  header{padding:0;gap:0}
-  header .hrow{gap:8px}
-  #winLabel{min-width:80px}
-  #colourBox label{background:var(--color-well);border:1px solid var(--color-border);border-radius:10px;font-size:13px;line-height:18px;padding:2px 6px;color:var(--color-muted)}
-  #colourBox label:has(input:checked){background:var(--color-sel);color:var(--color-text)}
-  #compareBox{gap:4px} #compareBox .slot{gap:4px}
-  #inspTop{padding:0 8px;gap:4px}
-}
+/* ---------- F43 layout: sidebar of verbs | title bar + map card | inspector ---------- */
+#app{display:grid;height:100vh;height:100dvh;padding:12px;gap:12px;grid-template-columns:var(--sw,248px) minmax(0,1fr) var(--iw,376px);grid-template-rows:44px minmax(0,1fr)}
+body.rail{--sw:56px}
+i[data-i]{display:inline-block;width:16px;height:16px;flex:none;background:currentColor;-webkit-mask:var(--ic) center/16px 16px no-repeat;mask:var(--ic) center/16px 16px no-repeat}
+button.ib{width:30px;height:30px;padding:0!important;display:inline-grid;place-items:center;border:1px solid transparent!important;background:transparent;color:var(--color-muted);flex:none}
+button.ib:hover:not(:disabled){color:var(--color-text);background:var(--color-hover)}
+/* sidebar tile */
+#side{grid-row:1/3;grid-column:1;min-height:0;min-width:0;display:flex;flex-direction:column;padding:12px 10px 10px;overflow:hidden;background:var(--color-tile);border-radius:16px;box-shadow:inset 0 0 0 1px var(--color-hair),inset 0 1px 0 rgba(255,255,255,.06);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+#logoRow{display:flex;align-items:center;justify-content:space-between;gap:6px;height:32px;padding:0 0 0 10px;margin-bottom:10px;flex:none}
+#crumb{display:inline-flex;align-items:center;gap:7px;min-width:0;overflow:hidden;font:500 12px/1 "JetBrains Mono",ui-monospace,monospace;text-transform:uppercase;letter-spacing:.06em;color:var(--color-muted);white-space:nowrap}
+#crumb a{color:var(--color-muted);text-decoration:none} #crumb a:hover{color:var(--color-text);text-decoration:none} #crumb .sep{opacity:.6}
+#crumb #hname{color:var(--color-text);font-weight:500;font-size:12px;letter-spacing:.06em}
+#verbs{display:flex;flex-direction:column;gap:2px;padding-bottom:10px;border-bottom:1px solid var(--color-hair);flex:none}
+#side button.verb{display:flex;align-items:center;gap:11px;width:100%;height:34px;padding:0 10px;border:1px solid transparent!important;background:transparent;color:var(--color-text);text-align:left;font-weight:400}
+#side button.verb i{color:var(--color-muted)}
+#side button.verb:hover:not(:disabled){background:var(--color-hover)}
+#side button.verb[aria-pressed=true],#side button.verb.on{background:var(--color-sel)}
+#side button.verb[aria-pressed=true] i,#side button.verb.on i{color:var(--color-orange)}
+.vl{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+kbd{font:500 11px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--color-muted);min-width:10px;text-align:right}
+#selSec{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;padding:2px 0 6px}
+#side h4.sech{margin:14px 10px 6px;display:flex;align-items:center}
+.cnt{margin-left:auto;font:500 11px "JetBrains Mono",monospace;color:var(--color-muted);letter-spacing:0}
+#selEmpty{padding:2px 10px 4px;line-height:1.45}
+.slot,.sitem{display:flex;align-items:center;gap:9px;min-height:32px;padding:0 4px 0 10px;border-radius:10px;font-size:13px;min-width:0;margin:0}
+.slot:empty{display:none}
+.slot:hover,.sitem:hover,.slot:focus-within,.sitem:focus-within{background:var(--color-hover)}
+.slot b{width:18px;height:18px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;color:#161616;font-size:11px;flex:none;font-weight:600}
+.slot b.cur{width:10px;height:10px;margin:0 4px;border-radius:50%;background:transparent;box-shadow:0 0 0 2px #fff}
+.sitem .dot{width:6px;height:6px;margin:0 6px;border-radius:50%;background:var(--color-muted);flex:none}
+.sn{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;cursor:pointer}
+#side .sitem button.sn{border:0!important;background:transparent;padding:0;font-size:13px!important;color:var(--color-text);height:30px}
+.sk{font-size:11px;color:var(--color-muted);text-transform:uppercase;letter-spacing:.04em;margin-right:2px}
+.sc{font:11px "JetBrains Mono",monospace;color:var(--color-muted);flex:none}
+.sbtns{display:none;gap:3px;flex:none}
+.slot:hover .sbtns,.slot:focus-within .sbtns,.sitem:hover .sbtns,.sitem:focus-within .sbtns{display:flex}
+.slot:hover .sc,.slot:focus-within .sc,.sitem:hover .sc,.sitem:focus-within .sc{display:none}
+#side .sbtns button,#side button.sx{width:22px;height:22px;padding:0;border-radius:7px!important;font-size:11px!important;line-height:20px;flex:none}
+#side button.sx{border:0!important;background:transparent;color:var(--color-muted);font-size:14px!important}
+#side button.sx:hover{color:var(--color-orange);background:rgba(224,118,60,.15)}
+#swapBtn{margin:4px 10px 0;font-size:12px!important;padding:2px 8px}
+#savedList{gap:2px}
+#savedList>div.sitem{background:transparent;padding:0 4px 0 10px;border:0;align-items:center;font-size:13px}
+#savedList>div.sitem:hover,#savedList>div.sitem:focus-within{background:var(--color-hover)}
+#savedList>div>button.sn{flex:1;white-space:nowrap}
+#savedBox>summary{display:none}
+#leftNote{flex:none;margin:6px 6px 8px;font-size:11px;line-height:1.4;color:var(--color-muted)}
+#leftNote:empty{display:none}
+#sideFoot{flex:none;display:flex;align-items:center;gap:6px;padding:8px 0 0 0;border-top:1px solid var(--color-hair)}
+#side #viewBtn{flex:1;display:flex;align-items:center;gap:11px;height:34px;padding:0 10px;border:1px solid transparent!important;background:transparent;color:var(--color-text);text-align:left}
+#side #viewBtn i{color:var(--color-muted)}
+#side #viewBtn:hover,#side #viewBtn[aria-expanded=true]{background:var(--color-hover)}
+#status{font-size:11px;color:var(--color-muted);display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(255,255,255,.14);border-radius:9999px;padding:1px 8px 1px 6px;line-height:16px;max-width:110px;overflow:hidden;white-space:nowrap}
+#statusHost{overflow:hidden;text-overflow:ellipsis}
+#ghLink{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;flex:none;border-radius:10px;color:var(--color-muted);text-decoration:none}
+#ghLink:hover{color:var(--color-text);background:var(--color-hover)}
+/* title bar */
+header{grid-row:1;grid-column:2;display:flex;align-items:center;gap:10px;min-width:0;white-space:nowrap;padding:0 2px;border-bottom:0}
+#hmain{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+#winLabel{flex:1 1 auto;min-width:0;overflow:hidden;font-size:11px;line-height:14px;color:var(--color-muted);white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;max-height:28px} #winLabel b{color:var(--color-text);font-weight:500}
+#winDD{position:relative;flex:none}
+#tbar{display:flex;align-items:center;gap:2px;margin-left:auto;flex:none;padding-left:8px;border-left:1px solid var(--color-hair)}
+header button.tb{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 6px;border:1px solid transparent!important;background:transparent;color:var(--color-muted)}
+header button.tb:hover:not(:disabled){color:var(--color-text);background:var(--color-hover)}
+header button.tb[aria-pressed=true]{color:var(--color-text);background:var(--color-sel)}
+header button.tb[aria-pressed=true] i{color:var(--color-orange)}
+.tc{font:500 11px/16px "JetBrains Mono",monospace;background:var(--color-well);border-radius:8px;padding:0 5px;color:var(--color-muted)}
+header #menuBtn{display:none}
+/* map card */
+#mapwrap{grid-row:2;grid-column:2;position:relative;overflow:hidden;background:var(--color-map);border-radius:16px;min-width:0;min-height:0}
+#insp{grid-row:1/3;grid-column:3;min-height:0;position:relative}
+#drawerClose{display:none!important;position:sticky;top:8px;margin:8px 8px -38px auto;z-index:4}
+#legendBox{position:absolute;left:10px;top:10px;z-index:5;width:300px;height:24px;padding:2px 6px;border-radius:10px;background:rgba(22,22,22,.78);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);box-shadow:inset 0 0 0 1px var(--color-hair)}
+#legendHead{display:none}
+#legendBox .rows{display:flex;height:20px;gap:3px;align-items:center}
+#legendBox .row{flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:3px;font-size:11px;line-height:20px}
+#legendBox .row span.t,#legendBox .row .lnum{display:none}
+#legendBox s{display:inline-block;width:12px;height:10px;text-decoration:none;flex:none;border-radius:3px}
+#legendBox em{margin:0;color:var(--color-muted);font-style:normal;font:11px "JetBrains Mono",monospace}
+#legendBox .row .new{padding:0 4px 0 3px;font-size:10px;line-height:13px;gap:3px}
+#legendBox .txt{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:20px;color:var(--color-muted)}
+#legendBox .row s[style*=gradient]{width:90px!important}
+#caption{position:absolute;left:12px;top:40px;bottom:auto;right:50px;font-size:11px;color:var(--color-muted);pointer-events:none;z-index:4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#hintWrap{position:absolute;top:8px;left:322px;right:46px;z-index:7;display:flex;justify-content:center;pointer-events:none}
+#hint{height:28px;line-height:26px;padding:0 14px;border-radius:9999px;font-size:12px;background:rgba(28,28,28,.92);border:1px solid rgba(224,118,60,.6);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;box-shadow:0 6px 20px rgba(0,0,0,.4)}
+/* floating composer: THE search box */
+#composer{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);width:min(560px,calc(100% - 32px));z-index:8}
+#searchBox{position:relative;display:flex;align-items:center;gap:10px;height:60px;padding:0 10px 0 16px;border-radius:18px;background:rgba(32,32,32,.8);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:inset 0 0 0 1px rgba(255,255,255,.11),inset 0 1px 0 rgba(255,255,255,.08),0 14px 36px rgba(0,0,0,.5)}
+#searchBox:focus-within{box-shadow:inset 0 0 0 1px rgba(224,118,60,.55),inset 0 1px 0 rgba(255,255,255,.08),0 14px 36px rgba(0,0,0,.5)}
+#searchBox>i{color:var(--color-muted)}
+#searchBox input#q{flex:1;min-width:0;width:auto;height:40px;background:transparent!important;border:0!important;font-size:14px!important;padding:0}
+#searchBox input#q:focus-visible{outline:none}
+#cchips{display:flex;align-items:center;gap:6px;flex:none}
+#modeRow{display:inline-flex}
+#modeRow label{display:inline-flex;align-items:center;height:28px;padding:0 9px;font-size:12px;color:var(--color-muted);background:var(--color-well);border:1px solid var(--color-border);cursor:pointer;position:relative}
+#modeRow label:first-child{border-radius:9999px 0 0 9999px} #modeRow label:last-child{border-radius:0 9999px 9999px 0;margin-left:-1px}
+#modeRow label:has(input:checked){background:var(--color-sel);color:var(--color-text)}
+#modeRow label:has(input:focus-visible){outline:2px solid var(--color-orange);outline-offset:2px;z-index:1}
+#modeRow input{position:absolute;opacity:0;width:1px;height:1px;margin:0}
+button.chipbtn{height:28px;padding:0 10px!important;display:inline-flex;align-items:center;gap:5px;border-radius:9999px!important;background:var(--color-well);color:var(--color-muted);font-size:12px!important;white-space:nowrap}
+button.chipbtn i{width:14px;height:14px;-webkit-mask-size:14px;mask-size:14px}
+button.chipbtn[aria-pressed=true]{background:var(--color-orange-tint);color:var(--color-orange);border-color:var(--color-orange)!important}
+#sugg{top:auto;bottom:calc(100% + 8px);margin:0;max-height:340px;padding:6px}
+#sugg li.gh{cursor:default;color:var(--color-muted);text-transform:uppercase;letter-spacing:.05em;font-size:11px;padding:6px 6px 3px}
+#sugg li.gh:hover{background:transparent}
+#sugg li .muted{font-size:11px}
+#mapwrap.sheet-open #composer{display:none}
+/* tables sheet over the lower half of the map */
+#tabs{position:absolute;left:0;right:0;bottom:0;height:var(--sheet-h,50%);z-index:9;display:grid;grid-template-rows:40px minmax(0,1fr);min-height:0;border-radius:16px 16px 0 0;overflow:hidden;background:rgba(26,26,26,.88);-webkit-backdrop-filter:blur(16px);backdrop-filter:blur(16px);box-shadow:inset 0 0 0 1px var(--color-hair),inset 0 1px 0 rgba(255,255,255,.08),0 -12px 32px rgba(0,0,0,.45);transform:translateY(calc(100% + 12px));transition:transform .22s ease;visibility:hidden}
+#mapwrap.sheet-open #tabs{transform:none;visibility:visible}
+#sheetHead{display:flex;align-items:flex-end;gap:4px;padding:0 6px 0 0;border-bottom:1px solid var(--color-hair)}
+#sheetHead #tabbar{flex:1;border-bottom:0;height:39px}
+#sheetHead #sheetClose{align-self:center}
+#handle{height:8px;z-index:3}
+thead,th{background:#1d1d1d}
+/* popovers */
+#viewPop{position:fixed;z-index:50;width:268px;max-height:calc(100vh - 24px);overflow:auto;background:var(--color-pop);border:1px solid var(--color-border);border-radius:14px;padding:4px 12px 12px;box-shadow:0 12px 32px rgba(0,0,0,.5)}
+#viewPop h4{margin:12px 0 6px}
+#viewPop #layersBox>summary{display:none}
+#viewPop #largeLine{margin-top:8px}
+#scrim{display:none}
+/* rail: verbs as icons with tooltips, selections as coloured dots */
+body.rail #side{padding:12px 8px 10px}
+body.rail #crumb,body.rail .vl,body.rail kbd,body.rail h4.sech,body.rail #recentBox,body.rail #savedBox,body.rail #leftNote,body.rail #selEmpty,body.rail #status,body.rail #swapBtn,body.rail .sn,body.rail .sc,body.rail .sbtns,body.rail .slot .sx{display:none!important}
+body.rail #logoRow{justify-content:center;padding:0}
+body.rail #side button.verb{justify-content:center;padding:0}
+body.rail .slot{justify-content:center;padding:0;margin-top:4px}
+body.rail #sideFoot{flex-direction:column;gap:4px}
+body.rail #side #viewBtn{flex:none;width:34px;padding:0;justify-content:center}
+body.side-over #side{position:fixed;left:12px;top:12px;bottom:12px;width:248px;z-index:46;background:rgba(32,32,32,.97);box-shadow:inset 0 0 0 1px var(--color-hair),0 16px 48px rgba(0,0,0,.6)}
+body.side-over #scrim{display:block;position:fixed;inset:0;z-index:45;background:rgba(0,0,0,.35)}
+#selBar{position:sticky;top:0;z-index:2;display:flex;gap:6px;flex-wrap:wrap;margin:-12px -14px 10px;padding:10px 14px;background:rgba(34,34,34,.94);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border-bottom:1px solid var(--color-hair)}
+@media (max-width:1499px){#app{--iw:360px;--sw:56px}}
 @media (max-width:1199px){
-  #insp{right:12px;top:84px;bottom:12px;margin-left:0;transform:translateX(calc(100% + 12px));border:0;background:rgba(30,30,30,.97)}
-  #hrow2{gap:4px} #winLabel{min-width:0;flex-basis:0}
-  #levelBox button{padding:2px 4px} #colourBox label{padding:1px 3px}
+  #app{grid-template-columns:var(--sw,248px) minmax(0,1fr)}
+  #insp{position:fixed;right:12px;top:12px;bottom:12px;width:380px;z-index:35;transform:translateX(calc(100% + 24px));transition:transform .2s ease;background:rgba(30,30,30,.97);box-shadow:inset 0 0 0 1px var(--color-hair),-8px 0 24px rgba(0,0,0,.5)}
+  body.drawer #insp{transform:none}
+  #drawerClose{display:grid!important}
+  #selBar{padding-right:48px}
+  #qswitch button{padding:3px 6px}
+  .tl{display:none}
+}
+@media (max-width:700px){
+  #app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr);padding:8px;gap:8px}
+  #side{display:none}
+  body.side-over #side{display:flex;left:0;top:0;bottom:0;width:min(300px,86vw);border-radius:0 16px 16px 0}
+  header{grid-column:1;flex-wrap:wrap;row-gap:6px;white-space:normal;padding:0}
+  header #menuBtn{display:inline-grid}
+  #tbar{order:1;border-left:0;padding-left:0}
+  #hmain{display:contents}
+  #infoBtn{order:0} #qswitch{order:2} #winDD{order:3}
+  #qswitch button{font-size:12px!important;padding:3px 7px}
+  #winSum{font-size:12px!important}
+  #winLabel{display:none}
+  #mapwrap{grid-column:1}
+  #composer{left:8px;right:8px;bottom:8px;width:auto;transform:none}
+  #searchBox{height:auto;flex-wrap:wrap;padding:8px 10px 8px 14px;row-gap:6px;gap:8px}
+  #searchBox input#q{flex:1 1 calc(100% - 30px);height:34px}
+  #cchips{flex:1 1 100%}
+  #insp{left:0;right:0;top:auto;bottom:0;width:auto;height:64vh;border-radius:16px 16px 0 0;transform:translateY(calc(100% + 12px))}
+  #legendBox{width:calc(100% - 56px);max-width:300px}
+  #hintWrap{left:10px;right:10px;top:40px}
+  #caption{display:none}
+  #tabs{height:var(--sheet-h,60%)}
 }
 @media (prefers-reduced-motion: reduce){.prog{animation:none;background:var(--color-orange)}}
 </style>
 </head>
 <body>
 <div id="app">
+<nav id="side" aria-label="Sidebar">
+  <div id="logoRow">
+    <span id="crumb"><a id="crumbLink">charoori</a><span class="sep" aria-hidden="true">/</span><a id="hname">undercurrent</a></span>
+    <button id="sideBtn" class="ib nu" data-act="side" aria-label="Collapse sidebar" title="Collapse sidebar" aria-expanded="true"><i data-i="sidebar"></i></button>
+  </div>
+  <div id="verbs" role="group" aria-label="Actions">
+    <button class="verb nu" id="vOverview" data-act="overview" title="Overview: clear selections, back to What is arriving"><i data-i="home"></i><span class="vl">Overview</span><kbd></kbd></button>
+    <button class="verb nu" id="vSearch" data-act="focusSearch" title="Search (/)"><i data-i="search"></i><span class="vl">Search</span><kbd>/</kbd></button>
+    <button class="verb nu" id="lassoBtn" data-act="lasso" aria-pressed="false" title="Lasso (L)"><i data-i="lasso"></i><span class="vl">Lasso</span><kbd>L</kbd></button>
+    <button class="verb nu" id="vCompare" data-act="compare" aria-pressed="false" title="Compare A·B (C)"><i data-i="compare"></i><span class="vl">Compare A·B</span><kbd>C</kbd></button>
+    <button class="verb nu" id="vConnect" data-act="connections" aria-pressed="false" title="Connections (2)"><i data-i="merge"></i><span class="vl">Connections</span><kbd>2</kbd></button>
+    <button class="verb nu" id="tourBtn" data-act="tour" title="Tour"><i data-i="help"></i><span class="vl">Tour</span><kbd></kbd></button>
+  </div>
+  <div id="selSec">
+    <h4 class="sech">Selections</h4>
+    <div id="compareBox">
+      <div class="slot" id="slotCur"></div><div class="slot" id="slotA"></div><div class="slot" id="slotB"></div>
+      <div id="selEmpty" class="muted small">Nothing selected yet. Click a topic, search, or lasso.</div>
+      <button id="swapBtn" class="nu" data-act="swap" aria-label="Swap A and B" title="Swap A and B" hidden>⇄ swap A and B</button>
+    </div>
+    <div id="recentBox" hidden><h4 class="sech">Recent</h4><div id="recentList"></div></div>
+    <details id="savedBox" open><summary class="savedSum">Saved</summary><div><h4 class="sech" data-i="bookmark">Saved <span id="savedCount" class="cnt">0</span></h4><div id="savedList"><div class="muted">none yet</div></div></div></details>
+  </div>
+  <div id="leftNote"></div>
+  <div id="sideFoot">
+    <button id="viewBtn" class="nu" data-act="view" aria-haspopup="dialog" aria-expanded="false" title="View: level, colour, layers"><i data-i="sliders"></i><span class="vl">View</span></button>
+    <span id="status">server: <span id="statusHost"></span> <span id="statusDot">●</span></span>
+    <a id="ghLink" target="_blank" rel="noopener" aria-label="undercurrent on GitHub" title="undercurrent on GitHub"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+</nav>
+
 <header>
-  <div class="hrow" id="hrow1">
-    <span id="crumb"><a id="crumbLink">charoori</a><span class="sep" aria-hidden="true">/</span></span>
-    <a id="hname">undercurrent</a>
+  <button id="menuBtn" class="ib nu" data-act="menu" aria-label="Open menu" title="Menu"><i data-i="menu"></i></button>
+  <div id="hmain">
     <span class="seg" id="qswitch" role="group" aria-label="Question">
       <button id="q1" data-act="preset" data-p="1" aria-pressed="true">What is arriving</button><button id="q2" data-act="preset" data-p="2" aria-pressed="false">How topics connect</button>
     </span>
-    <span id="status">server: <span id="statusHost"></span> <span id="statusDot">●</span></span>
-  </div>
-  <div class="hrow" id="hrow2">
     <details id="winDD" class="dd">
       <summary role="button" aria-haspopup="menu"><span id="winSum" style="border:1px solid var(--color-border);border-radius:6px;padding:3px 8px;font-size:12px;display:inline-block">last 6 months ▾</span></summary>
       <div role="menu" style="left:0;right:auto">
@@ -324,11 +436,59 @@ button[data-act=delConfirm]{background:transparent;color:var(--color-orange);bor
     </details>
     <span id="winLabel"></span>
     <button id="infoBtn" data-act="info" aria-label="How the numbers are computed" aria-expanded="false">i</button>
-    <a id="ghLink" target="_blank" rel="noopener" aria-label="undercurrent on GitHub" title="undercurrent on GitHub"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true" focusable="false"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+  </div>
+  <div id="tbar" role="toolbar" aria-label="Tables">
+    <button class="tb nu" id="tbTopics" data-act="sheet" data-t="topics" aria-pressed="false" title="Topics table"><i data-i="table"></i><span class="tl">Topics</span><span class="tc" id="cTopics">–</span></button>
+    <button class="tb nu" id="tbLinks" data-act="sheet" data-t="links" aria-pressed="false" title="Links table"><i data-i="merge"></i><span class="tl">Links</span><span class="tc" id="cLinks">–</span></button>
+    <button class="tb nu" id="tbPhrases" data-act="sheet" data-t="phrases" aria-pressed="false" title="Rising phrases table"><i data-i="hash"></i><span class="tl">Phrases</span><span class="tc" id="cPhrases">–</span></button>
+    <button class="tb nu" id="tbIdeas" data-act="sheet" data-t="ideas" aria-pressed="false" title="Ideas"><i data-i="bulb"></i><span class="tl">Ideas</span><span class="tc" id="cIdeas">–</span></button>
   </div>
 </header>
 
-<nav id="left" aria-label="Controls">
+<main id="mapwrap">
+  <canvas id="map" tabindex="0" role="img" aria-label="Map of papers"></canvas>
+  <svg id="lassoSvg"><path id="lassoPath" fill="none" stroke="#fff" stroke-width="1.5"/></svg>
+  <div id="loading">Loading map points: <span id="loadN">0.0</span> of <span id="loadT">7.8</span> MB<div class="bar"><i id="loadBar"></i></div></div>
+  <div id="legendBox"><h4 id="legendHead" data-i="trend">Growth vs CS, topics</h4><div class="rows" id="legendRows"></div></div>
+  <div id="hintWrap"><div id="hint" role="status" aria-live="polite" hidden></div></div>
+  <div id="zoomBtns"><button tabindex="-1" data-act="zin" aria-label="Zoom in">+</button><button tabindex="-1" data-act="zout" aria-label="Zoom out">−</button><button tabindex="-1" data-act="fit" aria-label="Fit map">⤢</button></div>
+  <div id="caption"></div>
+  <div id="tip" role="tooltip"></div>
+  <div id="composer">
+    <div id="searchBox">
+      <ul id="sugg" role="listbox" hidden></ul>
+      <i data-i="search" aria-hidden="true"></i>
+      <input type="search" id="q" placeholder="Search a phrase, topic or title…" autocomplete="off" aria-label="Search a phrase, topic or title" role="combobox" aria-expanded="false" aria-controls="sugg">
+      <div id="cchips">
+        <span id="modeRow" role="radiogroup" aria-label="Search mode"><label title="Phrase: title and abstract"><input type="radio" name="smode" value="phrase" checked>Phrase</label><label title="Title only"><input type="radio" name="smode" value="title">Title</label></span>
+        <button id="winChip" class="chipbtn nu" data-act="winChip" title="Window">6 mo ▾</button>
+        <button id="lassoChip" class="chipbtn nu" data-act="lasso" aria-pressed="false" title="Lasso (L)"><i data-i="lasso"></i>Lasso</button>
+      </div>
+    </div>
+  </div>
+  <section id="tabs" aria-label="Tables" inert>
+    <div id="handle" title="Drag to resize; double-click to close"></div>
+    <div id="sheetHead">
+      <div id="tabbar" role="tablist" aria-label="Tables">
+        <button role="tab" data-act="tab" data-t="topics" aria-selected="true">Topics</button><button role="tab" data-act="tab" data-t="links" aria-selected="false">Links</button><button role="tab" data-act="tab" data-t="phrases" aria-selected="false">Phrases</button><button role="tab" data-act="tab" data-t="ideas" aria-selected="false">Ideas</button>
+      </div>
+      <button id="sheetClose" class="ib nu" data-act="sheetClose" aria-label="Close table" title="Close (Esc)"><i data-i="x"></i></button>
+    </div>
+    <div id="tabbody" role="tabpanel"><div class="prog" id="tabProg"></div>
+      <div id="pTopics"></div><div id="pLinks" hidden><div style="padding:4px 10px"><input type="search" id="lkFilter" placeholder="filter by topic" aria-label="Filter links by topic" style="width:220px"></div><div id="lkTable"></div></div>
+      <div id="pPhrases" hidden><div class="tabhead" id="btLine"></div><div style="padding:4px 10px"><input type="search" id="phFilter" placeholder="filter phrases" aria-label="Filter phrases" style="width:220px"></div><div id="phTable"></div></div>
+      <div id="pIdeas" hidden></div>
+    </div>
+  </section>
+</main>
+
+<aside id="insp" aria-label="Inspector" aria-live="polite">
+  <button id="drawerClose" class="ib nu" data-act="drawerClose" aria-label="Close inspector" title="Close (Esc)"><i data-i="x"></i></button>
+  <div id="inspTop"></div><div id="abBlock"></div><div id="inspBody"></div>
+</aside>
+</div>
+<div id="scrim" data-act="scrim"></div>
+<div id="viewPop" role="dialog" aria-label="View settings" hidden>
   <div id="levelBox"><h4 data-i="layers">Level</h4>
     <span class="seg" role="radiogroup" aria-label="Level">
       <button role="radio" data-act="level" data-l="2" aria-checked="false">areas <span style="display:block">(20)</span></button><button role="radio" data-act="level" data-l="1" aria-checked="true">topics <span style="display:block">(116)</span></button><button role="radio" data-act="level" data-l="0" aria-checked="false">sub-topics <span style="display:block">(368)</span></button>
@@ -340,9 +500,7 @@ button[data-act=delConfirm]{background:transparent;color:var(--color-orange);bor
       <label><input type="radio" name="colour" value="date">Date</label><br>
       <label id="distLabel" title="Set A first"><input type="radio" name="colour" value="dist" disabled>Distance to A</label>
     </div></div>
-  <div id="legendBox"><h4 id="legendHead" data-i="trend">Growth vs CS, topics</h4><div class="rows" id="legendRows"></div>
-    <label id="lightRow" class="small muted"><input type="checkbox" id="lightness">Lightness only</label>
-    <div id="largeLine" class="tiny muted" hidden></div></div>
+  <label id="lightRow" class="small muted"><input type="checkbox" id="lightness">Lightness only</label>
   <details id="layersBox" open><summary>layers ▾</summary><div><h4 data-i="merge">Map layers</h4>
     <div class="small" style="line-height:1.9">
       <label><input type="checkbox" role="switch" id="tNodes">topic nodes</label><br>
@@ -352,46 +510,7 @@ button[data-act=delConfirm]{background:transparent;color:var(--color-orange);bor
     <label class="tiny muted" for="edgeN" style="display:block;margin-top:4px">edges shown: <span id="edgeCount" class="mono">40</span></label>
     <input type="range" id="edgeN" min="10" max="200" step="1" value="40" aria-label="Number of edges">
   </div></details>
-  <div id="searchBox" style="position:relative"><h4 data-i="search">Search</h4>
-    <input type="search" id="q" placeholder="/ phrase or title…" autocomplete="off" aria-label="Search phrase or title" role="combobox" aria-expanded="false" aria-controls="sugg">
-    <ul id="sugg" role="listbox" hidden></ul>
-    <div id="modeRow" class="tiny muted" role="radiogroup" aria-label="Search mode" style="margin-top:3px">
-      <label><input type="radio" name="smode" value="phrase" checked>phrase (title+abstract)</label> <label><input type="radio" name="smode" value="title">title</label></div>
-  </div>
-  <div id="compareBox"><h4 data-i="compare">Compare</h4>
-    <div class="slot" id="slotA"></div><div class="slot" id="slotB"></div>
-    <button id="swapBtn" data-act="swap" aria-label="Swap A and B" title="Swap A and B">⇄</button>
-  </div>
-  <div id="lassoHome"><div id="lassoWrap" style="margin-top:6px"><button id="lassoBtn" data-act="lasso" aria-pressed="false">Lasso (L)</button></div></div>
-  <details id="savedBox" open><summary class="savedSum">Saved ▾</summary><div><h4 data-i="bookmark">Saved</h4><div id="savedList"><div class="muted">none yet</div></div></div></details>
-  <div id="leftNote"></div>
-</nav>
-
-<main id="mapwrap">
-  <canvas id="map" tabindex="0" role="img" aria-label="Map of papers"></canvas>
-  <svg id="lassoSvg"><path id="lassoPath" fill="none" stroke="#fff" stroke-width="1.5"/></svg>
-  <div id="loading">Loading map points: <span id="loadN">0.0</span> of <span id="loadT">7.8</span> MB<div class="bar"><i id="loadBar"></i></div></div>
-  <div id="zoomBtns"><button tabindex="-1" data-act="zin" aria-label="Zoom in">+</button><button tabindex="-1" data-act="zout" aria-label="Zoom out">−</button><button tabindex="-1" data-act="fit" aria-label="Fit map">⤢</button></div>
-  <div id="mapLassoSlot"></div>
-  <div id="caption"></div>
-  <div id="tip" role="tooltip"></div>
-</main>
-
-<section id="tabs">
-  <div id="handle" title="Drag to resize; double-click to collapse"></div>
-  <div id="tabbar" role="tablist" aria-label="Tables">
-    <button role="tab" data-act="tab" data-t="topics" aria-selected="true">Topics</button><button role="tab" data-act="tab" data-t="links" aria-selected="false">Links</button><button role="tab" data-act="tab" data-t="phrases" aria-selected="false">Phrases</button><button role="tab" data-act="tab" data-t="ideas" aria-selected="false">Ideas</button>
-  </div>
-  <div id="tabbody" role="tabpanel"><div class="prog" id="tabProg"></div>
-    <div id="pTopics"></div><div id="pLinks" hidden></div>
-    <div id="pPhrases" hidden><div class="tabhead" id="btLine"></div><div style="padding:4px 10px"><input type="search" id="phFilter" placeholder="filter phrases" aria-label="Filter phrases" style="width:220px"></div><div id="phTable"></div></div>
-    <div id="pIdeas" hidden></div>
-  </div>
-</section>
-
-<aside id="insp" aria-label="Inspector" aria-live="polite">
-  <div id="inspTop"></div><div id="abBlock"></div><div id="inspBody"></div>
-</aside>
+  <div id="largeLine" class="tiny muted" hidden></div>
 </div>
 <div id="banner" hidden></div>
 <div id="infoPop" role="dialog" aria-label="How the numbers are computed" hidden></div>
@@ -411,7 +530,8 @@ const A_RGB = mapTokenRGB('--color-a-map'), B_RGB = mapTokenRGB('--color-b'), W_
 const MN = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const LEVEL_NAME = {0: 'sub-topics', 1: 'topics', 2: 'areas'}, LEVEL_ONE = {0: 'Sub-topic', 1: 'Topic', 2: 'Area'};
 const ARXIV = 'https:' + '//arxiv.org/abs/'; // ponytail: split so the F36.1 URL grep lists only the four loaded libraries (an outbound link is not a loaded library)
-const RM = matchMedia('(prefers-reduced-motion: reduce)'), COMPACT = matchMedia('(max-width: 1499px)'), NARROW = matchMedia('(max-width: 1199px)');
+const RM = matchMedia('(prefers-reduced-motion: reduce)'), COMPACT = matchMedia('(max-width: 1499px)'), NARROW = matchMedia('(max-width: 1199px)'), PHONE = matchMedia('(max-width: 700px)');
+const lsGet = k => { try { return localStorage.getItem(k); } catch (e) { return null; } }, lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} };
 const $ = id => document.getElementById(id);
 $('crumbLink').href = 'https:' + '//charoori.com/'; $('ghLink').href = 'https:' + '//github.com/Exorust/undercurrent'; // same split: outbound links, not loaded libraries
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -705,10 +825,18 @@ let pointsReady = false, overlaysReady = false, dataReady = false;
 const LABEL_FONT = {family: 'Inter, sans-serif', weight: 400, atlasSize: 64, lineHeight: 1.15};
 const labelMeasure = document.createElement('canvas').getContext('2d');
 const zf = () => VS ? Math.pow(2, VS.zoom - Z0) : 1;
+// F43.1 step 9: the fit keeps the floating composer's strip (and the legend strip on top) free of points
+function fitPad() { const c = $('composer'), ch = c && c.offsetHeight ? c.offsetHeight : 60; return {t: 44, b: Math.max(96, ch + 16 + 20), x: 20}; }
+function fitBox(x0, y0, x1, y1, k, maxZoom = Infinity) {
+  const c = $('map'), w = c.clientWidth || 968, h = c.clientHeight || 676, p = fitPad();
+  const s = Math.pow(2, Math.min(maxZoom, Math.log2(Math.min((w - 2 * p.x) / Math.max(x1 - x0, 1e-3), (h - p.t - p.b) / Math.max(y1 - y0, 1e-3)) * k)));
+  // flipY false: world y points up, so moving the target down lifts the content above the composer
+  return {target: [(x0 + x1) / 2, (y0 + y1) / 2 + (p.t - p.b) / (2 * s), 0], zoom: Math.log2(s)};
+}
 function fitView() {
-  const [x0, y0, x1, y1] = P.bbox, c = $('map'), w = c.clientWidth || 968, h = c.clientHeight || 676;
-  Z0 = Math.log2(Math.min(w / (x1 - x0), h / (y1 - y0)) * 0.92);
-  return {target: [(x0 + x1) / 2, (y0 + y1) / 2, 0], zoom: Z0, minZoom: Z0 - 1, maxZoom: Z0 + 7};
+  const [x0, y0, x1, y1] = P.bbox, f = fitBox(x0, y0, x1, y1, 0.98);
+  Z0 = f.zoom;
+  return {target: f.target, zoom: Z0, minZoom: Z0 - 1, maxZoom: Z0 + 7};
 }
 function flyTo(v, ms = 300) {
   VS = {...VS, ...v};
@@ -719,8 +847,7 @@ function fitRows(rows) {
   if (!rows || !rows.length) return;
   let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   for (const r of rows) { const x = P.xy[2 * r], y = P.xy[2 * r + 1]; if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-  const c = $('map'), z = Math.log2(Math.min(c.clientWidth / Math.max(x1 - x0, 1e-3), c.clientHeight / Math.max(y1 - y0, 1e-3)) * 0.8);
-  flyTo({target: [(x0 + x1) / 2, (y0 + y1) / 2, 0], zoom: Math.min(z, Z0 + 6)});
+  flyTo(fitBox(x0, y0, x1, y1, 0.8, Z0 + 6));
 }
 async function initDeck() {
   await new Promise(r => { if (window.deck) r(); else $('deckjs').addEventListener('load', r); });
@@ -735,8 +862,10 @@ async function initDeck() {
   });
   await onLoad; R.deckReady = true;
   new ResizeObserver(([entry]) => {
-    const {width, height} = entry.contentRect;
-    DK.setProps({width, height}); queueLabels();
+    const {width, height} = entry.contentRect, atFit = VS && P.bbox && Math.abs(VS.zoom - Z0) < 0.02;
+    DK.setProps({width, height});
+    if (atFit && width && height) { VS = fitView(); DK.setProps({initialViewState: {...VS}}); }  // sidebar collapse / width change: stay at the fit
+    queueLabels();
   }).observe($('mapwrap'));
   try { const gl = DK.device && DK.device.gl || $('map').getContext('webgl2'); const ext = gl.getExtension('WEBGL_debug_renderer_info'); R.renderer = gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER); } catch (e) {}
 }
@@ -882,6 +1011,10 @@ function computeLabels() {
   const atFit = f <= 1.2;
   cand.sort((a, b) => (atFit ? Number(!!b.fixed) - Number(!!a.fixed) : 0) || b.prio - a.prio);
   const kept = [];
+  // the floating composer covers the map's lower centre: no label is placed under it (F43.1 step 9)
+  let cb = null, Hb = H;
+  if (!S.sheet) { const cr = $('composer').getBoundingClientRect(), mr = $('map').getBoundingClientRect(); if (cr.height) { cb = [cr.left - mr.left - 4, cr.top - mr.top - 6, cr.right - mr.left + 4, cr.bottom - mr.top]; if (atFit) Hb = Math.min(H, cb[1]); } }
+  const underComposer = b => cb && b[0] < cb[2] && b[2] > cb[0] && b[3] > cb[1];
   for (const c of cand) {
     const [px, py] = vp.project(c.pos), lines = c.text.split('\n');
     // Match TextLayer's atlas: individual glyph advances at 64px, scaled to getSize.
@@ -896,21 +1029,21 @@ function computeLabels() {
     if (atFit && !c.fixed) {
       // Fixed badges already occupy their boxes. Try the nearest free area position.
       const dx = Math.max(0, Math.min(W - w, x0)) - x0;
-      const baseDy = Math.max(0, Math.min(H - h, y0)) - y0;
+      const baseDy = Math.max(0, Math.min(Hb - h, y0)) - y0;
       const line = Math.ceil(rowHeight * LABEL_FONT.lineHeight) + 1;
       let placed = false;
       for (const step of [0, 1, -1, 2, -2]) {
         const dy = baseDy + step * line, y = y0 + dy;
         const shifted = [x0 + dx, y, x0 + dx + w, y + h];
-        if (y >= 0 && y + h <= H && !overlaps(shifted)) {
+        if (y >= 0 && y + h <= Hb && !overlaps(shifted) && !underComposer(shifted)) {
           box = shifted; c.off = [c.off[0] + dx, c.off[1] + dy]; placed = true; break;
         }
       }
       if (!placed) continue;
     } else if (!atFit || !c.fixed) {
       if (box[2] < 0 || box[0] > W || box[3] < 0 || box[1] > H) continue;
-      if (overlaps(box)) continue;
-    }
+      if (overlaps(box) || underComposer(box)) continue;
+    } else if (underComposer(box)) continue;
     c.box = box; kept.push(c); if (kept.length >= 60) break;
   }
   LBL = kept;
@@ -958,8 +1091,10 @@ function edgeTip(e) {
 // lasso
 let lassoPts = null;
 function setLasso(on) {
-  S.mode = on ? 'lasso' : 'pan'; document.body.classList.toggle('lasso', on); $('lassoBtn').setAttribute('aria-pressed', on); $('lassoBtn').classList.toggle('on', on);
-  lassoPts = null; $('lassoPath').setAttribute('d', '');
+  if (on) closeSheet();
+  S.mode = on ? 'lasso' : 'pan'; document.body.classList.toggle('lasso', on);
+  for (const b of [$('lassoBtn'), $('lassoChip')]) { b.setAttribute('aria-pressed', on); b.classList.toggle('on', on); }
+  lassoPts = null; $('lassoPath').setAttribute('d', ''); renderHint();
   if (DK) DK.setProps({controller: {dragRotate: false, keyboard: false, inertia: false, doubleClickZoom: false, dragPan: !on}});
 }
 (() => {
@@ -971,7 +1106,13 @@ function setLasso(on) {
 function finishLasso(px) {
   if (px.length < 3) return;
   const vp = DK.getViewports()[0], poly = px.map(p => vp.unproject(p).slice(0, 2));
-  const t0 = performance.now(); let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+  const t0 = performance.now(), rows = lassoRows(poly);
+  R.lastLassoMs = Math.round(performance.now() - t0);
+  if (rows.length < 20) { S.view = 'msg'; S.msg = `Only ${rows.length} papers: too few for growth or phrases. Drag a larger area.`; renderInspector(); return; }
+  makeSel({rows}, {kind: 'lasso', rows: Int32Array.from(rows), poly, label: `Lasso, ${fmt(rows.length)} papers`});
+}
+function lassoRows(poly) {  // point-in-polygon over all papers, world coordinates
+  let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
   for (const [x, y] of poly) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
   const rows = [], xy = P.xy, m = poly.length;
   for (let i = 0; i < P.n; i++) {
@@ -979,9 +1120,7 @@ function finishLasso(px) {
     let ins = false; for (let a = 0, b = m - 1; a < m; b = a++) { const ya = poly[a][1], yb = poly[b][1]; if ((ya > y) !== (yb > y) && x < (poly[b][0] - poly[a][0]) * (y - ya) / (yb - ya) + poly[a][0]) ins = !ins; }
     if (ins) rows.push(i);
   }
-  R.lastLassoMs = Math.round(performance.now() - t0);
-  if (rows.length < 20) { S.view = 'msg'; S.msg = `Only ${rows.length} papers: too few for growth or phrases. Drag a larger area.`; renderInspector(); return; }
-  makeSel({rows}, {kind: 'lasso', rows: Int32Array.from(rows), poly, label: `Lasso, ${fmt(rows.length)} papers`});
+  return rows;
 }
 
 // ---------- selections ----------
@@ -994,14 +1133,92 @@ function selectTopic(level, c, opts = {}) {
 }
 function makeSel(spec, sel, opts = {}) {
   sel.spec = spec; sel.data = null;
+  const wasEmpty = !S.A && !S.B && !S.cur;
+  if (wasEmpty) S.presetBefore = $('q2').getAttribute('aria-pressed') === 'true' ? 2 : 1;
   if (opts.slot === 'A') S.A = sel; else if (opts.slot === 'B') S.B = sel;
-  else if (!S.A) { S.A = sel; sel.flash = true; setTimeout(() => { sel.flash = false; render(); }, 250); }
+  else if (S.cmp === 'second' && S.A && S.A !== sel) { S.B = sel; S.cmp = null; }  // guided compare: the second pick becomes B
+  else if (!S.A) {
+    S.A = sel; sel.flash = true; setTimeout(() => { sel.flash = false; render(); }, 250);
+    if (S.cmp === 'first') S.cmp = 'second';
+    else if (!S.firstNoted) { S.firstNoted = true; note('Selected. It is also A, ready to compare.'); }
+  }
   else S.cur = sel;
   S.focus = sel; S.view = 'sel'; S.ev = null;
   if (NARROW.matches) document.body.classList.add('drawer');
+  if (sideOpen) { sideOpen = false; layout(); }
   if (S.colour === 'dist' && sel === S.A) loadDist();
-  updateMask(); recolour(); computeLabels(); renderSlots(); renderInspector(); renderTopicsHL();
+  pushRecent(sel); $('insp').scrollTop = 0;
+  updateMask(); recolour(); computeLabels(); renderSlots(); renderInspector(); renderTopicsHL(); renderHint();
   fetchSel(sel);
+}
+// ---------- hint bar (lasso armed, guided compare, first-selection note) ----------
+function note(text) { S.note = text; S.noteUntil = performance.now() + 4000; renderHint(); setTimeout(renderHint, 4050); }
+function renderHint() {
+  const h = $('hint'); let t = '';
+  if (S.mode === 'lasso') t = 'Drag around an area to select it · Esc to cancel';
+  else if (S.cmp === 'first') t = 'Pick the first thing to compare: click a topic, search, or lasso';
+  else if (S.cmp === 'second') t = 'Now pick the second';
+  else if (S.note && S.noteUntil > performance.now()) t = S.note;
+  if (h.textContent !== t) { h.textContent = t; if (t) anim(h, {opacity: [0, 1], duration: 160}); }
+  h.hidden = !t;
+  $('vCompare').setAttribute('aria-pressed', String(!!S.cmp));
+}
+// ---------- guided compare (F43.2 steps 5-6) ----------
+function showAB() { $('insp').scrollTop = 0; if (NARROW.matches) document.body.classList.add('drawer'); const el = $('abBlock'); if (el.innerHTML) anim(el, {opacity: [0.35, 1], duration: 400}); }
+function startCompare() {
+  closeSheet(); if (S.mode === 'lasso') setLasso(false);
+  if (S.cmp) { S.cmp = null; return renderHint(); }  // pressed again: cancel
+  if (S.A && S.B) { S.view = S.view === 'evidence' ? 'evidence' : 'sel'; if (!S.focus) S.focus = S.A; renderInspector(); showAB(); return renderHint(); }
+  if (S.A && S.cur) { setSlot('B'); showAB(); return renderHint(); }
+  if (S.cur && !S.A) { S.A = S.cur; S.cur = null; S.focus = S.A; if (S.colour === 'dist') loadDist(); updateMask(); recolour(); renderSlots(); renderInspector(); S.cmp = 'second'; }
+  else if (S.A) { if (S.B) { S.A = S.B; S.B = null; } S.cmp = 'second'; }
+  else S.cmp = 'first';
+  renderHint();
+}
+// ---------- selection rows: make A / make B / remove ----------
+function selTo(who, to) {
+  const s = who === 'cur' ? S.cur : S[who]; if (!s) return;
+  if (to === 'x') return clearSlot(who);
+  if (who === to) return;
+  if (who === 'cur') { const old = S[to]; S[to] = s; S.cur = old && old !== S.A && old !== S.B ? old : null; }
+  else { const x = S.A; S.A = S.B; S.B = x; }  // A <-> B
+  S.focus = s; if (S.cmp === 'second' && S.A && S.B) S.cmp = null;
+  if (S.colour === 'dist') { S.A ? loadDist() : setColour('growth'); }
+  $('insp').scrollTop = 0;
+  updateMask(); recolour(); computeLabels(); renderSlots(); renderInspector(); renderTopicsHL(); loadAB(); renderHint();
+}
+function overview() {
+  S.cmp = null; if (S.mode === 'lasso') setLasso(false);
+  S.ev = null; S.cur = S.B = S.A = null; S.dist = null; S.focus = null; S.view = 'summary'; S.ideasUI = null;
+  if (S.colour === 'dist') S.colour = 'growth';
+  document.body.classList.remove('drawer');
+  applyPreset(1); closeSheet();
+  updateMask(); recolour(); computeLabels(); renderSlots(); renderInspector(); renderTopicsHL(); renderHint();
+  if (VS && P.bbox && DK) flyTo(fitView(), 300);
+}
+// ---------- recent selections (this browser) ----------
+let RECENT = []; try { RECENT = JSON.parse(lsGet('uc.recent') || '[]'); if (!Array.isArray(RECENT)) RECENT = []; } catch (e) { RECENT = []; }
+function pushRecent(sel) {
+  let e = null;
+  if (sel.kind === 'topic') e = {kind: 'topic', level: sel.level, c: sel.c, label: sel.label, key: `t${sel.level}-${sel.c}`};
+  else if (sel.kind === 'phrase' || sel.kind === 'query') { const t = sel.spec.phrase ?? sel.spec.query; e = {kind: sel.kind, text: t, label: sel.label, key: sel.kind[0] + ':' + t.toLowerCase()}; }
+  else if (sel.kind === 'lasso' && sel.poly) { const st = Math.max(1, Math.ceil(sel.poly.length / 120)), poly = sel.poly.filter((p, i) => i % st === 0).map(p => [+p[0].toFixed(4), +p[1].toFixed(4)]); e = {kind: 'lasso', poly, label: sel.label, n: sel.rows.length, key: 'l:' + sel.rows.length + ':' + poly[0]}; }
+  if (!e) return;
+  sel.recentKey = e.key;
+  RECENT = [e, ...RECENT.filter(x => x.key !== e.key)].slice(0, 5); lsSet('uc.recent', JSON.stringify(RECENT)); renderRecent();
+}
+function renameRecent(sel) { const e = sel.recentKey && RECENT.find(x => x.key === sel.recentKey); if (e && e.label !== sel.label) { e.label = sel.label; lsSet('uc.recent', JSON.stringify(RECENT)); renderRecent(); } }
+function renderRecent() {
+  $('recentBox').hidden = !RECENT.length;
+  $('recentList').innerHTML = RECENT.map((e, i) => `<div class="sitem"><span class="dot"></span><button class="sn nu" data-act="recent" data-i="${i}" title="${esc(e.label)}">${esc(e.label)}</button><span class="sbtns"><button class="nu" tabindex="-1" data-act="recent" data-i="${i}" data-slot="A" aria-label="Make it A">A</button><button class="nu" tabindex="-1" data-act="recent" data-i="${i}" data-slot="B" aria-label="Make it B">B</button></span><button class="sx nu" data-act="recentX" data-i="${i}" aria-label="Remove from recent">×</button></div>`).join('');
+}
+function runRecent(i, slot) {
+  const e = RECENT[i]; if (!e || !P.n) return; const opts = slot ? {slot} : {};
+  if (e.kind === 'topic') return selectTopic(e.level, e.c, opts);
+  if (e.kind === 'phrase') return makeSel({phrase: e.text}, {kind: 'phrase', label: e.label}, opts);
+  if (e.kind === 'query') return makeSel({query: e.text}, {kind: 'query', label: e.label}, opts);
+  const rows = lassoRows(e.poly); if (rows.length < 20) return;
+  makeSel({rows}, {kind: 'lasso', rows: Int32Array.from(rows), poly: e.poly, label: `Lasso, ${fmt(rows.length)} papers`}, opts);
 }
 async function fetchSel(sel) {
   sel.loading = true; sel.err = null; sel.t0 = performance.now(); const body = $('inspBody');
@@ -1021,6 +1238,7 @@ async function fetchSel(sel) {
     const top = (j.topics || []).find(t => t.level === 1);
     if (sel.kind === 'lasso' && top) sel.label = `Lasso, ${fmt(j.n)} papers, mostly ${top.label} (${Math.round(100 * top.own_share)}%)`;
     if (sel.kind === 'saved' && top) sel.label = `Saved: ${sel.name} (now mostly ${top.label}, ${Math.round(100 * top.own_share)}%)`;
+    renameRecent(sel);
   } catch (e) {
     if (e.offline) { sel.err = 'offline'; S.pending.add(() => fetchSel(sel)); }
     else if (e.status === 422) {  // nothing on the map: the selection leaves its slot, the inspector keeps the message
@@ -1037,14 +1255,18 @@ function setSlot(slot) {  // A / B keys and buttons: put the current selection i
   const s = S.cur || (slot === 'B' && S.focus !== S.A ? S.focus : null); if (!s) return;
   if (slot === 'A') S.A = s; else { if (s === S.A) return; S.B = s; }
   if (S.cur === s) S.cur = null; S.focus = s;
+  if (S.cmp && S.A && S.B) S.cmp = null;
   if (S.colour === 'dist' && slot === 'A') loadDist();
-  updateMask(); recolour(); renderSlots(); renderInspector(); loadAB();
+  $('insp').scrollTop = 0;
+  updateMask(); recolour(); renderSlots(); renderInspector(); loadAB(); renderHint();
 }
 function clearSlot(slot) {
   if (slot === 'A') S.A = null; else if (slot === 'B') S.B = null; else S.cur = null;
   S.dist = null; if (S.focus && ![S.A, S.B, S.cur].includes(S.focus)) S.focus = S.cur || S.B || S.A;
   if (!S.focus) S.view = 'summary';
   if (!S.A && S.colour === 'dist') setColour('growth');
+  // last selection gone: back to the preset that was showing before the first one (the question switch shows pressed again)
+  if (!S.A && !S.B && !S.cur) { const p = S.presetBefore || 1; const m = Object.entries(PRESETS[p]).every(([k, v]) => S[k] === v); if (!m) applyPreset(p, {sheet: false}); }
   updateMask(); recolour(); computeLabels(); renderSlots(); renderInspector(); renderTopicsHL();
 }
 async function loadAB() {
@@ -1080,6 +1302,7 @@ function updateWinLabel() {
   const x = winIdx(), v = volOf();
   $('winLabel').innerHTML = `<b>${rangeText(x.a, x.b)}</b> vs ${rangeText(x.pa, x.pb)} · corrected for CS growth (×${v ? v.toFixed(2) : '…'}) · last complete month ${mLabel(S.E)}`;
   $('winSum').textContent = (S.win.n ? `last ${S.win.n} months` : 'custom') + ' ▾';
+  $('winLabel').title = $('winLabel').textContent; $('winChip').textContent = (S.win.n ? `${S.win.n} mo` : 'custom') + ' ▾';
   document.querySelectorAll('[data-act=win]').forEach(b => b.setAttribute('aria-checked', String(S.win.n ? +b.dataset.n === S.win.n : b.dataset.n === 'custom')));
   render();
 }
@@ -1099,7 +1322,8 @@ async function loadPhrases() {
 async function boot() {
   $('statusHost').textContent = location.host || 'file'; if (ST) staticUI();
   if (!ST && location.protocol === 'file:') { banner('file'); $('loading').textContent = 'Map unavailable: open the page through the server.'; return; }
-  layout(); renderSlots();
+  layout(); renderSlots(); renderRecent(); renderHint();
+  if (params.get('sheet')) openSheet(params.get('sheet'), true);  // e.g. ?sheet=topics, so tools/shot.cjs --click-topic finds the rows
   const pts = loadPoints().catch(e => { $('loading').textContent = 'Could not load map points: ' + e.message; throw e; });
   if (ST) SX.ptsReady = pts;
   const dk = initDeck();
@@ -1149,12 +1373,14 @@ function setLevel(l) {
   S.sort = {col: 'default', dir: -1}; loadWindowData(); syncPreset();
 }
 const PRESETS = {1: {level: 1, colour: 'growth', grey: false, nodes: false, bridges: false, phrases: false, edgeN: 40}, 2: {level: 1, colour: 'growth', grey: true, nodes: true, bridges: true, phrases: false, edgeN: 40}};
-function applyPreset(p) {
+function applyPreset(p, opts = {}) {
   const v = PRESETS[p], lvChanged = S.level !== v.level; Object.assign(S, v);
   document.querySelector('input[name=colour][value=growth]').checked = true;
   $('tNodes').checked = v.nodes; $('tBridges').checked = v.bridges; $('tPhrases').checked = v.phrases; $('edgeN').value = v.edgeN;
   document.querySelectorAll('[data-act=level]').forEach(b => b.setAttribute('aria-checked', String(+b.dataset.l === v.level)));
-  setTab(p === 1 ? 'topics' : 'links');
+  if (opts.sheet === false) setTab(p === 1 ? 'topics' : 'links');
+  else if (p === 2) openSheet('links');  // F43.3 step 4: the connect question opens the Links sheet
+  else { setTab('topics'); if (S.sheet && S.tab !== 'topics') closeSheet(); else if (S.sheet && S.sheetByPreset) closeSheet(); }
   if (lvChanged) loadWindowData(); else { recolour(); renderLegend(); renderLinks(); computeLabels(); render(); }
   syncPreset();
 }
@@ -1162,11 +1388,34 @@ function syncPreset() {
   const m = p => Object.entries(PRESETS[p]).every(([k, v]) => S[k] === v);
   $('q1').setAttribute('aria-pressed', String(m(1))); $('q2').setAttribute('aria-pressed', String(m(2)));
   $('q1').classList.toggle('on', m(1)); $('q2').classList.toggle('on', m(2));
+  $('vConnect').setAttribute('aria-pressed', String(m(2)));
+  $('vOverview').classList.toggle('on', m(1) && !S.A && !S.B && !S.cur);
   const E = drawnEdges(); $('edgeCount').textContent = `${E.edges.length} of ${E.avail} pairs`;
 }
 function setTab(t) {
   S.tab = t; document.querySelectorAll('[data-act=tab]').forEach(b => { b.setAttribute('aria-selected', String(b.dataset.t === t)); b.tabIndex = b.dataset.t === t ? 0 : -1; });
   for (const [k, id] of [['topics', 'pTopics'], ['links', 'pLinks'], ['phrases', 'pPhrases'], ['ideas', 'pIdeas']]) $(id).hidden = k !== t;
+  syncTbar();
+}
+// ---------- tables sheet (F43.3): slides up over the lower half of the map card ----------
+function syncTbar() { document.querySelectorAll('#tbar [data-act=sheet]').forEach(b => b.setAttribute('aria-pressed', String(!!S.sheet && b.dataset.t === S.tab))); }
+function openSheet(t, byUser) {
+  setTab(t); S.sheetByPreset = !byUser;
+  if (!S.sheet) { S.sheet = true; $('mapwrap').classList.add('sheet-open'); $('tabs').inert = false; hideSugg(); if (S.mode === 'lasso') setLasso(false); queueLabels(); }
+  syncTbar();
+}
+function closeSheet() {
+  if (!S.sheet) return; S.sheet = false;
+  const f = document.activeElement; if (f && $('tabs').contains(f)) { const b = document.querySelector(`#tbar [data-t="${S.tab}"]`); b && b.focus(); }
+  $('mapwrap').classList.remove('sheet-open'); $('tabs').inert = true; syncTbar(); queueLabels();
+}
+function toggleSheet(t) { if (S.sheet && S.tab === t) closeSheet(); else openSheet(t, true); }
+function updateCounts() {
+  const T = S.topics[S.level], L = S.links;
+  $('cTopics').textContent = T ? T.topics.length : '–';
+  $('cLinks').textContent = L ? L.bridge_links.filter(e => e.status !== 'low').length : '–';
+  $('cPhrases').textContent = S.phraseList ? S.phraseList.length : '–';
+  $('cIdeas').textContent = ideaGroups().length;
 }
 function fillCustom() {
   const opts = S.MS.slice(0, S.E + 1).map((m, i) => `<option value="${i}">${mLabel(i)}</option>`).join('');  // pickers stop at the last complete month
@@ -1204,18 +1453,20 @@ function renderTopics() {
   el.innerHTML = (lv === 1 ? '<div class="tabhead">Ranked: topics with 200+ papers in the window.</div>' : '') +
     `<table id="topicsTable"><thead><tr><th>#</th>${th('topic', 'topic')}${th('area', 'area')}${th('recent', 'papers (window)', 'n')}${th('prior', 'prior', 'n')}${th('growth', 'growth vs CS', 'n')}<th>arriving sub-topics</th></tr></thead><tbody>` +
     rows.map((t, i) => `<tr tabindex="${i ? -1 : 0}" data-c="${t.c}"><td>${bRank.has(t.c) ? `<span class="rank">${bRank.get(t.c)}</span>` : ''}</td><td>${esc(t.label)}</td><td class="sub2">${esc(areaOf(lv, t.c))}</td><td class="n">${fmt(t.recent)}</td><td class="n">${fmt(t.prior)}</td><td class="n">${gCell(t)}</td><td>${lv === 0 ? '' : (t.arriving || []).map(chip).join('')}</td></tr>`).join('') + '</tbody></table>';
-  renderTopicsHL();
+  renderTopicsHL(); updateCounts();
 }
 const areaOf = (lv, c) => { if (lv === 2) return ''; let l = S.labels[lv] && S.labels[lv][c]; if (!l) return ''; if (lv === 0) { l = S.labels[1] && S.labels[1][l.parent]; if (!l) return ''; } return lblOf(2, l.parent); };
 function renderTopicsHL() { document.querySelectorAll('#topicsTable tbody tr').forEach(tr => tr.classList.toggle('hl', [S.A, S.B, S.cur].some(s => s && s.kind === 'topic' && s.level === S.level && s.c === +tr.dataset.c))); }
 const statusOf = e => e.status === 'new' ? 'new' : e.status === 'low' ? '' : e.growth >= 1.41 ? 'forming' : e.growth <= 0.71 ? 'fading' : 'steady';
 function linkGCell(e) { return e.status === 'new' ? '<span class="new" title="New link: 10 or more bridge papers in this window, fewer than 3 in the prior window.">new</span>' : e.growth == null ? '' : `<span class="gr" style="--gc:${growthHex(e.growth)}">×${e.growth.toFixed(2)}</span>`; }
 function renderLinks() {
-  const el = $('pLinks'), L = S.links;
+  const el = $('lkTable'), L = S.links;
   if (!L) { el.innerHTML = '<div class="tabhead">Loading links…</div>'; syncPreset(); return; }
   const T = (S.meta && S.meta.bridge_T) || (L.rule && L.rule.T) || 4, lv = S.level, nm = c => esc(lblOf(lv, c));
-  const main = L.bridge_links.filter(e => e.status !== 'low'), low = L.bridge_links.filter(e => e.status === 'low');
+  let main = L.bridge_links.filter(e => e.status !== 'low'), low = L.bridge_links.filter(e => e.status === 'low');
   const ranks = new Map(main.slice(0, 5).map((e, i) => [e, i + 1])), {col, dir} = S.linkSort;
+  const lf = $('lkFilter').value.trim().toLowerCase(), hit = e => !lf || lblOf(lv, e.c1).toLowerCase().includes(lf) || lblOf(lv, e.c2).toLowerCase().includes(lf);
+  if (lf) { main = main.filter(hit); low = low.filter(hit); }
   const value = e => col === 'growth' && e.status === 'new' ? Infinity : (e[col] ?? -Infinity);
   if (col !== 'default') for (const rows of [main, low]) rows.sort((a, b) => {
     const x = value(a), y = value(b); return (x < y ? -1 : x > y ? 1 : 0) * dir;
@@ -1228,13 +1479,14 @@ function renderLinks() {
   h += `<tr tabindex="-1" data-act="lowToggle" aria-expanded="${S.lowOpen}"><td colspan="9" class="muted">${S.lowOpen ? '▾' : '▸'} Pairs with fewer than 10 bridge papers (growth not computed) (${fmt(low.length)})</td></tr>`;
   if (S.lowOpen) h += low.map((e, i) => `<tr tabindex="-1" data-li="${main.length + i}"><td></td><td>${nm(e.c1)}</td><td>${nm(e.c2)}</td><td class="n">${e.n_bridge}</td><td colspan="3"></td><td class="n">${e.strength.toFixed(3)}</td><td></td></tr>`).join('');
   h += `</tbody></table><div class="tabhead" style="margin-top:8px">Phrase links use all 36 months and do not follow the window. A phrase links two topics when 10+ papers and 20%+ of its papers are in each, and it spans at most 4 topics.</div><table><tbody>` +
-    (L.phrase_links || []).map(p => `<tr><td>${nm(p.c1)} ↔ ${nm(p.c2)}</td><td class="small">${p.phrases.map(x => typeof x === 'string' ? esc(x) : `${esc(x.phrase)} <span class="muted">(${x.n1} / ${x.n2})</span>`).join(', ')}</td></tr>`).join('') + '</tbody></table>';
-  el.innerHTML = h; syncPreset();
+    (L.phrase_links || []).filter(hit).map(p => `<tr><td>${nm(p.c1)} ↔ ${nm(p.c2)}</td><td class="small">${p.phrases.map(x => typeof x === 'string' ? esc(x) : `${esc(x.phrase)} <span class="muted">(${x.n1} / ${x.n2})</span>`).join(', ')}</td></tr>`).join('') + '</tbody></table>';
+  el.innerHTML = h; syncPreset(); updateCounts();
 }
 function renderPhrases() {
   const bt = S.meta && S.meta.backtest_line; let m = bt && bt.match(/top-(\d+).*?(\d+(?:\.\d+)?)x.*?(\d+)%.*?(\d+)%/);
   $('btLine').textContent = m ? `Track record: in backtests, ${m[3]}% of the top-${m[1]} rising phrases then grew ${m[2]}× faster than CS, vs ${m[4]}% of all candidate phrases. A rising phrase is a lead, not a forecast.` : (bt ? 'Track record: ' + bt : '');
   const L = S.phraseList; if (!L) { $('phTable').innerHTML = '<div class="tabhead">Loading phrases…</div>'; return; }
+  updateCounts();
   if (S.phrasesUnavailable) { $('phTable').innerHTML = '<div class="tabhead">phrases unavailable</div>'; return; }
   const f = $('phFilter').value.trim().toLowerCase(), {col, dir} = S.phSort;
   const val = {phrase: p => p.phrase, papers: p => p.n, growth: p => p.growth ?? 0};
@@ -1242,6 +1494,7 @@ function renderPhrases() {
   const th = (k, label, cls = '') => `<th class="${cls}" aria-sort="${col === k ? (dir < 0 ? 'descending' : 'ascending') : 'none'}"><button data-act="phsort" data-k="${k}">${label}${col === k ? (dir < 0 ? ' ▼' : ' ▲') : ''}</button></th>`;
   $('phTable').innerHTML = `<table><thead><tr>${th('phrase', 'phrase')}${th('papers', 'papers', 'n')}${th('growth', 'growth', 'n')}<th>topics</th><th>draws edge</th></tr></thead><tbody>` +
     rows.map((p, i) => `<tr tabindex="${i ? -1 : 0}" data-ph="${esc(p.phrase)}"><td>${esc(p.phrase)}</td><td class="n">${fmt(p.n)}</td><td class="n">${p.growth != null ? '×' + p.growth.toFixed(1) : ''}</td><td class="small">${(p.topics || []).map(t => `${esc(t.label)} ${Math.round(100 * t.share)}%`).join(', ')}</td><td class="small">${p.eff > 4 ? `too broad (spans ${Math.round(p.eff)} topics)` : 'yes'}</td></tr>`).join('') + '</tbody></table>';
+  updateCounts();
 }
 function ideaGroups() {
   const g = new Map();
@@ -1251,22 +1504,31 @@ function ideaGroups() {
 function renderIdeasTab() {
   const gs = ideaGroups();
   $('pIdeas').innerHTML = gs.length ? `<table><thead><tr><th>date</th><th>A</th><th>B</th><th class="n">ideas</th></tr></thead><tbody>` + gs.map((g, i) => `<tr tabindex="${i ? -1 : 0}" data-ig="${esc(g.key)}"><td class="mono">${esc(String(g.created).replace('T', ' ').slice(0, 16))}</td><td>${esc(g.a || 'A')}</td><td>${esc(g.b || 'B')}</td><td class="n">${g.ideas.length}</td></tr>`).join('') + '</tbody></table>' : ST ? `<div class="tabhead">No precomputed ideas in this snapshot. Ideas between any A and B are ${LOCAL_ONLY}.</div>` : '<div class="tabhead">No ideas yet. Set A and B, then press "Ideas between A and B".</div>';
+  updateCounts();
 }
 async function loadIdeas() { try { S.ideas = await api('/ideas'); } catch (e) {} renderIdeasTab(); }
 async function loadSaved() { try { S.saved = await api('/selections'); } catch (e) {} renderSaved(); renderSlots(); }
 function renderSaved() {
-  $('savedList').innerHTML = S.saved.length ? S.saved.map(s => `<div><button data-act="loadSaved" data-id="${s.sel_id}">${esc(s.name || 'unnamed')} <span class="muted">· ${fmt(s.n)} papers · ${String(s.created).slice(0, 10)}</span></button><button data-act="delSaved" data-id="${s.sel_id}" aria-label="Delete ${esc(s.name || 'unnamed')}">×</button></div>`).join('') + '<div id="delMsg" class="small"></div>' : '<div class="muted small">none yet</div>';
+  $('savedCount').textContent = S.saved.length;
+  $('savedList').innerHTML = S.saved.length ? S.saved.map(s => `<div class="sitem"><span class="dot" style="background:var(--color-green-dk)"></span><button class="sn nu" data-act="loadSaved" data-id="${s.sel_id}" title="${esc(s.name || 'unnamed')} · ${fmt(s.n)} papers · saved ${String(s.created).slice(0, 10)}">${esc(s.name || 'unnamed')}</button><span class="sc">${fmt(s.n)}</span><span class="sbtns"><button class="nu" tabindex="-1" data-act="loadSaved" data-id="${s.sel_id}" data-slot="A" aria-label="Load ${esc(s.name || 'unnamed')} into A">A</button><button class="nu" tabindex="-1" data-act="loadSaved" data-id="${s.sel_id}" data-slot="B" aria-label="Load ${esc(s.name || 'unnamed')} into B">B</button></span><button class="sx nu" data-act="delSaved" data-id="${s.sel_id}" aria-label="Delete ${esc(s.name || 'unnamed')}">×</button></div>`).join('') + '<div id="delMsg" class="small" style="padding:0 10px"></div>' : '<div class="muted small" style="padding:0 10px">none yet</div>';
 }
 
-// ---------- slots ----------
+// ---------- selections list (current, A, B) ----------
 function renderSlots() {
-  for (const k of ['A', 'B']) {
-    const s = S[k], dd = S.saved.length ? `<details class="dd"><summary role="button" aria-label="Load a saved selection into ${k}" style="padding:0 4px">▾</summary><div>${S.saved.map(x => `<button data-act="loadSaved" data-id="${x.sel_id}" data-slot="${k}">${esc(x.name || 'unnamed')} · ${fmt(x.n)}</button>`).join('')}</div></details>` : '';
-    const n = s && (s.data ? s.data.n : s.rows ? s.rows.length : null);
-    $('slot' + k).innerHTML = `<b style="background:var(--color-${k.toLowerCase()})">${k}</b><span class="lbl${s ? ' set' : ''}" tabindex="0" title="${esc(s ? s.label : '')}">${s ? `${esc(s.label)} · ${n != null ? fmt(n) : '…'}` : 'empty'}</span>${dd}${s ? `<button data-act="clear" data-slot="${k}" aria-label="Clear ${k}">×</button>` : ''}`;
+  for (const [k, id] of [['cur', 'slotCur'], ['A', 'slotA'], ['B', 'slotB']]) {
+    const s = S[k], el = $(id);
+    if (!s) { el.innerHTML = ''; continue; }
+    const n = s.data ? s.data.n : s.rows ? s.rows.length : null;
+    const tag = k === 'cur' ? '<b class="cur" aria-hidden="true"></b>' : `<b style="background:var(--color-${k.toLowerCase()})">${k}</b>`;
+    const name = k === 'cur' ? 'current' : k;
+    const mk = to => `<button class="nu" data-act="selTo" data-who="${k}" data-to="${to}" aria-label="Make ${esc(s.label)} ${to}" title="${to === k ? 'This is ' + to : 'Make it ' + to}"${to === k ? ' aria-pressed="true"' : ''}>${to}</button>`;
+    el.title = `${name}: ${s.label}${n != null ? ' · ' + fmt(n) + ' papers' : ''}`;
+    el.innerHTML = `${tag}<span class="sn" tabindex="0" data-act="selFocus" data-who="${k}">${k === 'cur' ? '<span class="sk">current</span> ' : ''}${esc(s.label)}</span><span class="sc">${n != null ? fmt(n) : '…'}</span><span class="sbtns">${mk('A')}${mk('B')}</span><button class="sx nu" data-act="clear" data-slot="${k}" aria-label="Clear ${name}">×</button>`;
   }
+  $('selEmpty').hidden = !!(S.A || S.B || S.cur);
+  $('swapBtn').hidden = !(S.A && S.B);
   const dl = $('distLabel'), di = dl.querySelector('input'); di.disabled = !S.A; dl.title = S.A ? '' : 'Set A first';
-  syncControlTabOrder();
+  syncPreset();
 }
 
 // ---------- inspector ----------
@@ -1327,10 +1589,11 @@ function selButtons(s) {
   const both = S.A && S.B;
   let b = ST ? '' : `<button data-act="save">Save</button> `;
   if (s === S.cur) b += S.A ? `<button data-act="setB">Set as B</button> <button data-act="replaceA">Replace A</button> ` : `<button data-act="setA">Set as A</button> `;
-  else if (s === S.A && !S.B) b += '';
+  else if (s === S.A && !S.B) b += `<button data-act="compare">Compare A·B</button> `;
+  else if (s === S.B && S.A && S.B) b += `<button data-act="compare">Show A vs B</button> `;
   b += ST ? `<span title="Ideas between A and B are ${LOCAL_ONLY}"><button data-act="ideas" disabled>Ideas between A and B</button></span>`
     : `<span title="${both ? '' : 'Set A and B first'}"><button data-act="ideas" ${both ? '' : 'disabled'}>Ideas between A and B</button></span>`;
-  return `<div style="display:flex;gap:6px;flex-wrap:wrap;margin:10px 0">${b}</div>`;
+  return `<div id="selBar">${b}</div>`;
 }
 function summaryView() {
   const T1 = S.topics[1], w = T1 && T1.window;
@@ -1369,7 +1632,7 @@ function renderInspector() {
   let h = '', key = S.view;
   if (S.view === 'evidence' && S.ev) { h = evidenceView(); key += S.ev.c1 + ':' + S.ev.c2; }
   else if (S.view === 'msg') h = `<p>${esc(S.msg)}</p>`;
-  else if (s && S.view === 'sel') { h = (s.loading ? '<div class="prog on"></div><p class="muted small" id="slowLine"></p>' : '') + selView(s) + (s.data && !s.err ? selButtons(s) : ''); key += (s.sel_id || s.label); }
+  else if (s && S.view === 'sel') { h = (s.loading ? '<div class="prog on"></div><p class="muted small" id="slowLine"></p>' : '') + (s.data && !s.err ? selButtons(s) : '') + selView(s); key += (s.sel_id || s.label); }
   else { S.view = 'summary'; h = summaryView(); }
   el.innerHTML = h; el.dataset.key = key;
   if (prevKey !== key) anim(el, {opacity: [0, 1], duration: 180});
@@ -1426,7 +1689,7 @@ function nearestPhrases(q) {
 // ---------- evidence ----------
 async function openEvidence(e) {
   if (S.view !== 'evidence') S.prevView = {view: S.view, focus: S.focus};
-  S.ev = {c1: e.c1, c2: e.c2, level: S.level, link: e, data: null, page: 0}; S.view = 'evidence';
+  S.ev = {c1: e.c1, c2: e.c2, level: S.level, link: e, data: null, page: 0}; S.view = 'evidence'; $('insp').scrollTop = 0;
   if (NARROW.matches) document.body.classList.add('drawer');
   renderInspector(); renderLinks(); render();
   try { const d = await api(`/link?level=${S.level}&c1=${e.c1}&c2=${e.c2}&${winQS()}`); if (S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2) { S.ev.data = d; renderInspector(); } } catch (err) { if (ST && S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2) { S.ev.err = err.message; renderInspector(); } }
@@ -1463,18 +1726,33 @@ function toast(text, onOpen) {
   clearTimeout(t._h); t._h = setTimeout(() => { t.hidden = true; }, 6000);
 }
 
-// ---------- search ----------
+// ---------- search: one box, the composer (F43.2 steps 1-3) ----------
 const norm = s => s.toLowerCase().replace(/-/g, ' ');
+function hideSugg() { const ul = $('sugg'); ul.hidden = true; ul._i = -1; $('q').setAttribute('aria-expanded', 'false'); $('q').removeAttribute('aria-activedescendant'); }
 function suggest() {
   const v = $('q').value.trim(), ul = $('sugg'), mode = document.querySelector('input[name=smode]:checked').value;
-  if (!v || mode !== 'phrase' || !S.phraseList) { ul.hidden = true; $('q').setAttribute('aria-expanded', 'false'); return; }
-  const m = S.phraseList.filter(p => norm(p.phrase).includes(norm(v))).slice(0, 12);
-  ul.innerHTML = m.map((p, i) => `<li role="option" id="sg${i}" data-ph="${esc(p.phrase)}" aria-selected="false">${esc(p.phrase)} · ${fmt(p.recent)} papers · ×${(p.growth || 0).toFixed(1)}</li>`).join('');
-  ul.hidden = !m.length; $('q').setAttribute('aria-expanded', String(!!m.length)); ul._i = -1;
+  if (!v || document.activeElement !== $('q') && ul.hidden) return hideSugg();
+  const nv = norm(v), tops = [];
+  for (const lv of [1, 2, 0]) for (const l of Object.values(S.labels[lv] || {})) if (norm(l.label).includes(nv)) tops.push({lv, l});
+  tops.sort((a, b) => (norm(b.l.label).startsWith(nv) - norm(a.l.label).startsWith(nv)) || (a.lv === 1 ? -1 : 0) - (b.lv === 1 ? -1 : 0) || b.l.n - a.l.n);
+  const ph = mode === 'phrase' && S.phraseList ? S.phraseList.filter(p => norm(p.phrase).includes(nv)).slice(0, 8) : [];
+  let h = '', k = 0;
+  const opt = (attrs, html) => `<li role="option" id="sg${k++}" ${attrs} aria-selected="false">${html}</li>`;
+  if (tops.length) h += '<li class="gh" role="presentation">Topics</li>' + tops.slice(0, 5).map(({lv, l}) => opt(`data-topic="${lv}:${l.c}"`, `${esc(l.label)} <span class="muted">· ${LEVEL_ONE[lv].toLowerCase()} · ${fmt(l.n)} papers</span>`)).join('');
+  if (ph.length) h += '<li class="gh" role="presentation">Rising phrases</li>' + ph.map(p => opt(`data-ph="${esc(p.phrase)}"`, `${esc(p.phrase)} <span class="muted">· ${fmt(p.recent)} papers · ×${(p.growth || 0).toFixed(1)}</span>`)).join('');
+  h += '<li class="gh" role="presentation">Titles</li>' + opt(`data-title="${esc(v)}"`, `Search titles for "${esc(v)}"`);
+  ul.innerHTML = h; ul.hidden = false; $('q').setAttribute('aria-expanded', 'true'); ul._i = -1;
 }
+function pickSugg(li) {
+  hideSugg();
+  if (li.dataset.topic) { const [lv, c] = li.dataset.topic.split(':').map(Number); return selectTopic(lv, c); }
+  if (li.dataset.title != null) return runSearch(li.dataset.title, 'title');
+  $('q').value = li.dataset.ph; runSearch(li.dataset.ph, 'phrase');
+}
+function focusSearch() { closeSheet(); if (sideOpen) { sideOpen = false; layout(); } const q = $('q'); q.focus(); q.select(); if (q.value.trim()) suggest(); }
 function runSearch(text, mode) {
   text = text.trim(); if (!text) return;
-  $('sugg').hidden = true; $('q').setAttribute('aria-expanded', 'false');
+  hideSugg();
   if (mode === 'title') makeSel({query: text}, {kind: 'query', label: `title contains "${text}"`});
   else makeSel({phrase: text}, {kind: 'phrase', label: `phrase: "${text}"`});
 }
@@ -1498,77 +1776,80 @@ async function delSaved(id, confirmed) {
   catch (e) { const k = (e.message.match(/\d+/) || [])[0]; $('delMsg').textContent = e.status === 409 ? `Cannot delete: ${k || 'some'} ideas reference this selection.` : e.message; }
 }
 
-// Compact layout moves controls across DOM regions; order those groups before the map.
-// Wide layout retains its original natural tab order, including generated slot controls.
-function syncControlTabOrder() {
-  document.querySelectorAll('[data-control-tab]').forEach(el => {
-    const prior = el.dataset.controlTab;
-    if (prior === '') el.removeAttribute('tabindex'); else el.setAttribute('tabindex', prior);
-    delete el.dataset.controlTab;
-  });
-  if (!COMPACT.matches) return;
-  const groups = ['crumb', 'hname', 'qswitch', 'winDD', 'infoBtn', 'levelBox', 'colourBox', 'legendBox', 'layersBox', 'searchBox', 'compareBox', 'lassoWrap', 'savedBox'];
-  const selector = 'button, input, select, summary, [tabindex], a[href]';
-  groups.forEach((id, i) => {
-    const group = $(id), controls = group.matches(selector) ? [group] : group.querySelectorAll(selector);
-    for (const el of controls) {
-      // Summary elements can report -1 by default; only skip explicit negative tabindex values.
-      if (el.hasAttribute('tabindex') && el.tabIndex < 0) continue;
-      el.dataset.controlTab = el.getAttribute('tabindex') ?? '';
-      el.tabIndex = i + 1;
-    }
-  });
-}
-
-// ---------- layout (move control blocks between the left column and the 2-row header) ----------
+// ---------- layout (F43.4): full sidebar, icon rail (1440 and below, or collapsed), phone sheet ----------
+let sideOpen = false, sideCollapsed = lsGet('uc.side') === 'rail';
 function layout() {
-  const c = COMPACT.matches, left = $('left');
-  if (c) {
-    $('hrow1').insertBefore($('searchBox'), $('status'));
-    for (const id of ['levelBox', 'colourBox', 'layersBox', 'legendBox']) $('hrow2').append($(id));
-    $('hrow2').append($('ghLink')); // the GitHub link stays last in the header tab sequence
-    $('inspTop').append($('compareBox'), $('savedBox')); $('mapLassoSlot').append($('lassoWrap'));
-    $('layersBox').open = false; $('savedBox').open = false;
-  } else {
-    for (const id of ['levelBox', 'colourBox', 'legendBox', 'layersBox', 'searchBox', 'compareBox']) left.append($(id));
-    $('lassoHome').append($('lassoWrap')); left.append($('lassoHome'), $('savedBox'), $('leftNote'));
-    $('layersBox').open = true; $('savedBox').open = true; document.body.classList.remove('drawer');
-  }
-  syncControlTabOrder();
-  $('tabs').parentElement.style.removeProperty('--tabs-h'); tabsH = null;
-  if (DK) { queueLabels(); }
+  const phone = PHONE.matches, compact = COMPACT.matches, rail = !phone && (compact ? !sideOpen : sideCollapsed);
+  document.body.classList.toggle('rail', rail);
+  document.body.classList.toggle('side-over', sideOpen && (compact || phone));
+  const b = $('sideBtn'), open = !rail && !(phone && !sideOpen);
+  b.setAttribute('aria-expanded', String(open)); b.setAttribute('aria-label', open ? 'Collapse sidebar' : 'Expand sidebar'); b.title = open ? 'Collapse sidebar' : 'Expand sidebar';
+  if (!NARROW.matches) document.body.classList.remove('drawer');
+  if (!$('viewPop').hidden) toggleView(false);
+  if (DK) queueLabels();
 }
-COMPACT.addEventListener('change', layout); NARROW.addEventListener('change', () => document.body.classList.remove('drawer'));
+function toggleSide() {
+  if (COMPACT.matches || PHONE.matches) sideOpen = !sideOpen;
+  else { sideCollapsed = !sideCollapsed; lsSet('uc.side', sideCollapsed ? 'rail' : 'full'); }
+  layout();
+}
+for (const mq of [COMPACT, NARROW, PHONE]) mq.addEventListener('change', () => { sideOpen = false; document.body.classList.remove('drawer'); layout(); });
+function toggleView(open) {
+  const p = $('viewPop'), b = $('viewBtn'); open = open ?? p.hidden; p.hidden = !open; b.setAttribute('aria-expanded', String(open));
+  if (!open) return;
+  const r = b.getBoundingClientRect(), rail = document.body.classList.contains('rail');
+  p.style.left = Math.max(8, Math.min(innerWidth - 276, rail ? r.right + 10 : r.left)) + 'px';
+  p.style.bottom = Math.max(8, innerHeight - (rail ? r.bottom : r.top - 8)) + 'px'; p.style.top = 'auto';
+}
 
-// tabs resize handle: body 120..520, double-click collapses to the 32 px bar
-let tabsH = null, tabsPrev = null;
+// sheet resize handle: 120 px .. map height - 40; double-click closes
 (() => {
-  const h = $('handle'), app = $('app'), cur = () => $('tabs').getBoundingClientRect().height - 32;
-  h.addEventListener('pointerdown', e => { h.setPointerCapture(e.pointerId); const y0 = e.clientY, b0 = cur(); h.onpointermove = ev => { tabsH = Math.max(120, Math.min(520, b0 + y0 - ev.clientY)); app.style.setProperty('--tabs-h', (tabsH + 32) + 'px'); }; });
-  h.addEventListener('pointerup', () => { h.onpointermove = null; queueLabels(); });
-  h.addEventListener('dblclick', () => { if (tabsPrev == null) { tabsPrev = cur(); app.style.setProperty('--tabs-h', '32px'); } else { app.style.setProperty('--tabs-h', (tabsPrev + 32) + 'px'); tabsPrev = null; } queueLabels(); });
+  const h = $('handle'), tabs = $('tabs'), mw = $('mapwrap');
+  h.addEventListener('pointerdown', e => { h.setPointerCapture(e.pointerId); const y0 = e.clientY, b0 = tabs.getBoundingClientRect().height; tabs.style.transition = 'none'; h.onpointermove = ev => { tabs.style.setProperty('--sheet-h', Math.max(120, Math.min(mw.clientHeight - 40, b0 + y0 - ev.clientY)) + 'px'); }; });
+  h.addEventListener('pointerup', () => { h.onpointermove = null; tabs.style.transition = ''; queueLabels(); });
+  h.addEventListener('dblclick', closeSheet);
 })();
 
 // ---------- events ----------
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-act]');
   const pop = $('infoPop'); if (!pop.hidden && !e.target.closest('#infoPop') && !(t && t.dataset.act === 'info')) closeInfo();
+  if (!$('viewPop').hidden && !e.target.closest('#viewPop') && !(t && t.dataset.act === 'view')) toggleView(false);
+  if (!$('sugg').hidden && !e.target.closest('#searchBox')) hideSugg();
   if (!t) {
     const tr = e.target.closest('tr[data-c]'); if (tr && tr.closest('#pTopics') && !e.target.closest('button')) return selectTopic(S.level, +tr.dataset.c);
     const lr = e.target.closest('tr[data-li]'); if (lr) return openEvidence(S.linkRows[+lr.dataset.li]);
-    const pr = e.target.closest('tr[data-ph], #sugg li'); if (pr) { $('q').value = pr.dataset.ph; return runSearch(pr.dataset.ph, 'phrase'); }
+    const sg = e.target.closest('#sugg li[role=option]'); if (sg) return pickSugg(sg);
+    const pr = e.target.closest('tr[data-ph]'); if (pr) { $('q').value = pr.dataset.ph; return runSearch(pr.dataset.ph, 'phrase'); }
     const ir = e.target.closest('tr[data-ig]'); if (ir) { const g = ideaGroups().find(x => x.key === ir.dataset.ig); if (g) { S.view = 'ideas'; $('inspBody').innerHTML = `<h4 style="margin-top:0" data-i="bulb">Ideas: ${esc(g.a || 'A')} ↔ ${esc(g.b || 'B')}</h4>` + ideasHTML({ideas: g.ideas, created: g.created, window: g.window, shown: []}); if (NARROW.matches) document.body.classList.add('drawer'); } }
     return;
   }
   const a = t.dataset.act, d = t.dataset;
   if (t.tagName === 'A') e.preventDefault();
+  if (sideOpen && t.closest('#verbs')) { sideOpen = false; layout(); }  // rail overlay / phone sheet closes after a verb
   switch (a) {
     case 'preset': applyPreset(+d.p); break;
+    case 'side': toggleSide(); break;
+    case 'menu': sideOpen = true; layout(); break;
+    case 'scrim': sideOpen = false; layout(); break;
+    case 'overview': overview(); break;
+    case 'focusSearch': focusSearch(); break;
+    case 'compare': startCompare(); break;
+    case 'connections': applyPreset($('q2').getAttribute('aria-pressed') === 'true' ? 1 : 2); break;
+    case 'tour': document.dispatchEvent(new CustomEvent('uc:tour', {detail: {tour: 'first'}})); break;  // F42 adds the cue cards
+    case 'view': toggleView(); break;
+    case 'sheet': toggleSheet(d.t); break;
+    case 'sheetClose': closeSheet(); break;
+    case 'drawerClose': document.body.classList.remove('drawer'); break;
+    case 'winChip': { const w = $('winDD'); w.open = !w.open; if (w.open) w.querySelector('summary').focus(); break; }
+    case 'selTo': selTo(d.who, d.to); break;
+    case 'selFocus': { const s2 = d.who === 'cur' ? S.cur : S[d.who]; if (s2) { S.focus = s2; S.view = 'sel'; S.ev = null; $('insp').scrollTop = 0; if (NARROW.matches) document.body.classList.add('drawer'); renderInspector(); } break; }
+    case 'recent': runRecent(+d.i, d.slot); break;
+    case 'recentX': RECENT.splice(+d.i, 1); lsSet('uc.recent', JSON.stringify(RECENT)); renderRecent(); break;
     case 'win': if (d.n === 'custom') { $('customBox').hidden = false; } else { $('winDD').open = false; setWindow({n: +d.n}); } break;
     case 'winApply': $('winDD').open = false; $('customBox').hidden = true; setWindow({a: +$('cFrom').value, b: +$('cTo').value}); break;
     case 'info': $('infoPop').hidden ? openInfo() : closeInfo(); break;
     case 'level': setLevel(+d.l); break;
-    case 'tab': setTab(d.t); break;
     case 'sort': S.sort = {col: d.k, dir: S.sort.col === d.k ? -S.sort.dir : -1}; renderTopics(); break;
     case 'linksort': S.linkSort = {col: d.k, dir: S.linkSort.col === d.k ? -S.linkSort.dir : -1}; renderLinks(); document.querySelector(`#linksTable [data-k="${d.k}"]`).focus(); break;
     case 'phsort': S.phSort = {col: d.k, dir: S.phSort.col === d.k ? -S.phSort.dir : -1}; renderPhrases(); break;
@@ -1581,12 +1862,13 @@ document.addEventListener('click', e => {
     case 'replaceA': setSlot('A'); break;
     case 'clear': clearSlot(d.slot); break;
     case 'swap': { const x = S.A; S.A = S.B; S.B = x; if (S.colour === 'dist') loadDist(); S.dist = S.dist && S.A && S.B ? {...S.dist, key: S.A.sel_id + ':' + S.B.sel_id} : null; renderSlots(); render(); renderAB(); break; }
+    case 'tab': setTab(d.t); break;
     case 'lasso': setLasso(S.mode !== 'lasso'); break;
     case 'zin': flyTo({zoom: VS.zoom + 1}, 150); break;
     case 'zout': flyTo({zoom: VS.zoom - 1}, 150); break;
     case 'fit': flyTo(fitView(), 300); break;
     case 'save': if (S.focus) { S.focus.saveOpen = true; S.focus.saveFocused = false; renderInspector(); } break;
-    case 'loadSaved': { const dd = t.closest('details.dd') || (COMPACT.matches && t.closest('#savedBox')); if (dd) dd.open = false; } loadSavedSel(d.id, d.slot); break;
+    case 'loadSaved': { const dd = t.closest('details.dd'); if (dd) dd.open = false; } loadSavedSel(d.id, d.slot); break;
     case 'delSaved': delSaved(d.id, false); break;
     case 'delConfirm': delSaved(d.id, true); break;
     case 'zoomMatches': if (S.focus && S.focus.rows) fitRows(S.focus.rows); break;
@@ -1609,12 +1891,13 @@ document.addEventListener('change', e => {
   else if (t.id === 'tBridges') { S.bridges = t.checked; render(); syncPreset(); }
   else if (t.id === 'tPhrases') { S.phrases = t.checked; render(); syncPreset(); }
   else if (t.id === 'cFrom' || t.id === 'cTo') checkCustom();
-  else if (t.name === 'smode') suggest();
+  else if (t.name === 'smode') { if ($('q').value.trim()) { $('q').focus(); suggest(); } }
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'edgeN') { S.edgeN = +e.target.value; render(); syncPreset(); }
   else if (e.target.id === 'q') suggest();
   else if (e.target.id === 'phFilter') renderPhrases();
+  else if (e.target.id === 'lkFilter') renderLinks();
 });
 function openInfo() {
   const m = S.meta || {}, T = m.bridge_T || 4, v = volOf(), pop = $('infoPop'), r = $('infoBtn').getBoundingClientRect();
@@ -1632,27 +1915,32 @@ function openInfo() {
   pop.style.left = Math.max(8, Math.min(innerWidth - 368, r.left - 170)) + 'px'; pop.style.top = (r.bottom + 6) + 'px'; pop.hidden = false; $('infoBtn').setAttribute('aria-expanded', 'true');
 }
 function closeInfo() { $('infoPop').hidden = true; $('infoBtn').setAttribute('aria-expanded', 'false'); }
-function escLayer() {  // innermost first
+function escLayer() {  // innermost first; F43.5: sheet -> lasso/compare -> current -> B -> A -> overview preset
   if (!$('infoPop').hidden) return closeInfo();
-  const dd = document.querySelector('details.dd[open], #layersBox[open]:not(#left #layersBox), #savedBox[open]:not(#left #savedBox)'); if (dd && COMPACT.matches || dd && dd.classList.contains('dd')) { dd.open = false; return; }
-  if (!$('sugg').hidden) { $('sugg').hidden = true; return; }
+  if (!$('viewPop').hidden) { toggleView(false); return $('viewBtn').focus(); }
+  const dd = document.querySelector('details.dd[open]'); if (dd) { dd.open = false; return; }
+  if (!$('sugg').hidden) return hideSugg();
+  if (sideOpen) { sideOpen = false; return layout(); }
+  if (S.sheet) return closeSheet();
   if (S.mode === 'lasso') return setLasso(false);
+  if (S.cmp) { S.cmp = null; return renderHint(); }
   if (NARROW.matches && document.body.classList.contains('drawer')) return document.body.classList.remove('drawer');
   if (S.view === 'evidence') return closeEvidence();
   if (S.view === 'msg' || S.view === 'ideas') { S.view = S.focus ? 'sel' : 'summary'; return renderInspector(); }
   if (S.cur) return clearSlot('cur');
   if (S.B) return clearSlot('B');
   if (S.A) return clearSlot('A');
+  const p = S.presetBefore || 1; if ($(p === 2 ? 'q2' : 'q1').getAttribute('aria-pressed') !== 'true') applyPreset(p, {sheet: false});
 }
 document.addEventListener('keydown', e => {
   const t = e.target, inText = t.matches && t.matches('input[type=text],input[type=search],textarea,select');
   if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); if (!ST && S.focus && S.view === 'sel') { S.focus.saveOpen = true; S.focus.saveFocused = false; renderInspector(); } return; }
   if (t.id === 'saveName') { if (e.key === 'Enter') doSave(t.value); else if (e.key === 'Escape') { S.focus.saveOpen = false; S.focus.saveFocused = false; renderInspector(); } e.stopPropagation(); return; }
   if (t.id === 'q') {
-    const ul = $('sugg'), items = [...ul.querySelectorAll('li')];
-    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !ul.hidden && items.length) { e.preventDefault(); ul._i = Math.max(0, Math.min(items.length - 1, (ul._i ?? -1) + (e.key === 'ArrowDown' ? 1 : -1))); items.forEach((li, i) => li.setAttribute('aria-selected', String(i === ul._i))); t.setAttribute('aria-activedescendant', 'sg' + ul._i); return; }
-    if (e.key === 'Enter') { const pick = !ul.hidden && ul._i >= 0 ? items[ul._i].dataset.ph : null; if (pick) t.value = pick; runSearch(t.value, document.querySelector('input[name=smode]:checked').value); return; }
-    if (e.key === 'Escape') { e.preventDefault(); ul.hidden = true; ul._i = -1; t.value = ''; t.setAttribute('aria-expanded', 'false'); t.removeAttribute('aria-activedescendant'); t.blur(); return; }
+    const ul = $('sugg'), items = [...ul.querySelectorAll('li[role=option]')];
+    if ((e.key === 'ArrowDown' || e.key === 'ArrowUp') && !ul.hidden && items.length) { e.preventDefault(); ul._i = Math.max(0, Math.min(items.length - 1, (ul._i ?? -1) + (e.key === 'ArrowDown' ? 1 : -1))); items.forEach((li, i) => li.setAttribute('aria-selected', String(i === ul._i))); t.setAttribute('aria-activedescendant', items[ul._i].id); items[ul._i].scrollIntoView({block: 'nearest'}); return; }
+    if (e.key === 'Enter') { if (!ul.hidden && ul._i >= 0 && items[ul._i]) return pickSugg(items[ul._i]); runSearch(t.value, document.querySelector('input[name=smode]:checked').value); return; }
+    if (e.key === 'Escape') { e.preventDefault(); if (!ul.hidden) return hideSugg(); t.value = ''; hideSugg(); t.blur(); return; }
     return;
   }
   if (inText) { if (e.key === 'Escape') t.blur(); return; }
@@ -1664,13 +1952,14 @@ document.addEventListener('keydown', e => {
     const i = tr ? rows.indexOf(tr) : -1, j = Math.max(0, Math.min(rows.length - 1, i + (e.key === 'ArrowDown' ? 1 : -1)));
     rows.forEach(r => r.tabIndex = -1); rows[j].tabIndex = 0; rows[j].focus(); return;
   }
-  if ((tr || th) && e.key === 'Escape') { e.preventDefault(); t.blur(); return; }
+  if ((tr || th) && e.key === 'Escape') { e.preventDefault(); if (S.sheet && t.closest('#tabs')) return closeSheet(); t.blur(); return; }
   if (tr && e.key === 'Enter') { e.preventDefault(); tr.click(); return; }
   if (e.key === 'Escape') { if (S.mode === 'lasso' && lassoPts) { setLasso(false); return; } escLayer(); return; }
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const onMap = t === $('map'), k = e.key;
-  if (k === '/') { e.preventDefault(); if (COMPACT.matches || true) $('q').focus(); return; }
+  if (k === '/') { e.preventDefault(); return focusSearch(); }
   if (k === 'l' || k === 'L') return setLasso(S.mode !== 'lasso');
+  if (k === 'c' || k === 'C') return startCompare();
   if (k === 'a' || k === 'A') return setSlot('A');
   if (k === 'b' || k === 'B') return setSlot('B');
   if (k === '1' || k === '2') return applyPreset(+k);
