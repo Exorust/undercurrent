@@ -2,10 +2,11 @@
 # Weekly job (launchd fires it daily at 04:00; it works only when the last success is 6+ days old).
 #   1. harvest the last 14 days of arXiv CS and embed new papers (every week)
 #   1b. SOFT (a failure is logged and notified, the run continues on the last good data):
+#       enrich --refresh (citation counts + venue for rows older than 6 days, every week),
 #       institutions (OpenAlex affiliations for every paper not yet looked up), then load_extra (merge data/raw/* into the DB)
 #       institutions and refs exit 3 when ids failed after retries: `soft` notifies, successful chunks are kept
 #   2. only when a new month has completed since the published snapshot:
-#       SOFT enrich --refresh (citation counts) and refs (Semantic Scholar references), then full pipeline
+#       SOFT refs (Semantic Scholar references), then full pipeline
 #       (run_all.sh, which runs load_extra again after map, then links and citations), static export with ideas for the top 20 links,
 #       size checks, deploy to Vercel
 # A failed hard step deploys nothing: the public page keeps the last good snapshot. Failures raise a macOS notification.
@@ -21,13 +22,13 @@ if [ -n "$UC_DRY" ]; then
   echo "step: embed new papers: timeout 10800 radar.enrich --months 2 (up to 3 attempts)"
   echo "step: affiliations (soft): timeout 1800 radar.institutions (papers not yet looked up)"
   echo "step: load_extra (soft): timeout 1800 radar.load_extra"
+  echo "step: citation refresh (soft): timeout 10800 radar.enrich --refresh --older-days 6"
   echo "step: last-complete-month check vs published snapshot (no new month: stamp and stop)"
-  echo "step (new month only): enrich --refresh (soft): timeout 7200 radar.enrich --refresh"
   echo "step (new month only): refs (soft): timeout 28800 radar.refs"
   echo "step (new month only): full pipeline: timeout 10800 ./run_all.sh (includes load_extra and citations)"
   echo "step (new month only): export: timeout 3600 radar.export --out site --ideas 20"
   echo "step (new month only): preview, snapshot checks"
-  echo "step (new month only): deploy: timeout 1800 vercel deploy site --prod --yes (skipped when UC_NO_DEPLOY is set)"
+  echo "step (new month only): deploy: timeout 1800 vercel deploy site --prod --yes --archive=tgz (skipped when UC_NO_DEPLOY is set)"
   exit 0
 fi
 
@@ -64,6 +65,8 @@ say "affiliations (institutions, papers not yet looked up)"
 soft "institutions" timeout 1800 $PY -m radar.institutions
 say "load_extra"
 soft "load_extra" timeout 1800 $PY -m radar.load_extra
+say "refresh citation counts"
+soft "enrich --refresh" timeout 10800 $PY -m radar.enrich --refresh --older-days 6
 
 # last complete month now (same rule as serve.py / links.py) vs the one the published snapshot ends at
 now=$($PY - <<'EOF'
@@ -79,8 +82,6 @@ pub=$($PY -c "import json;print(json.load(open('site/data/meta.json'))['windows'
 say "last complete month $now; published snapshot ends $pub"
 if [ "$now" = "$pub" ]; then say "no new complete month; snapshot unchanged"; touch "$STAMP"; exit 0; fi
 
-say "new month: refresh citation counts"
-soft "enrich --refresh" timeout 7200 $PY -m radar.enrich --refresh
 say "new month: references"
 soft "refs" timeout 28800 $PY -m radar.refs
 say "new month: full pipeline"
@@ -107,6 +108,6 @@ EOF
 if [ -n "$UC_NO_DEPLOY" ]; then say "UC_NO_DEPLOY set; not deploying"; touch "$STAMP"; exit 0; fi
 say "deploy"
 mkdir -p site/.vercel && cp tools/vercel-project.json site/.vercel/project.json || fail "vercel project link (tools/vercel-project.json)"
-timeout 1800 vercel deploy site --prod --yes || fail "vercel deploy"
+timeout 1800 vercel deploy site --prod --yes --archive=tgz || fail "vercel deploy"
 touch "$STAMP"
 say "done"; notify "Published the $now snapshot"
