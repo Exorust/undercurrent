@@ -297,9 +297,9 @@ kbd{font:500 12px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--color-mu
 #mapwrap{grid-row:3;grid-column:2;position:relative;overflow:hidden;background:var(--color-map);border-radius:16px;min-width:0;min-height:0}
 #insp{grid-row:1/4;grid-column:3;min-height:0;position:relative}
 #drawerClose{display:none!important;position:sticky;top:8px;margin:8px 8px -38px auto;z-index:4}
-#legendBox{position:absolute;left:10px;top:10px;z-index:5;width:300px;height:24px;padding:2px 6px;border-radius:10px;background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-hair)}
+#legendBox{position:absolute;left:10px;top:10px;z-index:5;width:340px;height:auto;padding:2px 6px;border-radius:10px;background:var(--color-surface);box-shadow:inset 0 0 0 1px var(--color-hair)}
 #legendHead{display:none}
-#legendBox .rows{display:flex;height:20px;gap:3px;align-items:center}
+#legendBox .rows{display:flex;min-height:20px;gap:8px;align-items:center}
 #legendBox .row{flex:1 1 auto;display:flex;align-items:center;justify-content:center;gap:3px;font-size:12px;line-height:20px}
 #legendBox .row span.t,#legendBox .row .lnum{display:none}
 #legendBox s{display:inline-block;width:12px;height:10px;text-decoration:none;flex:none;border-radius:3px}
@@ -308,6 +308,10 @@ kbd{font:500 12px/1 "JetBrains Mono",ui-monospace,monospace;color:var(--color-mu
 #legendBox.lightness .row .lnum{display:inline;font-size:12px} #legendBox.lightness .row em{display:none}
 #legendBox .txt{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:20px;color:var(--color-muted)}
 #legendBox .row s[style*=gradient]{width:90px!important}
+#legendBox .gscale{flex:1 1 auto;min-width:0;display:flex;flex-direction:column;gap:2px;padding:2px 2px 0}
+#legendBox .gbar{display:flex;height:10px;border-radius:5px;overflow:hidden}
+#legendBox .gbar span{flex:1}
+#legendBox .gk{display:flex;justify-content:space-between;font-size:11px;line-height:13px;color:var(--color-muted);white-space:nowrap}
 #caption{position:absolute;left:12px;top:40px;bottom:auto;right:50px;font-size:12px;color:var(--color-muted);pointer-events:none;z-index:4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #hintWrap{position:absolute;top:8px;left:322px;right:46px;z-index:7;display:flex;justify-content:center;pointer-events:none}
 #hint{height:28px;line-height:26px;padding:0 14px;border-radius:9999px;font-size:12px;background:var(--color-surface);border:1px solid var(--color-hair);color:var(--color-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;box-shadow:0 6px 20px rgba(0,0,0,.08)}
@@ -453,7 +457,7 @@ tr.hl{background:var(--color-selected)}
   #searchBox input#q{flex:1 1 calc(100% - 30px);height:34px}
   #cchips{flex:1 1 100%}
   #insp{left:0;right:0;top:auto;bottom:0;width:auto;height:64vh;border-radius:16px 16px 0 0;transform:translateY(calc(100% + 12px))}
-  #legendBox{width:calc(100% - 56px);max-width:300px}
+  #legendBox{width:calc(100% - 56px);max-width:340px}
   #hintWrap{left:10px;right:10px;top:40px}
   #caption{display:none}
   #tabs{height:var(--sheet-h,60%)}
@@ -1878,10 +1882,13 @@ function renderLegend() {
   if (S.colour === 'dist' && !S.grey) { rows.innerHTML = `<div class="row"><s style="background:linear-gradient(90deg,#e8e8e8,#5f5f5f);width:120px"></s><span class="t">nearest 5% → farthest 50%</span></div>`; return; }
   const cnt = {nd: 0, new: 0}; for (let i = 0; i < 7; i++) cnt[i] = 0;
   if (T) for (const t of T.topics) cnt[clusterInfo(t).step]++;
-  const sw = S.lightness ? LG : G; let h = '';
-  for (let i = 6; i >= 0; i--) h += `<div class="row" title="${STEP_TXT[i]}"><s style="background:${sw[i]}"></s>${S.lightness ? `<span class="lnum mono">${i + 1}</span>` : ''}<span class="t">${STEP_TXT[i]}</span><em>${T ? cnt[i] : '–'}</em></div>`;
-  h += `<div class="row" title="new in this window"><span class="new">new</span><span class="t">new in this window</span><em>${T ? cnt.new : '–'}</em></div>`;
-  h += `<div class="row" title="too few papers to rate"><s style="background:${ND}"></s><span class="t">too few papers to rate</span><em>${T ? cnt.nd : '–'}</em></div>`;
+  // growth as one gradient bar, slower (left) to faster (right); per-step topic counts in each segment's tooltip
+  const sw = S.lightness ? LG : G, n = i => T ? cnt[i] : '–';
+  let h = `<div class="gscale"><div class="gbar" style="background:linear-gradient(90deg,${sw.join(',')})">`;
+  for (let i = 0; i < 7; i++) h += `<span title="${STEP_TXT[i]}: ${n(i)} topics"></span>`;
+  h += `</div><div class="gk"><span>slower than CS</span><span>same</span><span>faster</span></div></div>`;
+  h += `<div class="row" title="new in this window: ${T ? cnt.new : '–'} topics"><span class="new">new</span></div>`;
+  h += `<div class="row" title="too few papers to rate: ${T ? cnt.nd : '–'} topics"><s style="background:${ND}"></s><em>few papers</em></div>`;
   rows.innerHTML = h;
 }
 function setColour(v) {

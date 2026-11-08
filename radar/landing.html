@@ -113,14 +113,19 @@ nav.top .btn .short { display: none; }
 .foot-note { margin-top: 20px; font: 400 12px/1.6 var(--mono); color: var(--graphite); }
 .empty { color: var(--graphite); font: 400 13px/1.4 var(--mono); padding: 12px 0; }
 
+/* map preview */
+.frame { display: block; margin-top: 48px; overflow: hidden; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,.08); }
+.frame img { display: block; width: 100%; height: auto; transition: transform .3s; }
+.frame:hover img { transform: scale(1.01); }
+.frame[hidden] { display: none; }
+
 /* stats */
 .statsec { padding: 0 0 80px; border: 0; }
-.stats { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); max-width: 1040px; margin: 0 auto; overflow: hidden; }
-.stat { padding: 22px 24px; border-left: 1px solid var(--line); }
-.stat:first-child { border-left: 0; }
+.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; max-width: 1200px; margin: 0 auto; background: none; border: 0; box-shadow: none; padding: 0; }
+.stat { display: flex; align-items: baseline; gap: 8px; }
 .stat[hidden] { display: none; }
-.stat .v { font: 400 32px/1.1 var(--sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.stat .label { margin-top: 8px; display: block; letter-spacing: 0; font-size: 13px; }
+.stat .v { font: 400 26px/1.1 var(--sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat .label { font: 400 14px/1.3 var(--sans); letter-spacing: 0; color: var(--graphite); white-space: nowrap; }
 
 /* reading the map */
 .read { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 32px; }
@@ -185,11 +190,6 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   .navright { margin-left: auto; }
 }
 @media (max-width: 860px) {
-  .stats { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .stat { border-left: 0; border-top: 1px solid var(--line); }
-  .stat:nth-child(even) { border-left: 1px solid var(--line); }
-  .stat:nth-child(-n+2) { border-top: 0; }
-  .stat:last-child:nth-child(odd) { grid-column: 1 / -1; border-left: 0; }
   .now, .method, .read, .agent { grid-template-columns: 1fr; }
   .agent { gap: 16px; }
   section { padding: 64px 0; }
@@ -209,8 +209,6 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   .navright { gap: 10px; }
   nav.top .btn .long { display: none; }
   nav.top .btn .short { display: inline; }
-  .stat { padding: 18px 16px; }
-  .stat .v { font-size: 26px; }
   .cta .btn { flex: 1 1 100%; justify-content: center; }
   .cmd { flex-direction: column; }
   .cmd button { padding: 10px 16px; justify-content: center; }
@@ -237,7 +235,6 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     </div>
     <div class="navlinks">
       <a href="#now">Snapshot</a>
-      <a href="#method">Method</a>
       <a href="#agents">Agents</a>
     </div>
     <div class="navright">
@@ -262,6 +259,9 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     </div>
     <p class="mnote">The map downloads about 6 MB and works best on a laptop.</p>
     <div class="note">Free · No signup · Built by Chandrahas Aroori</div>
+    <a class="tile frame fade" href="map/" aria-label="Open the map">
+      <img src="preview.png" width="1600" height="1000" alt="The undercurrent map: about 459,000 papers drawn as points and grouped into topics, coloured from blue (shrinking) to orange (growing)" onerror="this.parentNode.hidden=true">
+    </a>
   </div>
 </header>
 
@@ -292,88 +292,14 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
 
 <section class="statsec" aria-label="Numbers in this snapshot">
   <div class="wrap">
-    <div class="tile stats fade" id="stats">
-      <div class="stat"><div class="v" data-s="n">459,249</div><span class="label">Papers</span></div>
-      <div class="stat"><div class="v" data-s="topics">114</div><span class="label">Topics</span></div>
-      <div class="stat"><div class="v" data-s="subs">373</div><span class="label">Sub-topics</span></div>
-      <div class="stat"><div class="v" data-s="months">36</div><span class="label">Months covered</span></div>
-      <div class="stat"><div class="v" data-s="arriving">15</div><span class="label">Arriving sub-topics, last 6 months</span></div>
-      <div class="stat"><div class="v" data-s="inst" data-suffix=" %">85 %</div><span class="label">Affiliations known</span></div>
-      <div class="stat" id="codeStat" hidden><div class="v" data-s="code" data-suffix=" %">0 %</div><span class="label">With code</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="read">
-  <div class="wrap">
-    <div class="fade">
-      <div class="kicker">On the map</div>
-      <h2>Reading the map</h2>
-    </div>
-    <div class="read">
-      <div class="tile fade">
-        <h3>Colour is growth</h3>
-        <div class="scale" aria-hidden="true">
-          <span style="background:#2c5f9e"></span><span style="background:#6c93c3"></span><span style="background:#a9bcd4"></span><span style="background:#a6a6a6"></span><span style="background:#e5b183"></span><span style="background:#df8743"></span><span style="background:#c4501b"></span>
-        </div>
-        <div class="scale-k" aria-hidden="true"><span>slower</span><span>keeps pace</span><span>faster</span></div>
-        <p><span class="swatch" style="background:#df8743"></span>Orange grows faster than CS, <span class="swatch" style="background:#6c93c3"></span>blue slower, <span class="swatch" style="background:#a6a6a6"></span>grey keeps pace.</p>
-      </div>
-      <div class="tile fade">
-        <h3>Keys and window</h3>
-        <p><strong>Shortcuts:</strong> <kbd>2</kbd> links · <kbd>L</kbd> lasso · <kbd>[</kbd> <kbd>]</kbd> window</p>
-        <p>Growth compares the last 6 months with the 6 before. Switch to 3 or 12 months on the map.</p>
-      </div>
-      <div class="tile fade">
-        <h3>Guided tours</h3>
-        <ul class="tours">
-          <li><a href="map/?tour=arriving">Find what is arriving →</a></li>
-          <li><a href="map/?tour=connect">See how two fields connect →</a></li>
-          <li><a href="map/?tour=compare">Compare a region with your field →</a></li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="method">
-  <div class="wrap">
-    <div class="fade">
-      <div class="kicker">Method</div>
-      <h2>How the numbers are made</h2>
-      <p class="lead">Every number on the map comes from one of these rules. They are simple on purpose, so you can check them.</p>
-    </div>
-    <div class="method">
-      <div class="tile rule fade">
-        <span class="label">Growth</span>
-        <p>Papers in the window against papers in the window before it, divided by the growth of all CS over the same months. 1.0 means a topic keeps pace with the field.</p>
-        <code class="well formula">growth = ((papers now + 1) / (papers before + 1)) / CS growth</code>
-      </div>
-      <div class="tile rule fade">
-        <span class="label">Arriving sub-topic</span>
-        <p>A sub-topic whose recent papers make up a clearly larger share of it than they do of the whole corpus.</p>
-        <code class="well formula">≥ 30 papers in the window and window share ≥ 1.6 × corpus share</code>
-      </div>
-      <div class="tile rule fade">
-        <span class="label">Bridge paper and link strength</span>
-        <p>A paper is a bridge when its nearest neighbours fall in two topics at once. A link's strength is its bridge count scaled by the size of both topics, so two big topics do not link just because they are big.</p>
-        <code class="well formula">bridge: ≥ 5 of its 14 nearest neighbours in each topic<br>strength = bridges / √(n₁ × n₂)</code>
-      </div>
-      <div class="tile rule fade">
-        <span class="label">Map and topics</span>
-        <p>Each paper's title and abstract become a SPECTER2 embedding from Semantic Scholar. A 15-neighbour graph is laid out with UMAP, and HDBSCAN groups the layout into topics and sub-topics.</p>
-        <code class="well formula">SPECTER2 → 15-neighbour graph → UMAP → HDBSCAN</code>
-      </div>
-      <div class="tile rule fade">
-        <span class="label">Citations</span>
-        <p>Citation percentile compares a paper with others submitted the same month; counts come from Semantic Scholar and are refreshed monthly.</p>
-      </div>
-    </div>
-    <div class="tile honest fade">
-      <span class="label">How much to trust it</span>
-      <p><strong>Topic growth and links are descriptive.</strong> They report what happened in the last window. They are not forecasts, and they have not been backtested yet.</p>
-      <p>The one signal I have backtested is rising phrases. Going back to four earlier cutoffs, the top 50 rising phrases went on to grow 1.5× faster than CS in 36 % of cases, against a 27 % baseline. That is a real but modest lift. Use the map to decide what to read first.</p>
-      <p class="q" id="bt">Backtest: top-50 phrases grew 1.5x faster than CS in 36% of cases vs 27% baseline (pooled, 4 cutoffs)</p>
+    <div class="stats fade" id="stats">
+      <div class="stat"><div class="v" data-s="n">459,249</div><span class="label">papers</span></div>
+      <div class="stat"><div class="v" data-s="topics">114</div><span class="label">topics</span></div>
+      <div class="stat"><div class="v" data-s="subs">373</div><span class="label">sub-topics</span></div>
+      <div class="stat"><div class="v" data-s="months">36</div><span class="label">months</span></div>
+      <div class="stat"><div class="v" data-s="arriving">15</div><span class="label">arriving sub-topics (6 months)</span></div>
+      <div class="stat"><div class="v" data-s="inst" data-suffix=" %">85 %</div><span class="label">with affiliations</span></div>
+      <div class="stat" id="codeStat" hidden><div class="v" data-s="code" data-suffix=" %">0 %</div><span class="label">with code</span></div>
     </div>
   </div>
 </section>
@@ -414,7 +340,7 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     <div class="tile fcols">
       <div>
         <span class="label">Undercurrent</span>
-        <ul><li><a href="map/">Open the map</a></li><li><a href="#now">Latest snapshot</a></li><li><a href="#method">Method</a></li></ul>
+        <ul><li><a href="map/">Open the map</a></li><li><a href="#now">Latest snapshot</a></li></ul>
       </div>
       <div>
         <span class="label">By Chandrahas Aroori</span>
@@ -559,7 +485,6 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
         '<span class="s">' + fmt(b.n_bridge_prior) + (b.n_bridge_prior === 1 ? ' bridge paper' : ' bridge papers') + ' in the 6 months before</span></a></li>';
     }));
     document.getElementById('winnote').textContent = 'Window: ' + ym(w.from) + ' to ' + ym(w.to) + ' against the 6 months before, corrected for CS growth (×' + w.vol_ratio.toFixed(2) + '). Switch to 3 or 12 months on the map.';
-    if (m.backtest_line) document.getElementById('bt').textContent = 'Backtest: ' + m.backtest_line;
   }).catch(function (e) {
     console.warn('undercurrent: could not read the data files', e);
     document.getElementById('pill').textContent = 'Updated monthly from arXiv';
