@@ -48,8 +48,23 @@ def parse(xml_bytes):
         rows.append((pid, f"20{pid[:2]}-{pid[2:4]}-01", e.findtext("a:published", "", NS)[:10] or None, e.findtext("a:updated", "", NS)[:10] or None,
                      sq(e.findtext("a:title", "", NS)), sq(e.findtext("a:summary", "", NS)),
                      prim.get("term") if prim is not None else (cats[0] if cats else None), cats,
-                     [sq(a.findtext("a:name", "", NS)) for a in e.iterfind("a:author", NS)]))
+                     [sq(a.findtext("a:name", "", NS)) for a in e.iterfind("a:author", NS)],
+                     sq(e.findtext("x:comment", "", NS)) or None))
     return total, rows
+
+
+def upsert(con, rows):
+    """Replace-by-id upsert; a None comment never overwrites an existing non-null one (works with or without a PK)."""
+    miss = [r[0] for r in rows if r[-1] is None]
+    old = {}
+    if miss:
+        con.execute("create temp table if not exists _ids(id text)"); con.execute("delete from _ids")
+        con.executemany("insert into _ids values (?)", [(i,) for i in miss])
+        old = dict(con.execute("select p.id, p.comment from papers p join _ids using (id) where p.comment is not null").fetchall())
+    rows = [r if r[-1] is not None or r[0] not in old else r[:-1] + (old[r[0]],) for r in rows]
+    con.executemany("delete from papers where id = ?", [(r[0],) for r in rows])  # replace by id, also on tables without a PK (dev copy)
+    con.executemany("insert into papers (id, submitted, created, updated, title, abstract, primary_cat, categories, authors, comment, harvested_at) "
+                    "values (?,?,?,?,?,?,?,?,?,?,now())", rows)
 
 
 def window(d0, d1, cats=CATS):
@@ -77,7 +92,7 @@ def main():
     ap.add_argument("--cats", default=CATS, help="comma-separated arXiv categories")
     a = ap.parse_args()
     RAW.mkdir(parents=True, exist_ok=True)
-    con = duckdb.connect(str(DB)); con.execute(SCHEMA)
+    con = duckdb.connect(str(DB)); con.execute(SCHEMA); con.execute("alter table papers add column if not exists comment text")
     d, stop, kept = dt.date.fromisoformat(a.frm), dt.date.fromisoformat(a.until) if a.until else dt.date.today(), 0
     while d <= stop:
         d1 = min(d + dt.timedelta(days=a.days - 1), stop)
@@ -85,7 +100,7 @@ def main():
         if not mark.exists():
             total, rows = window(d, d1, a.cats)
             if rows:
-                con.executemany("insert or replace into papers values (?,?,?,?,?,?,?,?,?,now())", rows)
+                upsert(con, rows)
             kept += len(rows); mark.touch()
             print(f"{d}..{d1}: {len(rows)}/{total} (run total {kept})", file=sys.stderr, flush=True)
         d = d1 + dt.timedelta(days=1)

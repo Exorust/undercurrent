@@ -1,6 +1,9 @@
 #!/bin/sh
 # Full pipeline after harvest. Each stage logs to data/log/<stage>.log; the script stops on the first failed stage.
 # Signals and backtest come first because they need no embeddings.
+# Stages in order: signals, backtest-<cutoff> x4, bteval (soft), hn (soft), enrich, map, links,
+#   load_extra (merges data/raw/* Parquet into the DB), citations (citation percentiles and per-topic signals; needs
+#   paper_topics from map, so it runs after links), merge, report.
 # Lock (arch §5.3): data/run.lock holds this shell's pid, removed on exit; refuses while data/serve.pid names a live radar.serve.
 # RADAR_DRY=1 replaces every stage with `sleep 1` (lock tests only; touches no database).
 cd "$(dirname "$0")"
@@ -49,6 +52,8 @@ stage hn       $PY -m radar.hn --top 40 || echo "(hn check failed; continuing)"
 stage enrich   enrich_retry || exit 1
 stage map      $PY -m radar.map --llm-labels || exit 1
 stage links    $PY -m radar.links || exit 1
+stage load_extra timeout 1800 $PY -m radar.load_extra || exit 1
+stage citations  timeout 1800 $PY -m radar.citations || exit 1
 stage merge    $PY -m radar.merge --n 8 || exit 1
 stage report   $PY -m radar.report || exit 1
 echo "== all done $(date +%H:%M:%S)"

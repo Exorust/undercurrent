@@ -1,11 +1,36 @@
 #!/bin/sh
 # Weekly job (launchd fires it daily at 04:00; it works only when the last success is 6+ days old).
 #   1. harvest the last 14 days of arXiv CS and embed new papers (every week)
-#   2. only when a new month has completed since the published snapshot: full pipeline (run_all.sh),
-#      static export with ideas for the top 20 links, size checks, deploy to Vercel
-# A failed step deploys nothing: the public page keeps the last good snapshot. Failures raise a macOS notification.
-# Env: UC_FORCE=1 ignores the 6-day stamp; UC_NO_DEPLOY=1 stops before `vercel deploy`; UC_ALLOW_BATTERY=1.
+#   1b. SOFT (a failure is logged and notified, the run continues on the last good data):
+#       institutions --since 14 days ago (OpenAlex affiliations), then load_extra (merge data/raw/* into the DB)
+#   2. only when a new month has completed since the published snapshot:
+#       SOFT enrich --refresh (citation counts) and refs (Semantic Scholar references), then full pipeline
+#       (run_all.sh, which also runs load_extra and citations), static export with ideas for the top 20 links,
+#       size checks, deploy to Vercel
+# A failed hard step deploys nothing: the public page keeps the last good snapshot. Failures raise a macOS notification.
+# Env: UC_FORCE=1 ignores the 6-day stamp; UC_NO_DEPLOY=1 stops before `vercel deploy`; UC_ALLOW_BATTERY=1;
+#      UC_DRY=1 prints the steps it would run and exits 0 (no log, no data/ access).
+# OPENALEX_KEY comes from .env in the repo root (launchd has no shell profile).
 cd "$(dirname "$0")/.." || exit 1
+[ -f .env ] && set -a && . ./.env && set +a
+
+# dry run: must stay BEFORE mkdir/exec so it never writes $LOG or touches data/
+if [ -n "$UC_DRY" ]; then
+  since=$(date -v-14d +%F)
+  echo "step: harvest: timeout 7200 radar.harvest_api --from $since"
+  echo "step: embed new papers: timeout 10800 radar.enrich --months 2 (up to 3 attempts)"
+  echo "step: affiliations (soft): timeout 1800 radar.institutions --since $since"
+  echo "step: load_extra (soft): timeout 1800 radar.load_extra"
+  echo "step: last-complete-month check vs published snapshot (no new month: stamp and stop)"
+  echo "step (new month only): enrich --refresh (soft): timeout 7200 radar.enrich --refresh"
+  echo "step (new month only): refs (soft): timeout 28800 radar.refs"
+  echo "step (new month only): full pipeline: timeout 10800 ./run_all.sh (includes load_extra and citations)"
+  echo "step (new month only): export: timeout 3600 radar.export --out site --ideas 20"
+  echo "step (new month only): preview, snapshot checks"
+  echo "step (new month only): deploy: timeout 1800 vercel deploy site --prod --yes (skipped when UC_NO_DEPLOY is set)"
+  exit 0
+fi
+
 mkdir -p data/log
 LOG="data/log/weekly-$(date +%F).log"
 exec >>"$LOG" 2>&1
@@ -14,6 +39,8 @@ STAMP=data/weekly.stamp
 say() { echo "== $(date '+%F %T') $*"; }
 notify() { osascript -e "display notification \"$1\" with title \"undercurrent weekly\"" 2>/dev/null; }
 fail() { say "FAILED: $1"; notify "Failed: $1 (log: $LOG)"; exit 1; }
+# soft LABEL CMD...: a failure is logged and notified but does not stop the run
+soft() { label=$1; shift; "$@" || { say "$label failed; continuing with last good data"; notify "$label failed; continuing with last good data (log: $LOG)"; }; }
 
 say "start"
 if [ -z "$UC_FORCE" ] && [ -f "$STAMP" ] && [ -n "$(find "$STAMP" -mtime -6 2>/dev/null)" ]; then say "last success under 6 days ago; nothing to do"; exit 0; fi
@@ -33,6 +60,10 @@ timeout 7200 $PY -m radar.harvest_api --from "$(date -v-14d +%F)" || fail "harve
 say "embed new papers"
 ok=; for i in 1 2 3; do timeout 10800 $PY -m radar.enrich --months 2 && { ok=1; break; }; say "enrich attempt $i failed; retry in 120 s"; sleep 120; done
 [ -n "$ok" ] || fail "enrich"
+say "affiliations (institutions, last 14 days)"
+soft "institutions" timeout 1800 $PY -m radar.institutions --since "$(date -v-14d +%F)"
+say "load_extra"
+soft "load_extra" timeout 1800 $PY -m radar.load_extra
 
 # last complete month now (same rule as serve.py / links.py) vs the one the published snapshot ends at
 now=$($PY - <<'EOF'
@@ -48,6 +79,10 @@ pub=$($PY -c "import json;print(json.load(open('site/data/meta.json'))['windows'
 say "last complete month $now; published snapshot ends $pub"
 if [ "$now" = "$pub" ]; then say "no new complete month; snapshot unchanged"; touch "$STAMP"; exit 0; fi
 
+say "new month: refresh citation counts"
+soft "enrich --refresh" timeout 7200 $PY -m radar.enrich --refresh
+say "new month: references"
+soft "refs" timeout 28800 $PY -m radar.refs
 say "new month: full pipeline"
 timeout 10800 ./run_all.sh || fail "run_all.sh"
 say "export"

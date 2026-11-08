@@ -3,6 +3,8 @@
 Usage: python -m radar.serve [--port 8765] [--fake-llm PATH] [--llm-timeout 300] [--slow SECONDS]
        python -m radar.serve --selftest          # tiny fixture database in a temp dir; prints ok
 
+Also serves the filter page's data: /filter.js, /filterdata, /institutions, /countries, /rows and the signal/citation fields (tables
+from radar.load_extra and radar.citations; each may be absent, then the fields are empty or null).
 Reads data/radar.duckdb (or RADAR_DB) read-only and keeps ids, months, clusters, the 14-NN graph,
 citations and the 768-d vectors in memory. Writes only data/workbench.duckdb (saved selections and
 ideas), which the pipeline never opens. Endpoints and rules: docs/designs/topic-workbench-architecture.md §5-6.
@@ -39,6 +41,8 @@ log = logging.getLogger("radar.serve")
 S = argparse.Namespace()            # server state, filled by load()
 CACHE, CACHE_LOCK = collections.OrderedDict(), threading.Lock()   # transient selections, LRU 64
 WB_LOCK, IDEAS_LOCK = threading.Lock(), threading.Lock()
+EXTRA_LOCK = threading.Lock()       # guards the lazily built filterdata / countries caches
+SIG_WINS = (3, 6, 12)
 
 
 class E(Exception):
@@ -185,6 +189,8 @@ def load():
     else:   # ponytail: map.py writes one row per run (flows F2/F3), arch §2.1 says key/value; read either, latest run wins
         cur = con.execute("select * from map_meta order by created desc limit 1"); meta = dict(zip([d[0] for d in cur.description], cur.fetchone()))
     S.con, S.meta, S.run_id = con, meta, meta["run_id"]
+    S.tables = {r[0] for r in con.execute("select table_name from information_schema.tables").fetchall()}
+    S.filterdata, S.countries = None, None
     if meta.get("links_run_id") != S.run_id: die(f"map run {S.run_id} has no links stage. Run: .venv/bin/python -m radar.links")
     pi = con.execute("select row, id, month, cat, l0, l1, l2 from point_index order by row").fetchnumpy()
     S.n = n = len(pi["row"]); assert (np.asarray(pi["row"]) == np.arange(n)).all(), "point_index.row must be 0..n-1"
@@ -204,6 +210,17 @@ def load():
     S.K = np.full((n, 14), -1, np.int32); S.K[r[ok], pos[ok]] = nb[ok]
     S.cit = np.asarray(con.execute("select coalesce(s.citations, -1) c from point_index p left join s2_meta s using(id) order by p.row").fetchnumpy()["c"], np.int64)
     S.cats = json.loads(meta.get("categories", "[]"))
+    S.citp = np.full(n, 255, np.uint8)               # paper_cites.cit_pct per row, 255 = unknown
+    if "paper_cites" in S.tables:
+        for r_, v_ in con.execute("select row, cit_pct from paper_cites where cit_pct is not null and row >= 0 and row < ?", [n]).fetchall():
+            S.citp[r_] = min(max(int(v_), 0), 254)
+    S.sig, S.extra = {}, {}
+    if "topic_signals" in S.tables:
+        for lv, c, win, nn, vs, cs, cm, t10, ti, tv in con.execute(
+                "select level, cluster, win, n, venue_share, code_share, cit_median_pct, top10_share, top_insts, top_venues from topic_signals").fetchall():
+            S.sig[(int(lv), int(c), int(win))] = {"win": int(win), "n": nn, "venue_share": vs, "code_share": cs, "cit_median_pct": cm,
+                "top10_share": t10, "top_insts": json.loads(ti) if ti else [], "top_venues": json.loads(tv) if tv else []}
+    if "extra_meta" in S.tables: S.extra = {str(k): v for k, v in con.execute("select key, value from extra_meta").fetchall()}
     S.T = int(float(meta.get("bridge_T") or 4))
     S.k, S.lab, S.tinfo = {}, {}, {}
     for lv, c, label, cnt, cx, cy in con.execute("select level, cluster, label, n, cx, cy from topics where cluster >= 0 order by 1, 2").fetchall():
@@ -258,6 +275,16 @@ def open_wb():
 
 # ---------- helpers on selections ----------
 
+def pextra(cur, ids):
+    """{id: (venue, code_url)} from paper_comments; empty when that table is absent."""
+    if "paper_comments" not in S.tables or not ids: return {}
+    return {i: (v, u) for i, v, u in cur.execute("select id, venue, code_url from paper_comments where id in (select unnest(?::varchar[]))",
+                                                 [list(ids)]).fetchall()}
+
+
+def citpct(r): return None if r is None or r < 0 or S.citp[r] == 255 else int(S.citp[r])
+
+
 def papers(cur, rows):
     """paper objects in the given row order."""
     rows = [int(r) for r in rows]
@@ -265,11 +292,11 @@ def papers(cur, rows):
     got = {i: (t, c, s) for i, t, c, s in cur.execute(
         """select p.id, p.title, s.citations, coalesce(s.tldr, left(p.abstract, 400)) from papers p left join s2_meta s using(id)
            where p.id in (select unnest(?::varchar[]))""", [[str(S.ids[r]) for r in rows]]).fetchall()}
-    out = []
+    out, ex = [], pextra(cur, [str(S.ids[r]) for r in rows])
     for r in rows:
-        t, c, s = got.get(str(S.ids[r]), (None, None, None))
+        t, c, s = got.get(str(S.ids[r]), (None, None, None)); v, u = ex.get(str(S.ids[r]), (None, None))
         out.append({"row": r, "id": str(S.ids[r]), "title": t, "month": ym(S.month[r]), "cat": catname(S.cat[r]),
-                    "citations": c, "summary": (s or "")[:400]})
+                    "citations": c, "summary": (s or "")[:400], "venue": v, "code_url": u, "cit_pct": citpct(r)})
     return out
 
 
@@ -374,7 +401,7 @@ def h_meta(h, q, body, cur):
     return {"run_id": S.run_id, "n_points": S.n, "months": [ym(i) for i in range(S.E + 1)], "last_complete": ym(S.E),
             "categories": S.cats, "levels": {str(lv): len([1 for (l, _) in S.tinfo if l == lv]) for lv in (2, 1, 0)},
             "bridge_T": S.T, "onset_share": S.onset_share, "knn_recall14": fl("knn_recall14"), "knn_bridge_agree": fl("knn_bridge_agree"),
-            "backtest_line": m.get("backtest_line", BACKTEST_LINE), "level0_links": S.level0, "stale_removed": S.stale, "started": S.started}
+            "backtest_line": m.get("backtest_line", BACKTEST_LINE), "level0_links": S.level0, "stale_removed": S.stale, "started": S.started, "extra": S.extra}
 
 
 def h_labels(h, q, body, cur):
@@ -389,8 +416,21 @@ def h_paper(h, q, body, cur):
     r = qint(q, "row", 0, S.n); i = str(S.ids[r])
     t, ab, au, c, s = cur.execute("""select p.title, p.abstract, p.authors, s.citations, coalesce(s.tldr, left(p.abstract, 400))
                                      from papers p left join s2_meta s using(id) where p.id = ?""", [i]).fetchone()
+    v, u = pextra(cur, [i]).get(i, (None, None))
     return {"row": r, "id": i, "title": t, "month": ym(S.month[r]), "cat": catname(S.cat[r]), "citations": c, "summary": (s or "")[:400],
-            "abstract": ab, "authors": list(au or [])[:5], "url": f"https://arxiv.org/abs/{i}"}
+            "venue": v, "code_url": u, "cit_pct": citpct(r), "abstract": ab, "authors": list(au or [])[:5], "url": f"https://arxiv.org/abs/{i}"}
+
+
+def sigwin(w):
+    """topic_signals window for a request window: its month count when that is 3/6/12, else the nearest of those."""
+    n = w["obj"]["n_months"]; return min(SIG_WINS, key=lambda x: (abs(x - n), x))
+
+
+def h_topic(h, q, body, cur):
+    lv, w = qint(q, "level", 0, 3, 1), window(q); c = qint(q, "c", 0, S.k[lv])
+    r, p = S.TM[lv][c, w["rf"]:w["rt"] + 1].sum(), S.TM[lv][c, w["pf"]:w["pt"] + 1].sum()
+    return {"window": w["obj"], "level": lv, "c": c, "label": S.lab[lv][c], "n_total": S.tinfo.get((lv, c), (0, 0))[1], **gstats(r, p, w),
+            "signals": S.sig.get((lv, c, sigwin(w))), "signals_all": S.sig.get((lv, c, 0))}
 
 
 def h_topics(h, q, body, cur):
@@ -413,9 +453,10 @@ def h_topics(h, q, body, cur):
                 arriving[par[c][0]].append({"c": c, "label": S.lab[0][c], **gstats(r0[c], p0[c], w),
                     "onset": ym(S.onset0[c]) if S.onset0[c] >= 0 else None, "parent_share": par[c][1],
                     "window_share": share, "corpus_share": corpus_share})
-    r, p = rec(lv)
+    r, p = rec(lv); win = sigwin(w)
     return {"window": w["obj"], "level": lv, "topics": [
         {"c": c, "label": S.lab[lv][c], "n_total": S.tinfo.get((lv, c), (0, 0))[1], **gstats(r[c], p[c], w),
+         **{k: (S.sig.get((lv, c, win)) or {}).get(k) for k in ("venue_share", "code_share", "cit_median_pct")},
          "arriving": sorted(arriving.get(c, []), key=lambda a: a["window_share"], reverse=True)} for c in range(S.k[lv])]}
 
 
@@ -454,6 +495,11 @@ def h_links(h, q, body, cur):
     rows = cur.execute("""select c1, c2, coalesce(sum(n_bridge) filter (where month between ? and ?), 0),
                                  coalesce(sum(n_bridge) filter (where month between ? and ?), 0)
                           from topic_links where level = ? and month between ? and ? group by 1, 2""", [rf, rt, pf, pt, lv, pf, rt]).fetchall()
+    cl = {}
+    if "topic_citelinks" in S.tables:
+        cl = {(a, b): (int(x), int(y), int(z)) for a, b, x, y, z in cur.execute(
+            """select c1, c2, sum(n_cites), sum(n_1to2), sum(n_2to1) from topic_citelinks where level = ? and month between ? and ?
+               group by 1, 2""", [lv, rf, rt]).fetchall()}
     out = []
     for c1, c2, br, bp in rows:
         if br == 0: continue
@@ -461,11 +507,14 @@ def h_links(h, q, body, cur):
         st = link_status(br, bp); sp = (bp + 1) / (n1p + n2p + 1)
         out.append({"c1": c1, "c2": c2, "n_bridge": int(br), "n_bridge_prior": int(bp), "n1": n1, "n2": n2, "n1_prior": n1p, "n2_prior": n2p,
                     "strength": br / math.sqrt(n1 * n2) if n1 and n2 else None, "share_now": br / (n1 + n2) if n1 + n2 else None,
-                    "share_prior": None if st == "new" else sp, "growth": (br / (n1 + n2)) / sp if st == "ratio" else None, "status": st})
+                    "share_prior": None if st == "new" else sp, "growth": (br / (n1 + n2)) / sp if st == "ratio" else None, "status": st, "n_cites": cl.get((c1, c2), (0, 0, 0))[0]})
+    seen = {(x["c1"], x["c2"]) for x in out}
+    cite_links = sorted(({"c1": a, "c2": b, "n_cites": v[0], "n_1to2": v[1], "n_2to1": v[2]} for (a, b), v in cl.items()
+                         if v[0] >= 10 and (a, b) not in seen), key=lambda x: (-x["n_cites"], x["c1"], x["c2"]))[:200]
     order = {"new": 0, "ratio": 1, "low": 2}
     out.sort(key=lambda x: (order[x["status"]], -(x["growth"] if x["status"] == "ratio" else x["n_bridge"])))
     return {"window": w["obj"], "level": lv, "rule": {"k": 14, "T": S.T, "strength": "B/sqrt(n1*n2)", "share": "B/(n1+n2)"},
-            "bridge_links": out, "phrase_window": "whole corpus",
+            "bridge_links": out, "cite_links": cite_links, "phrase_window": "whole corpus",
             "phrase_links": [{"c1": a, "c2": b, "phrases": v} for (a, b), v in sorted(S.plinks[lv].items())]}
 
 
@@ -478,7 +527,16 @@ def h_link(h, q, body, cur):
                     [lv, c1, c2, w["rf"], w["rt"]]).fetchall()
     kk = {r: (k1, k2) for r, k1, k2 in b}
     top = by_cites(np.array(sorted(kk), np.int64), 30)
-    return {"window": w["obj"], "level": lv, "c1": c1, "c2": c2, "n_bridge": len(b),
+    cites = {"n_cites": 0, "n_1to2": 0, "n_2to1": 0, "top": []}
+    if "topic_citelinks" in S.tables:
+        t = cur.execute("""select coalesce(sum(n_cites), 0), coalesce(sum(n_1to2), 0), coalesce(sum(n_2to1), 0) from topic_citelinks
+                           where level = ? and c1 = ? and c2 = ? and month between ? and ?""", [lv, c1, c2, w["rf"], w["rt"]]).fetchone()
+        cites.update(n_cites=int(t[0]), n_1to2=int(t[1]), n_2to1=int(t[2]))
+    if "citelink_evidence" in S.tables:
+        ev = cur.execute("select cited_row, n from citelink_evidence where level = ? and c1 = ? and c2 = ? and cited_row >= 0 and cited_row < ? "
+                         "order by n desc, cited_row limit 20", [lv, c1, c2, S.n]).fetchall()
+        cites["top"] = [{**p, "n": int(n)} for p, (_, n) in zip(papers(cur, [r for r, _ in ev]), ev)]
+    return {"window": w["obj"], "level": lv, "c1": c1, "c2": c2, "n_bridge": len(b), "cites": cites,
             "bridges": [{**p, "k1": kk[p["row"]][0], "k2": kk[p["row"]][1]} for p in papers(cur, top)],
             "phrases": S.plinks[lv].get((c1, c2), [])}
 
@@ -519,7 +577,9 @@ def h_select(h, q, body, cur):
                     + (f"; nearest rising phrases: {', '.join(near)}" if near else ""))
         sel = remember(rows, k, {k: v}, nu)
         if not len(rows):
-            ps = [{"id": i, "title": t, "month": str(m)[:7], "citations": c, "url": f"https://arxiv.org/abs/{i}"}
+            ex = pextra(cur, [i for _, i in got])
+            ps = [{"id": i, "title": t, "month": str(m)[:7], "citations": c, "url": f"https://arxiv.org/abs/{i}",
+                   "venue": ex.get(i, (None, None))[0], "code_url": ex.get(i, (None, None))[1], "cit_pct": None}
                   for i, t, m, c in cur.execute("""select p.id, p.title, p.submitted, s.citations
                       from papers p left join s2_meta s using(id) where p.id in (select unnest(?::varchar[]))""",
                       [[i for _, i in got]]).fetchall()]
@@ -728,12 +788,71 @@ def h_fault(h, q, body, cur):
     return 1 / 0
 
 
+ID_RE, CC_RE = re.compile(r"I\d+"), re.compile(r"[A-Z]{2}")
+
+
+def h_filterjs(h, q, body, cur):
+    f = ROOT / "radar/filter.js"
+    if not f.exists(): raise E(404, "not_found", "radar/filter.js is missing")
+    h.send_bytes(200, f.read_bytes(), "application/javascript; charset=utf-8", {"Cache-Control": "no-cache"})
+
+
+def h_filterdata(h, q, body, cur):
+    """Uint8 flags per row (bit0 accepted, bit1 workshop, bit2 submitted, bit3 code, bit4 withdrawn), then Uint8 cit_pct per row (255 unknown)."""
+    with EXTRA_LOCK:
+        if S.filterdata is None:
+            fl = np.zeros(S.n, np.uint8)
+            if "paper_comments" in S.tables:
+                for r, kind, code, wd in cur.execute("select p.row, c.kind, c.code_url is not null, c.withdrawn from point_index p join paper_comments c using(id)").fetchall():
+                    fl[r] = (kind == "accepted") | (2 if kind == "workshop" else 0) | (4 if kind == "submitted" else 0) | (8 if code else 0) | (16 if wd else 0)
+            S.filterdata = fl.tobytes() + S.citp.tobytes()
+    h.send_bytes(200, S.filterdata, "application/octet-stream", {"X-N": str(S.n), "Cache-Control": "no-cache"})
+
+
+def h_institutions(h, q, body, cur):
+    if "institutions" not in S.tables: return []
+    s = (q.get("q") or "").strip().lower()
+    if not s: sql, a = "select inst_id, name, country, n from institutions where n >= 30 order by n desc, inst_id limit 20", []
+    else:
+        sql = """select inst_id, name, country, n from institutions where n >= 30 and contains(lower(name), ?)
+                 order by not starts_with(lower(name), ?), n desc, inst_id limit 20"""; a = [s, s]
+    return [[i, nm, cc, int(n)] for i, nm, cc, n in cur.execute(sql, a).fetchall()]
+
+
+def h_countries(h, q, body, cur):
+    with EXTRA_LOCK:
+        if S.countries is None:
+            S.countries = [] if not {"institutions", "paper_institutions"} <= S.tables else [[cc, int(n)] for cc, n in cur.execute(
+                """select i.country, count(distinct a.id) n from paper_institutions a join institutions i using(inst_id)
+                   join point_index p on p.id = a.id where i.country is not null group by 1 order by n desc, 1""").fetchall()]
+    return S.countries
+
+
+def h_rows(h, q, body, cur):
+    insts = [x for x in (q.get("inst") or "").split(",") if x] if q.get("inst") else []
+    cc = q.get("country")
+    if len(insts) > 5 or not all(ID_RE.fullmatch(x) for x in insts): raise bad("inst must be at most 5 comma-separated ids like I123")
+    if cc is not None and not CC_RE.fullmatch(cc): raise bad("country must be a two-letter upper-case code")
+    if not insts and cc is None: raise bad("inst or country is required")
+    blocks = []
+    have = {"institutions", "paper_institutions"} <= S.tables
+    for x in insts:
+        got = cur.execute("select distinct p.row from paper_institutions a join point_index p on p.id = a.id where a.inst_id = ? order by 1", [x]).fetchnumpy()["row"] if have else []
+        blocks.append(np.asarray(got, "<u4"))
+    if cc is not None:
+        got = cur.execute("""select distinct p.row from paper_institutions a join institutions i using(inst_id) join point_index p on p.id = a.id
+                             where i.country = ? order by 1""", [cc]).fetchnumpy()["row"] if have else []
+        blocks.append(np.asarray(got, "<u4"))
+    h.send_bytes(200, b"".join(b.tobytes() for b in blocks), "application/octet-stream", {"X-Lens": ",".join(str(len(b)) for b in blocks)})
+
+
 ROUTES = {("GET", "/"): h_index, ("GET", "/points.bin"): h_points, ("GET", "/meta"): h_meta, ("GET", "/labels"): h_labels,
           ("GET", "/phrases"): h_phrases, ("GET", "/paper"): h_paper, ("GET", "/topics"): h_topics, ("GET", "/links"): h_links, ("GET", "/link"): h_link,
           ("POST", "/select"): h_select, ("GET", "/distance"): h_distance, ("GET", "/colour/dist"): h_colour_dist,
           ("GET", "/selections"): h_selections_get, ("POST", "/selections"): h_selections_post,
           ("POST", "/selections/delete"): h_selections_delete, ("POST", "/ideas"): h_ideas_post, ("GET", "/ideas"): h_ideas_get,
-          ("GET", "/fault"): h_fault}
+          ("GET", "/fault"): h_fault, ("GET", "/topic"): h_topic, ("GET", "/filter.js"): h_filterjs, ("GET", "/filterdata"): h_filterdata,
+          ("GET", "/institutions"): h_institutions, ("GET", "/countries"): h_countries, ("GET", "/rows"): h_rows}
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -775,7 +894,7 @@ class Handler(BaseHTTPRequestHandler):
                 if not isinstance(body, dict): raise bad("body must be a JSON object")
             fn = ROUTES.get((method, url.path))
             if fn is None: raise E(404, "not_found", f"no route {method} {url.path}")
-            if CFG["slow"] and url.path not in ("/", "/meta", "/points.bin"): time.sleep(CFG["slow"])
+            if CFG["slow"] and url.path not in ("/", "/meta", "/points.bin", "/filter.js"): time.sleep(CFG["slow"])
             cur = S.con.cursor()
             try: out = fn(self, q, body, cur)
             finally: cur.close()
@@ -938,7 +1057,7 @@ def selftest():
     st, m = req("/meta"); ok(st == 200 and "999999" in (m["stale_removed"] or "") and P["pid"].read_text().strip() == str(os.getpid()), "stale serve.pid removed and replaced")
     ok(m["levels"] == {"2": 1, "1": 2, "0": 3} and m["last_complete"] == "2026-10" and len(m["months"]) == 36, "/meta levels and months")
     assert set(m) == {"run_id", "n_points", "months", "last_complete", "categories", "levels", "bridge_T", "onset_share",
-                      "knn_recall14", "knn_bridge_agree", "backtest_line", "level0_links", "stale_removed", "started"}
+                      "knn_recall14", "knn_bridge_agree", "backtest_line", "level0_links", "stale_removed", "started", "extra"}
     assert datetime.fromisoformat(m["started"])
     ok(req("/meta", host="evil.example")[0] == 403, "Host guard")
     ok(req("/select", {"rows": [1, 2]}, origin=None)[0] == 403 and req("/select", {"rows": [1]}, origin="http://attacker.test")[0] == 403, "Origin guard")
@@ -1012,6 +1131,81 @@ def selftest():
     ok(req("/selections/delete", {"sel_id": c["sel_id"]})[1] == {"deleted": True, "run_id": "T1"} and req("/selections/delete", {"sel_id": "nope"})[0] == 404, "delete")
     with CACHE_LOCK: CACHE.clear()
     st, s2 = req("/select", {"sel_id": b["sel_id"]}); ok(st == 200 and s2["n"] == b["n"] and s2["missing"] == 0, "saved selection reloads from workbench")
+
+    # ---- filter page endpoints: absent tables first, then a reload with the extra tables ----
+    import struct
+    def raw(path, host=f"localhost:{port}"):
+        try:
+            with urllib.request.urlopen(urllib.request.Request(base + path, headers={"Host": host})) as f: return f.status, dict(f.headers), f.read()
+        except urllib.error.HTTPError as e: return e.code, dict(e.headers), e.read()
+    ok(m["extra"] == {} and req("/institutions")[1] == [] and req("/countries")[1] == [], "absent tables: /meta extra, /institutions, /countries empty")
+    st, hd, fd = raw("/filterdata"); ok(st == 200 and hd["X-N"] == "90" and fd == bytes(90) + bytes([255]) * 90, "absent tables: /filterdata all zero flags, cit_pct 255")
+    st, hd, rb = raw("/rows?inst=I1&country=US"); ok(st == 200 and hd["X-Lens"] == "0,0" and rb == b"", "absent tables: /rows empty blocks")
+    st, tj = req("/topic?level=0&c=0"); ok(st == 200 and tj["signals"] is None and tj["signals_all"] is None and tj["label"] == "robot manipulation policy", "absent tables: /topic signals null")
+    ok(all(tp["venue_share"] is None and tp["cit_median_pct"] is None for tp in req("/topics?level=0")[1]["topics"]), "absent tables: /topics signal fields null")
+    st, pj = req("/paper?row=0"); ok(pj["venue"] is None and pj["code_url"] is None and pj["cit_pct"] is None, "absent tables: /paper extras null")
+    ok(req("/links?level=0")[1]["cite_links"] == [] and all(b["n_cites"] == 0 for b in req("/links?level=0")[1]["bridge_links"]), "absent tables: /links cite_links empty")
+    st, lk = req("/link?level=0&c1=0&c2=1"); ok(lk["cites"] == {"n_cites": 0, "n_1to2": 0, "n_2to1": 0, "top": []}, "absent tables: /link cites empty")
+    st, hd, js = raw("/filter.js"); ok(st == 200 and hd["Content-Type"].startswith("application/javascript") and b"UCFilter" in js, "/filter.js served")
+    for bad_path in ("/rows", "/rows?inst=x1", "/rows?inst=I1,I2,I3,I4,I5,I6", "/rows?country=us", "/rows?country=USA", "/rows?inst=I1;drop"):
+        assert raw(bad_path)[0] == 400, bad_path
+    print("ok /rows rejects bad input with 400")
+    # load the extras into the fixture and reload server state
+    S.con.close(); c = duckdb.connect(str(P["db"]))
+    c.execute("""create table paper_comments as select id, null::varchar comment,
+                 case when row % 5 in (0, 4) then 'NeurIPS' when row % 5 = 1 then 'WS' end venue, null::varchar venue_source,
+                 case row % 5 when 0 then 'accepted' when 1 then 'workshop' when 2 then 'submitted' when 3 then 'preprint' else 'accepted' end kind,
+                 2026 as year, case when row % 4 = 0 then 'https://code/' || row end as code_url, null::int as pages, row = 7 as withdrawn from point_index""")
+    c.execute("create table institutions (inst_id text, ror text, name text, country text, type text, n int)")
+    c.execute("""insert into institutions values ('I1', null, 'Mass Inst of Tech', 'US', null, 40), ('I2', null, 'Tsinghua University', 'CN', null, 35),
+                 ('I3', null, 'Tiny Lab', 'US', null, 5), ('I4', null, 'Technion', 'IL', null, 50)""")
+    c.execute("create table paper_institutions (id text, inst_id text, author_pos int)")
+    c.execute("""insert into paper_institutions select id, 'I1', 0 from point_index where row % 2 = 0 union all select id, 'I1', 1 from point_index where row % 2 = 0
+                 union all select id, 'I2', 0 from point_index where row % 3 = 0 union all select id, 'I3', 0 from point_index where row < 4
+                 union all select id, 'I4', 0 from point_index where row % 10 = 0""")
+    c.execute("create table extra_meta (key text, value text)"); c.execute("insert into extra_meta values ('snapshot', '2026-11-05'), ('n', '90')")
+    c.execute("create table paper_cites as select row, case when row = 3 then null else row end::int cit_pct from point_index")
+    c.execute("""create table topic_signals (level int, cluster int, win int, n int, venue_share double, code_share double, cit_median_pct double,
+                 top10_share double, top_insts varchar, top_venues varchar)""")
+    c.execute("""insert into topic_signals values (0, 0, 6, 20, 0.4, 0.25, 50, 0.1, '[["I1","MIT",9]]', '[["NeurIPS",5]]'),
+                 (0, 0, 0, 32, 0.5, 0.3, 48, 0.1, null, null), (0, 1, 3, 7, null, null, null, null, null, null)""")
+    c.execute("create table topic_citelinks (level int, c1 int, c2 int, month int, n_cites int, n_1to2 int, n_2to1 int)")
+    c.execute("insert into topic_citelinks values (0, 0, 2, 30, 7, 5, 2), (0, 0, 2, 31, 6, 1, 5), (0, 0, 2, 5, 99, 99, 0), (0, 0, 1, 31, 12, 6, 6), (0, 1, 2, 31, 4, 4, 0)")
+    c.execute("create table citelink_evidence (level int, c1 int, c2 int, cited_row int, n int)")
+    c.execute("insert into citelink_evidence values (0, 0, 2, 5, 3), (0, 0, 2, 9, 4), (0, 0, 2, 1, 4)")
+    c.close(); load()
+    st, m2 = req("/meta"); ok(m2["extra"] == {"snapshot": "2026-11-05", "n": "90"}, "/meta extra from extra_meta")
+    st, hd, fd = raw("/filterdata"); fl, cp = fd[:90], fd[90:]
+    exp = lambda r: (r % 5 == 0 or r % 5 == 4) | (2 if r % 5 == 1 else 0) | (4 if r % 5 == 2 else 0) | (8 if r % 4 == 0 else 0) | (16 if r == 7 else 0)
+    ok(st == 200 and hd["X-N"] == "90" and len(fd) == 180 and all(fl[r] == exp(r) for r in range(90)) and cp[3] == 255 and cp[5] == 5 and cp[89] == 89,
+       "/filterdata flags and cit_pct")
+    ok(raw("/filterdata")[2] is not None and S.filterdata is not None, "/filterdata cached")
+    st, ins = req("/institutions"); ok([r[0] for r in ins] == ["I4", "I1", "I2"] and ins[0] == ["I4", "Technion", "IL", 50], "/institutions empty q: top by n, n >= 30 only")
+    ok([r[0] for r in req("/institutions?q=TECH")[1]] == ["I4", "I1"], "/institutions prefix match before substring, case-insensitive")
+    ok(req("/institutions?q=tiny")[1] == [] and req("/institutions?q=zzz")[1] == [], "/institutions n < 30 and no match excluded")
+    st, cs = req("/countries"); ok(cs == [["US", 47], ["CN", 30], ["IL", 9]], "/countries")
+    ids = np.array(S.ids)
+    def rows_of(pred): return [r for r in range(90) if pred(r)]
+    st, hd, rb = raw("/rows?inst=I1,I2&country=US")
+    e1, e2, e3 = rows_of(lambda r: r % 2 == 0), rows_of(lambda r: r % 3 == 0), rows_of(lambda r: r % 2 == 0 or r < 4)
+    lens = [int(x) for x in hd["X-Lens"].split(",")]
+    got = list(struct.unpack(f"<{len(rb) // 4}I", rb)); parts = [got[:lens[0]], got[lens[0]:lens[0] + lens[1]], got[lens[0] + lens[1]:]]
+    ok(st == 200 and lens == [len(e1), len(e2), len(e3)] and parts == [e1, e2, e3] and hd["Content-Type"] == "application/octet-stream", "/rows blocks sorted uint32 with X-Lens")
+    st, tj = req("/topic?level=0&c=0")
+    ok(tj["signals"] == {"win": 6, "n": 20, "venue_share": 0.4, "code_share": 0.25, "cit_median_pct": 50, "top10_share": 0.1,
+                         "top_insts": [["I1", "MIT", 9]], "top_venues": [["NeurIPS", 5]]} and tj["signals_all"]["n"] == 32 and tj["signals_all"]["top_insts"] == [], "/topic signals and signals_all")
+    st, tj = req("/topic?level=0&c=0&from=2026-08&to=2026-10"); ok(tj["signals"] is None and tj["signals_all"]["win"] == 0, "/topic window 3 with no signals row is null")
+    tp0 = req("/topics?level=0")[1]["topics"]; ok(tp0[0]["venue_share"] == 0.4 and tp0[0]["code_share"] == 0.25 and tp0[0]["cit_median_pct"] == 50 and tp0[1]["venue_share"] is None, "/topics signal fields")
+    st, pj = req("/paper?row=8"); ok(pj["venue"] is None and pj["code_url"] == "https://code/8" and pj["cit_pct"] == 8, "/paper venue, code_url, cit_pct")
+    st, pj = req("/paper?row=0"); ok(pj["venue"] == "NeurIPS" and pj["cit_pct"] == 0, "/paper venue from paper_comments")
+    st, d = req(f"/distance?a={a['sel_id']}&b={b['sel_id']}"); ok(all({"venue", "code_url", "cit_pct"} <= set(p) for p in d["bridges"]), "bridge paper objects carry the new fields")
+    st, s3 = req("/select", {"topic": {"level": 0, "c": 0}}); ok(all({"venue", "code_url", "cit_pct"} <= set(p) for p in s3["top_cited"] + s3["newest"]), "top_cited and newest carry the new fields")
+    st, L = req("/links?level=0"); br = {(x["c1"], x["c2"]): x for x in L["bridge_links"]}
+    ok((0, 1) in br and br[(0, 1)]["n_cites"] == 12 and [(x["c1"], x["c2"], x["n_cites"], x["n_1to2"], x["n_2to1"]) for x in L["cite_links"]] == [(0, 2, 13, 6, 7)],
+       "/links n_cites for the window, cite_links excludes bridge pairs and n_cites < 10")
+    st, lk = req("/link?level=0&c1=0&c2=2")
+    ok(lk["cites"]["n_cites"] == 13 and (lk["cites"]["n_1to2"], lk["cites"]["n_2to1"]) == (6, 7) and [(p["row"], p["n"]) for p in lk["cites"]["top"]] == [(1, 4), (9, 4), (5, 3)]
+       and "venue" in lk["cites"]["top"][0], "/link cites with top evidence papers")
     srv.shutdown(); srv.server_close(); S.wb.close(); S.con.close()
     import shutil; shutil.rmtree(tmp, ignore_errors=True)
     print(f"ok ({time.time() - t0:.1f} s)")

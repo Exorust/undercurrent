@@ -4,149 +4,174 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>undercurrent: what is arriving in computer science research</title>
-<meta name="description" content="A map of every computer-science paper on arXiv since November 2023. See which topics grow faster than the field and which ones are starting to connect. Updated monthly.">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23ffffff'/%3E%3Cpath d='M6 13c3-3 5-3 8 0s5 3 8 0 3-2 4-2' fill='none' stroke='%231c1c1c' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M6 20c3-3 5-3 8 0s5 3 8 0 3-2 4-2' fill='none' stroke='%235f5f5f' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif&family=JetBrains+Mono:wght@400;500&display=swap">
+<meta name="description" content="A map of every computer-science paper on arXiv since November 2023. See which topics grow faster than CS as a whole and which ones are starting to connect. Updated monthly.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="undercurrent: what is arriving in computer science research">
+<meta property="og:description" content="Every arXiv CS paper since November 2023 on one map. Growth is measured against all of CS, so only topics outpacing the field light up.">
+<meta property="og:url" content="https://charoori.com/undercurrent/">
+<meta property="og:image" content="https://charoori.com/undercurrent/preview.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="undercurrent: what is arriving in computer science research">
+<meta name="twitter:description" content="Every arXiv CS paper since November 2023 on one map. Growth is measured against all of CS, so only topics outpacing the field light up.">
+<meta name="twitter:image" content="https://charoori.com/undercurrent/preview.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='9' fill='%23fdfbfa'/%3E%3Cpath d='M6 13c3-3 5-3 8 0s5 3 8 0 3-2 4-2' fill='none' stroke='%23016a71' stroke-width='2.2' stroke-linecap='round'/%3E%3Cpath d='M6 20c3-3 5-3 8 0s5 3 8 0 3-2 4-2' fill='none' stroke='%2327251e' stroke-width='2.2' stroke-linecap='round'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Instrument+Serif&display=swap">
 <style>
 :root {
-  --bg: #ffffff; --tile: #ffffff; --well: #f3f3f1; --line: #e6e5e1;
-  --text: #1c1c1c; --secondary: #5f5f5f; --muted: #9a9a9a;
+  /* F51 warm palette */
+  --canvas: #faf8f5;    /* parchment: page canvas */
+  --paper: #fdfbfa;     /* soft paper: cards */
+  --line: #d1d1cd;      /* warm mist: hairlines, input borders */
+  --ink: #27251e;       /* primary text */
+  --graphite: #72706b;  /* secondary text, labels */
+  --ash: #92918b;       /* only >= 18px text or decoration */
+  --hover: #f1eee8;
+  --teal: #016a71;      /* accent: primary button, eyebrow pill, logo, link hover/focus, "new" */
+  --teal-tint: #e3efef;
   --r: 14px; --serif: "Instrument Serif", Georgia, serif;
-  --sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; --mono: "JetBrains Mono", ui-monospace, Menlo, monospace;
+  --sans: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 }
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; scroll-padding-top: 72px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
-body { margin: 0; background: var(--bg); color: var(--text); font: 400 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
+body { margin: 0; background: var(--canvas); color: var(--ink); font: 400 16px/1.6 var(--sans); -webkit-font-smoothing: antialiased; overflow-x: hidden; }
 a { color: inherit; }
-a:focus-visible, button:focus-visible { outline: 2px solid #1c1c1c; outline-offset: 2px; }
+a:hover { color: var(--teal); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 .mono { font-family: var(--mono); }
-.label { font: 500 12px/1.4 var(--mono); letter-spacing: .04em; color: var(--secondary); }
-.tile { background: var(--tile); border: 1px solid var(--line); border-radius: var(--r); }
-.well { background: var(--well); border-radius: 10px; }
+.label { font: 500 12px/1.4 var(--mono); letter-spacing: .04em; color: var(--graphite); }
+.tile { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); }
+.well { background: var(--hover); border-radius: 10px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 20px; border-radius: 10px; font: 500 14px/1 var(--sans);
-  text-decoration: none; letter-spacing: .04em; white-space: nowrap; }
-.btn-p { background: #1c1c1c; border: 1px solid #1c1c1c; color: #ffffff; }
-.btn-p:hover { background: #1c1c1c; }
-.btn-s { background: #ffffff; border: 1px solid var(--line); color: var(--text); }
-.btn-s:hover { background: #efefed; }
+  text-decoration: none; letter-spacing: .02em; white-space: nowrap; cursor: pointer; }
+.btn-p { background: var(--teal); border: 1px solid var(--teal); color: #ffffff; }
+.btn-p:hover { background: #01585e; color: #ffffff; }
+.btn-s { background: var(--paper); border: 1px solid var(--line); color: var(--ink); }
+.btn-s:hover { background: var(--hover); color: var(--ink); }
 section { padding: 80px 0; border-top: 1px solid var(--line); }
 h2 { font: 400 clamp(32px, 3.2vw, 42px)/1.15 var(--serif); letter-spacing: -.02em; margin: 12px 0 16px; }
-h3 { font: 500 20px/1.3 var(--sans); margin: 0 0 8px; }
-.kicker { font: 400 13px/1.4 var(--mono); color: var(--secondary); }
-.lead { color: var(--secondary); max-width: 640px; }
+h3 { font: 500 18px/1.3 var(--sans); margin: 0 0 8px; }
+.kicker { font: 400 13px/1.4 var(--mono); color: var(--graphite); }
+.lead { color: var(--graphite); max-width: 640px; }
 .ico { width: 22px; height: 22px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
-/* nav: same language as charoori.com's bar */
-nav.top { position: sticky; top: 0; z-index: 10; background: #ffffff; border-bottom: 1px solid var(--line);
-  font: 500 12px/1 var(--sans); letter-spacing: 0; }
+/* nav */
+nav.top { position: sticky; top: 0; z-index: 10; background: var(--canvas); border-bottom: 1px solid var(--line); font: 500 12px/1 var(--sans); }
 nav.top .wrap { display: flex; align-items: center; gap: 24px; height: 52px; }
-nav.top a { text-decoration: none; color: var(--secondary); }
-nav.top a:hover { color: var(--text); }
-.crumb { display: flex; align-items: center; gap: 10px; white-space: nowrap; }
-.crumb { text-transform: lowercase; }
-.crumb .sep { color: var(--muted); }
-.crumb a.brand { display: flex; align-items: center; gap: 8px; color: var(--text); }
+nav.top a { text-decoration: none; color: var(--graphite); }
+nav.top a:hover { color: var(--teal); }
+.crumb { display: flex; align-items: center; gap: 10px; white-space: nowrap; text-transform: lowercase; }
+.crumb .sep { color: var(--graphite); }
+.crumb a.brand { display: flex; align-items: center; gap: 8px; color: var(--ink); }
 .brand span { font: 400 22px/1 var(--serif); letter-spacing: -.02em; }
 .brand svg { width: 20px; height: 20px; }
 .navlinks { display: flex; gap: 22px; margin: 0 auto; }
 .navright { display: flex; align-items: center; gap: 18px; }
-.navright .gh { display: flex; color: var(--text); padding: 4px; }
+.navright .gh { display: flex; color: var(--ink); padding: 4px; }
 .navright .gh svg { width: 18px; height: 18px; }
 nav.top .btn { padding: 9px 14px; font: 500 12px/1 var(--sans); letter-spacing: 0; color: #ffffff; }
 nav.top .btn:hover { color: #ffffff; }
 nav.top .btn .short { display: none; }
 
 /* hero */
-.hero { background: #f7f7f5; text-align: center; padding: 96px 0 56px; border: 0; }
-.hero h1 { font: 400 clamp(36px, 6.4vw, 80px)/1.04 var(--serif); letter-spacing: -.035em; margin: 20px 0 24px; }
+.hero { text-align: center; padding: 88px 0 64px; border: 0; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border: 1px solid var(--teal); border-radius: 999px;
+  background: var(--paper); color: var(--teal); font: 500 13px/1.4 var(--sans); }
+.pill span { white-space: nowrap; }
+.pill { flex-wrap: wrap; justify-content: center; column-gap: 5px; }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--teal); flex: none; }
+.hero h1 { font: 400 clamp(36px, 6.4vw, 80px)/1.04 var(--serif); letter-spacing: -.035em; margin: 24px 0 24px; }
 .hero h1 span { display: block; }
-.grad { color: var(--secondary); padding-bottom: .06em; }
-.hero p.one { font-size: 19px; color: var(--secondary); max-width: 720px; margin: 0 auto 36px; }
-.cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-.note { margin-top: 20px; font: 400 13px/1.4 var(--mono); color: var(--secondary); }
+.hero h1 .soft { color: var(--graphite); padding-bottom: .06em; }
+.hero p.one { font-size: 19px; color: var(--graphite); max-width: 720px; margin: 0 auto 36px; }
+.cta { display: flex; gap: 20px; justify-content: center; align-items: center; flex-wrap: wrap; }
+.cta .tl { font-size: 15px; color: var(--ink); text-underline-offset: 3px; }
+.cta .tl:hover { color: var(--teal); }
+.mnote { display: none; margin: 14px auto 0; font-size: 14px; color: var(--graphite); max-width: 320px; }
+.note { margin-top: 20px; font: 400 13px/1.4 var(--mono); color: var(--graphite); }
 
-/* preview */
-.frame { overflow: hidden; margin-top: 8px; border-radius: 20px; box-shadow: 0 8px 40px rgba(0,0,0,.08); }
-.frame .bar { display: flex; justify-content: space-between; gap: 16px; padding: 12px 18px; border-bottom: 1px solid var(--line); font: 400 13px/1.4 var(--mono); color: var(--secondary); }
-.frame .bar .dot { color: var(--text); }
-.frame a.shot { display: block; aspect-ratio: 16 / 9.4; position: relative; background: #f3f3f1; }
-.frame a.shot img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top left; }
-.frame a.shot .ph { position: absolute; inset: 0; display: none; place-items: center; font: 500 14px/1 var(--mono); color: var(--secondary); letter-spacing: .04em; }
-.frame a.shot.noimg img { display: none; }
-.frame a.shot.noimg .ph { display: grid; }
-
-/* stats */
-.stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); margin: 40px auto 0; max-width: 1040px; overflow: hidden; }
-.stat { padding: 22px 24px; border-left: 1px solid var(--line); }
-.stat:first-child { border-left: 0; }
-.stat .v { font: 400 32px/1.1 var(--sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.stat .label { color: var(--muted); margin-top: 8px; display: block; text-transform: none; letter-spacing: 0; font-size: 13px; }
-
-/* what is */
-.center { text-align: center; }
-.what p { max-width: 720px; margin: 0 auto 16px; color: var(--secondary); font-size: 17px; }
-.what .asof { margin-top: 24px; font: 400 13px/1.4 var(--mono); color: var(--secondary); }
-
-/* tasks */
-.tasks { display: grid; grid-template-columns: 1fr 2.3fr; gap: 48px; align-items: start; }
-.cards3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); overflow: hidden; }
-.task { padding: 28px 26px; border-left: 1px solid var(--line); display: flex; flex-direction: column; min-height: 280px; }
-.task:first-child { border-left: 0; }
-.task { min-width: 0; }
-.task .head { display: flex; justify-content: space-between; align-items: center; color: var(--muted); margin-bottom: 36px; }
-.task .head .ico { color: var(--text); }
-.task p { color: var(--secondary); font-size: 15px; margin: 0 0 24px; }
-.task a.go { margin-top: auto; font: 500 13px/1.4 var(--mono); color: var(--text); text-decoration: none; }
-.task a.go:hover { text-decoration: underline; }
-
-/* right now */
-.now-head { display: flex; justify-content: space-between; align-items: end; gap: 24px; flex-wrap: wrap; margin-bottom: 32px; }
+/* snapshot */
+.now-head { margin-bottom: 32px; }
 .now { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .now .tile { padding: 20px 22px; }
 .now .th { flex-wrap: wrap; display: flex; align-items: center; gap: 10px; padding-bottom: 14px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
-.now .th .ico { width: 18px; height: 18px; color: var(--muted); }
-.now .th .live { margin-left: auto; font: 400 12px/1 var(--mono); color: var(--text); }
+.now .th .ico { width: 18px; height: 18px; color: var(--graphite); }
+.now .th .win { margin-left: auto; font: 400 12px/1 var(--mono); color: var(--graphite); }
 .now ol { list-style: none; margin: 0; padding: 0; }
-.now li a { display: flex; align-items: center; gap: 12px; padding: 11px 0; text-decoration: none; border-bottom: 1px solid var(--line); }
+.now li a { display: block; padding: 12px 0; text-decoration: none; border-bottom: 1px solid var(--line); }
 .now li:last-child a { border-bottom: 0; }
-.now li a:hover .t { color: var(--text); text-decoration: underline; }
-.now .t { overflow-wrap: anywhere; flex: 1; min-width: 0; font-size: 15px; line-height: 1.35; }
-.now .s { display: block; font: 400 12px/1.4 var(--mono); color: var(--secondary); margin-top: 3px; }
-.badge { flex: none; font: 500 13px/1 var(--mono); padding: 6px 8px; background: var(--well); border-radius: 999px; font-variant-numeric: tabular-nums; }
-.foot-note { margin-top: 20px; font: 400 12px/1.6 var(--mono); color: var(--secondary); }
-.empty { color: var(--secondary); font: 400 13px/1.4 var(--mono); padding: 12px 0; }
+.now li a:hover .t { color: var(--teal); text-decoration: underline; }
+.now .t { display: block; overflow-wrap: anywhere; font-size: 15px; line-height: 1.35; }
+.now .s { display: block; font: 400 12px/1.5 var(--mono); color: var(--graphite); margin-top: 4px; overflow-wrap: anywhere; }
+.fig { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font: 500 13px/1.3 var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.fig .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.new { display: inline-block; font: 600 11px/1 var(--mono); letter-spacing: .04em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; color: var(--teal); background: var(--teal-tint); }
+.foot-note { margin-top: 20px; font: 400 12px/1.6 var(--mono); color: var(--graphite); }
+.empty { color: var(--graphite); font: 400 13px/1.4 var(--mono); padding: 12px 0; }
 
-/* first five minutes */
-.steps { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; margin-top: 40px; counter-reset: s; }
-.step { padding: 22px 20px; }
-.step .head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; color: var(--muted); }
-.step .head .ico { color: var(--text); }
-.step h3 { font-size: 17px; }
-.step p { margin: 0; color: var(--secondary); font-size: 14px; line-height: 1.55; }
-kbd { font: 500 12px/1 var(--mono); padding: 3px 6px; border-radius: 6px; background: var(--well); border: 1px solid var(--line); color: var(--text); }
-.swatch { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: 1px; margin: 0 2px; }
+/* stats */
+.statsec { padding: 0 0 80px; border: 0; }
+.stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 1040px; margin: 0 auto; overflow: hidden; }
+.stat { padding: 22px 24px; border-left: 1px solid var(--line); }
+.stat:first-child { border-left: 0; }
+.stat .v { font: 400 32px/1.1 var(--sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+.stat .label { margin-top: 8px; display: block; letter-spacing: 0; font-size: 13px; }
+
+/* reading the map */
+.read { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 32px; }
+.read .tile { padding: 22px 24px; }
+.read p { margin: 0 0 10px; color: var(--graphite); font-size: 15px; }
+.read p:last-child { margin-bottom: 0; }
+.read strong { color: var(--ink); font-weight: 500; }
+.scale { display: flex; gap: 4px; margin: 4px 0 14px; }
+.scale span { flex: 1; height: 10px; border-radius: 3px; }
+.scale-k { display: flex; justify-content: space-between; font: 400 12px/1.4 var(--mono); color: var(--graphite); margin: -8px 0 12px; }
+kbd { font: 500 12px/1 var(--mono); padding: 3px 6px; border-radius: 6px; background: var(--hover); border: 1px solid var(--line); color: var(--ink); }
+.swatch { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: 1px; margin: 0 3px 0 0; }
+.tours { list-style: none; margin: 0; padding: 0; }
+.tours li { margin: 0 0 10px; }
+.tours a { font-size: 15px; text-underline-offset: 3px; }
 
 /* method */
 .method { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 40px; }
 .rule { padding: 24px 26px; }
 .rule .label { display: block; margin-bottom: 10px; }
-.rule p { margin: 0; color: var(--secondary); font-size: 15px; }
-.formula { display: block; margin: 12px 0 0; padding: 12px 14px; font: 400 13px/1.6 var(--mono); color: var(--text); overflow-wrap: anywhere; }
-.honest { margin-top: 16px; padding: 24px 26px; border-color: var(--line); }
-.honest p { margin: 8px 0 0; color: var(--secondary); }
-.honest .q { font: 400 13px/1.6 var(--mono); color: var(--text); }
+.rule p { margin: 0; color: var(--graphite); font-size: 15px; }
+.formula { display: block; margin: 12px 0 0; padding: 12px 14px; font: 400 13px/1.6 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+.honest { margin-top: 16px; padding: 24px 26px; }
+.honest p { margin: 8px 0 0; color: var(--graphite); }
+.honest p strong { color: var(--ink); font-weight: 500; }
+.honest .q { font: 400 13px/1.6 var(--mono); color: var(--ink); }
+
+/* agent row */
+.agent { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 32px; align-items: center; padding: 24px 26px; }
+.agent h2 { font-size: 30px; margin: 0 0 6px; }
+.agent p { margin: 0; color: var(--graphite); font-size: 15px; }
+.cmd { display: flex; gap: 10px; align-items: stretch; }
+.cmd pre { flex: 1; min-width: 0; margin: 0; padding: 12px 14px; white-space: pre-wrap; overflow-wrap: anywhere; font: 13px/1.6 var(--mono); color: var(--ink); }
+.cmd button { flex: none; padding: 0 16px; letter-spacing: 0; }
+.alinks { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: 14px; }
+.alinks a { text-underline-offset: 3px; }
+#agentCopyStatus { color: var(--graphite); font-size: 13px; min-height: 20px; margin-top: 4px; }
+
+/* coming soon */
+.soon { padding: 32px 0; }
+.soon .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.soon .label { margin-right: 6px; }
+.chip { font-size: 13px; color: var(--graphite); padding: 5px 12px; border: 1px dashed var(--line); border-radius: 999px; background: var(--paper); }
 
 footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
 .fcols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 28px 30px; }
-.fcols h2 { margin: 0 0 14px; font: 400 22px/1.2 var(--serif); color: var(--text); }
+.fcols .label { display: block; margin: 0 0 14px; }
 .fcols ul { list-style: none; margin: 0; padding: 0; }
 .fcols li { margin: 0 0 8px; }
-.fcols a { color: var(--text); text-decoration: none; font-size: 14px; }
-.fcols a:hover { text-decoration: underline; text-decoration-color: var(--secondary); }
-.fline { margin: 20px 0 0; font: 400 12px/1.6 var(--mono); color: var(--secondary); }
-@media (max-width: 640px) { .fcols { grid-template-columns: 1fr; gap: 20px; } }
+.fcols a { color: var(--ink); text-decoration: none; font-size: 14px; }
+.fcols a:hover { color: var(--teal); text-decoration: underline; }
+.fline { margin: 20px 0 0; font: 400 12px/1.6 var(--mono); color: var(--graphite); }
 
 .fade { opacity: 1; }
 @media (prefers-reduced-motion: no-preference) {
@@ -154,10 +179,6 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   .js .fade.in { opacity: 1; transform: none; }
 }
 
-@media (max-width: 1100px) {
-  .steps { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .tasks { grid-template-columns: 1fr; gap: 24px; }
-}
 @media (max-width: 899px) {
   .navlinks, .navright .wide { display: none; }
   .navright { margin-left: auto; }
@@ -168,41 +189,38 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   .stat:nth-child(even) { border-left: 1px solid var(--line); }
   .stat:nth-child(-n+2) { border-top: 0; }
   .stat:last-child { grid-column: 1 / -1; border-left: 0; }
-  .cards3, .now, .method { grid-template-columns: 1fr; }
-  .task { border-left: 0; border-top: 1px solid var(--line); min-height: 0; }
-  .task:first-child { border-top: 0; }
-  .task .head { margin-bottom: 20px; }
-  .steps { grid-template-columns: 1fr; }
+  .now, .method, .read, .agent { grid-template-columns: 1fr; }
+  .agent { gap: 16px; }
   section { padding: 64px 0; }
+  .statsec { padding: 0 0 64px; }
+}
+@media (max-width: 640px) {
+  .mnote { display: block; }
+  .fcols { grid-template-columns: 1fr; gap: 20px; }
 }
 @media (max-width: 480px) {
   .wrap { padding: 0 16px; }
-  .hero { padding: 64px 0 40px; }
+  .hero { padding: 48px 0 48px; }
   .hero p.one { font-size: 17px; }
+  .pill { font-size: 12px; padding: 6px 12px; }
   nav.top .wrap { gap: 12px; }
   .crumb { gap: 7px; }
   .navright { gap: 10px; }
   nav.top .btn .long { display: none; }
   nav.top .btn .short { display: inline; }
-  .frame .bar { flex-direction: column; gap: 4px; font-size: 12px; }
   .stat { padding: 18px 16px; }
   .stat .v { font-size: 26px; }
   .cta .btn { flex: 1 1 100%; justify-content: center; }
+  .cmd { flex-direction: column; }
+  .cmd button { padding: 10px 16px; justify-content: center; }
 }
-#agents pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;font:12px/1.6 var(--mono);margin:0 0 12px}
-#agents button{align-self:flex-start;min-height:28px;cursor:pointer;padding:6px 12px;letter-spacing:0}
-#agentCopyStatus{color:var(--secondary);font-size:13px;min-height:24px}
 </style>
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
   <symbol id="i-up" viewBox="0 0 24 24"><path d="M3 17l6-6 4 4 8-8"/><path d="M15 7h6v6"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><circle cx="6" cy="12" r="3"/><circle cx="18" cy="6" r="3"/><circle cx="18" cy="18" r="3"/><path d="M8.6 10.7l6.8-3.4M8.6 13.3l6.8 3.4"/></symbol>
-  <symbol id="i-lasso" viewBox="0 0 24 24"><path d="M4 10c0-3.3 3.6-6 8-6s8 2.7 8 6-3.6 6-8 6c-1.4 0-2.7-.3-3.8-.7"/><path d="M8 15.5c-1.5 1-2 2.2-1.5 3.5"/><circle cx="7" cy="20" r="1"/></symbol>
   <symbol id="i-sprout" viewBox="0 0 24 24"><path d="M12 21v-9"/><path d="M12 12c0-4 3-7 8-7 0 4-3 7-8 7z"/><path d="M12 14c0-3-2.5-5.5-7-5.5 0 3 2.5 5.5 7 5.5z"/></symbol>
-  <symbol id="i-palette" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="8" cy="10" r="1.2"/><circle cx="12" cy="7.5" r="1.2"/><circle cx="16" cy="10" r="1.2"/><path d="M12 21c-1.5 0-2-1-2-2s1-2 2-2h1.5"/></symbol>
-  <symbol id="i-click" viewBox="0 0 24 24"><path d="M9 9l11 4-5 2-2 5z"/><path d="M5 3v3M3 5h3M5.5 9.5l-2 2M9.5 5.5l2-2"/></symbol>
-  <symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></symbol>
 </svg>
 
 <nav class="top" aria-label="Main">
@@ -210,15 +228,14 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     <div class="crumb">
       <a href="https://charoori.com/">Charoori</a><span class="sep" aria-hidden="true">/</span>
       <a class="brand" href="#top" aria-label="undercurrent, back to top">
-        <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" fill="#ffffff" stroke="#e6e5e1"/>
-          <path d="M6 13c3-3 5-3 8 0s5 3 8 0 3-2 4-2" fill="none" stroke="#1c1c1c" stroke-width="1.8" stroke-linecap="round"/>
-          <path d="M6 20c3-3 5-3 8 0s5 3 8 0 3-2 4-2" fill="none" stroke="#5f5f5f" stroke-width="1.8" stroke-linecap="round"/></svg>
+        <svg viewBox="0 0 32 32" aria-hidden="true"><rect x="1" y="1" width="30" height="30" rx="9" fill="#fdfbfa" stroke="#d1d1cd"/>
+          <path d="M6 13c3-3 5-3 8 0s5 3 8 0 3-2 4-2" fill="none" stroke="#016a71" stroke-width="1.8" stroke-linecap="round"/>
+          <path d="M6 20c3-3 5-3 8 0s5 3 8 0 3-2 4-2" fill="none" stroke="#27251e" stroke-width="1.8" stroke-linecap="round"/></svg>
         <span>Undercurrent</span>
       </a>
     </div>
     <div class="navlinks">
-      <a href="#how">How it works</a>
-      <a href="#first">First five minutes</a>
+      <a href="#now">Snapshot</a>
       <a href="#method">Method</a>
       <a href="#agents">Agents</a>
     </div>
@@ -235,144 +252,82 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
 <main>
 <header class="hero" id="top">
   <div class="wrap">
-    <div class="kicker">arXiv computer science · updated monthly · data through <span data-k="last">…</span></div>
-    <h1><span>What is arriving in</span><span class="grad">computer science research</span></h1>
-    <p class="one">A map of every CS paper on arXiv since November 2023. See which topics grow faster than the field, and which ones are starting to connect.</p>
+    <div class="pill" id="pill">Updated monthly from arXiv</div>
+    <h1><span>What is arriving in</span><span class="soft">computer science research</span></h1>
+    <p class="one">Every arXiv CS paper since November 2023, <span data-k="n">459,249</span> of them, on one map. Growth is measured against all of CS, which grew <span data-k="vol">×1.36</span> in the last six months, so a topic only lights up when it outpaces the field.</p>
     <div class="cta">
       <a class="btn btn-p" href="map/">Open the map →</a>
-      <a class="btn btn-s" href="#how">How it works</a>
+      <a class="tl" href="#now">See this month's results ↓</a>
     </div>
-    <div class="note">Free · No signup · <span data-k="n">…</span> papers</div>
-
-    <div class="tile frame fade" style="margin-top:64px">
-      <div class="bar"><span>charoori.com/undercurrent/map</span><span><span class="dot">●</span> Captured from the live map. Click to open it.</span></div>
-      <a class="shot" href="map/" id="shot">
-        <img src="preview.png" alt="The undercurrent map: about 459,000 papers drawn as points and grouped into topics, coloured from blue (shrinking) to orange (growing)" onerror="this.parentNode.classList.add('noimg')">
-        <span class="ph">Open the live map →</span>
-      </a>
-    </div>
-
-    <div class="tile stats fade" aria-label="Numbers in this snapshot">
-      <div class="stat"><div class="v" data-k="n">…</div><span class="label">Papers</span></div>
-      <div class="stat"><div class="v" data-k="topics">…</div><span class="label">Topics</span></div>
-      <div class="stat"><div class="v" data-k="subs">…</div><span class="label">Sub-topics</span></div>
-      <div class="stat"><div class="v" data-k="months">…</div><span class="label">Months covered</span></div>
-      <div class="stat"><div class="v" data-k="arriving">…</div><span class="label" title="Arriving sub-topics in the last 6 months">Arriving · 6 mo</span></div>
-    </div>
+    <p class="mnote">The map downloads about 6 MB and works best on a laptop.</p>
+    <div class="note">Free · No signup · Built by Chandrahas Aroori</div>
   </div>
 </header>
-
-<section id="how" class="what center">
-  <div class="wrap fade">
-    <h2>What is undercurrent?</h2>
-    <p>It places every computer-science paper on arXiv on one map, so papers on similar problems sit near each other and form topics. Each topic shows how fast it is growing, corrected for the growth of CS as a whole, so a topic only looks hot if it is outpacing the field. Lines between topics are made of bridge papers: papers whose nearest neighbours sit in both topics.</p>
-    <p>It is for researchers looking for methods arriving from other areas, and for neighbouring fields worth reading. It is a monthly snapshot, not a live feed, built by Chandrahas Aroori.</p>
-    <div class="asof">As of <span data-k="gen">…</span></div>
-  </div>
-</section>
-
-<section>
-  <div class="wrap tasks">
-    <div class="fade">
-      <h2>What are you trying to find out?</h2>
-      <p class="lead">Pick the question closest to yours. Each one opens the map with a short guided tour that walks you through it.</p>
-    </div>
-    <div class="tile cards3 fade">
-      <div class="task">
-        <div class="head"><svg class="ico" aria-hidden="true"><use href="#i-up"/></svg><span class="mono">01</span></div>
-        <h3>Find what is arriving</h3>
-        <p>See which topics and sub-topics are growing fastest right now, then read their newest and most cited papers.</p>
-        <a class="go" href="map/?tour=arriving">Step-by-step tour →</a>
-      </div>
-      <div class="task">
-        <div class="head"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg><span class="mono">02</span></div>
-        <h3>See how two fields connect</h3>
-        <p>Pick a line between two topics and read the bridge papers that sit between them, and whether the link is new or growing.</p>
-        <a class="go" href="map/?tour=connect">Step-by-step tour →</a>
-      </div>
-      <div class="task">
-        <div class="head"><svg class="ico" aria-hidden="true"><use href="#i-lasso"/></svg><span class="mono">03</span></div>
-        <h3>Compare a region with your field</h3>
-        <p>Draw around any patch of the map and set it against your own area: how far apart they are and what they share.</p>
-        <a class="go" href="map/?tour=compare">Step-by-step tour →</a>
-      </div>
-    </div>
-  </div>
-</section>
-
-<section id="agents">
-  <div class="wrap">
-    <div class="fade">
-      <h2>Use it from your own agent</h2>
-      <p class="lead">Pick two areas on the map and undercurrent writes the prompt: the evidence for both sides and a method for combining them. Paste it into Claude or ChatGPT, or connect your coding agent to undercurrent's MCP server and let it compare topics, read abstracts and check whether an idea already exists.</p>
-    </div>
-    <div class="tile cards3 fade">
-      <div class="task"><h3>Copy the prompt</h3><p>Works with any chat AI. Set A and B on the map, choose what to borrow, then copy the idea prompt with its paper evidence.</p><a class="go" href="map/?tour=compare">Compare two areas →</a></div>
-      <div class="task"><h3>Claude Code, Codex, Cursor</h3><p>Connect your coding agent to the MCP server. For Claude Code:</p><pre class="well"><code id="agentCommand">claude mcp add --transport http undercurrent https://charoori.com/undercurrent/api/mcp/</code></pre><button id="copyAgentCommand" class="btn btn-s" aria-label="Copy Claude Code MCP setup">Copy</button><div id="agentCopyStatus" role="status" aria-live="polite"></div></div>
-      <div class="task"><h3>Free while it's new</h3><p>The MCP server is free and read-only. Heavier tools may become a paid plan later.</p></div>
-    </div>
-  </div>
-</section>
 
 <section id="now">
   <div class="wrap">
     <div class="now-head fade">
-      <div>
-        <div class="kicker">Right now</div>
-        <h2>What the latest snapshot shows</h2>
-        <p class="lead" style="margin:0">Read from the same data files the map uses. Click any item to explore it on the map.</p>
-      </div>
+      <div class="kicker">Right now</div>
+      <h2>What the latest snapshot shows</h2>
+      <p class="lead" style="margin:0">Read from the same data files the map uses. Click any item to explore it on the map.</p>
     </div>
     <div class="now fade">
       <div class="tile">
-        <div class="th"><svg class="ico" aria-hidden="true"><use href="#i-up"/></svg><span class="label">Fastest-growing topics</span><span class="live">● 6 months</span></div>
-        <ol id="l-grow"><li class="empty">…</li></ol>
+        <div class="th"><svg class="ico" aria-hidden="true"><use href="#i-up"/></svg><span class="label">Fastest-growing topics</span><span class="win">6 months</span></div>
+        <ol id="l-grow"><li class="empty">Loading…</li></ol>
       </div>
       <div class="tile">
-        <div class="th"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg><span class="label">Arriving sub-topics</span><span class="live">● 6 months</span></div>
-        <ol id="l-arr"><li class="empty">…</li></ol>
+        <div class="th"><svg class="ico" aria-hidden="true"><use href="#i-sprout"/></svg><span class="label">Arriving sub-topics</span><span class="win">6 months</span></div>
+        <ol id="l-arr"><li class="empty">Loading…</li></ol>
       </div>
       <div class="tile">
-        <div class="th"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg><span class="label">New links</span><span class="live">● 6 months</span></div>
-        <ol id="l-links"><li class="empty">…</li></ol>
+        <div class="th"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg><span class="label">New links</span><span class="win">6 months</span></div>
+        <ol id="l-links"><li class="empty">Loading…</li></ol>
       </div>
     </div>
-    <div class="foot-note" id="winnote">Window: … </div>
+    <div class="foot-note" id="winnote">Window: the last 6 complete months against the 6 before, corrected for CS growth.</div>
   </div>
 </section>
 
-<section id="first">
+<section class="statsec" aria-label="Numbers in this snapshot">
+  <div class="wrap">
+    <div class="tile stats fade" id="stats">
+      <div class="stat"><div class="v" data-s="n">459,249</div><span class="label">Papers</span></div>
+      <div class="stat"><div class="v" data-s="topics">114</div><span class="label">Topics</span></div>
+      <div class="stat"><div class="v" data-s="subs">373</div><span class="label">Sub-topics</span></div>
+      <div class="stat"><div class="v" data-s="months">36</div><span class="label">Months covered</span></div>
+      <div class="stat"><div class="v" data-s="arriving">15</div><span class="label">Arriving sub-topics, last 6 months</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="read">
   <div class="wrap">
     <div class="fade">
       <div class="kicker">On the map</div>
-      <h2>Your first five minutes on the map</h2>
-      <p class="lead">Everything works with the mouse; the keys are shortcuts.</p>
+      <h2>Reading the map</h2>
     </div>
-    <div class="steps">
-      <div class="tile step fade">
-        <div class="head"><svg class="ico" aria-hidden="true"><use href="#i-palette"/></svg><span class="mono">01</span></div>
-        <h3>Read the colours</h3>
-        <p>The map is coloured by growth. <span class="swatch" style="background:#df8743"></span>Orange topics grow faster than CS, <span class="swatch" style="background:#6c93c3"></span>blue ones shrink, grey keeps pace.</p>
+    <div class="read">
+      <div class="tile fade">
+        <h3>Colour is growth</h3>
+        <div class="scale" aria-hidden="true">
+          <span style="background:#2c5f9e"></span><span style="background:#6c93c3"></span><span style="background:#a9bcd4"></span><span style="background:#a6a6a6"></span><span style="background:#e5b183"></span><span style="background:#df8743"></span><span style="background:#c4501b"></span>
+        </div>
+        <div class="scale-k" aria-hidden="true"><span>slower</span><span>keeps pace</span><span>faster</span></div>
+        <p><span class="swatch" style="background:#df8743"></span>Orange grows faster than CS, <span class="swatch" style="background:#6c93c3"></span>blue slower, <span class="swatch" style="background:#a6a6a6"></span>grey keeps pace.</p>
       </div>
-      <div class="tile step fade">
-        <div class="head"><svg class="ico" aria-hidden="true"><use href="#i-click"/></svg><span class="mono">02</span></div>
-        <h3>Click a topic</h3>
-        <p>The panel on the right shows its numbers, its arriving sub-topics, and its most cited and newest papers.</p>
+      <div class="tile fade">
+        <h3>Keys and window</h3>
+        <p><strong>Shortcuts:</strong> <kbd>2</kbd> links · <kbd>L</kbd> lasso · <kbd>[</kbd> <kbd>]</kbd> window</p>
+        <p>Growth compares the last 6 months with the 6 before. Switch to 3 or 12 months on the map.</p>
       </div>
-      <div class="tile step fade">
-        <div class="head"><svg class="ico" aria-hidden="true"><use href="#i-link"/></svg><span class="mono">03</span></div>
-        <h3>Show connections</h3>
-        <p>Press <kbd>2</kbd> to draw links between topics. Click a line to list its bridge papers.</p>
-      </div>
-      <div class="tile step fade">
-        <div class="head"><svg class="ico" aria-hidden="true"><use href="#i-lasso"/></svg><span class="mono">04</span></div>
-        <h3>Draw a region</h3>
-        <p>Press <kbd>L</kbd> and draw around any area, even one that crosses topics, to see what it holds.</p>
-      </div>
-      <div class="tile step fade">
-        <div class="head"><svg class="ico" aria-hidden="true"><use href="#i-clock"/></svg><span class="mono">05</span></div>
-        <h3>Change the window</h3>
-        <p>Use <kbd>[</kbd> and <kbd>]</kbd> to switch between the last 3, 6 and 12 months.</p>
+      <div class="tile fade">
+        <h3>Guided tours</h3>
+        <ul class="tours">
+          <li><a href="map/?tour=arriving">Find what is arriving →</a></li>
+          <li><a href="map/?tour=connect">See how two fields connect →</a></li>
+          <li><a href="map/?tour=compare">Compare a region with your field →</a></li>
+        </ul>
       </div>
     </div>
   </div>
@@ -409,9 +364,42 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     </div>
     <div class="tile honest fade">
       <span class="label">How much to trust it</span>
-      <p>I tested whether rising phrases keep rising. Going back to four earlier cutoffs, the top 50 rising phrases went on to grow 1.5× faster than CS in 36 % of cases, against a 27 % baseline. That is a real but modest lift: treat the map as a place to start reading, not a forecast.</p>
-      <p class="q" id="bt">…</p>
+      <p><strong>Topic growth and links are descriptive.</strong> They report what happened in the last window. They are not forecasts, and they have not been backtested yet.</p>
+      <p>The one signal I have backtested is rising phrases. Going back to four earlier cutoffs, the top 50 rising phrases went on to grow 1.5× faster than CS in 36 % of cases, against a 27 % baseline. That is a real but modest lift. Use the map to decide what to read first.</p>
+      <p class="q" id="bt">Backtest: top-50 phrases grew 1.5x faster than CS in 36% of cases vs 27% baseline (pooled, 4 cutoffs)</p>
     </div>
+  </div>
+</section>
+
+<section id="agents">
+  <div class="wrap">
+    <div class="tile agent fade">
+      <div>
+        <h2>Use it from your agent</h2>
+        <p>A free, read-only MCP server lets your agent compare topics, read abstracts and check whether an idea already exists.</p>
+      </div>
+      <div>
+        <div class="cmd">
+          <pre class="well"><code id="agentCommand">claude mcp add --transport http undercurrent https://charoori.com/undercurrent/api/mcp/</code></pre>
+          <button id="copyAgentCommand" class="btn btn-s" type="button" aria-label="Copy Claude Code MCP setup">Copy</button>
+        </div>
+        <div id="agentCopyStatus" role="status" aria-live="polite"></div>
+        <div class="alinks">
+          <a href="llms.txt">Codex, Cursor and other agents</a>
+          <a href="map/?tour=compare">Copy an idea prompt for any chat AI</a>
+          <a href="https://github.com/Exorust/undercurrent" target="_blank" rel="noopener">Source</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="soon" aria-label="Coming later">
+  <div class="wrap">
+    <span class="label">Coming later</span>
+    <span class="chip">Institution and country filters</span>
+    <span class="chip">Venue and code signals from arXiv comments</span>
+    <span class="chip">Citation percentiles</span>
   </div>
 </section>
 </main>
@@ -420,21 +408,21 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   <div class="wrap">
     <div class="tile fcols">
       <div>
-        <h2 class="label">Undercurrent</h2>
-        <ul><li><a href="map/">Open the map</a></li><li><a href="#how">How it works</a></li><li><a href="#method">Method</a></li></ul>
+        <span class="label">Undercurrent</span>
+        <ul><li><a href="map/">Open the map</a></li><li><a href="#now">Latest snapshot</a></li><li><a href="#method">Method</a></li></ul>
       </div>
       <div>
-        <h2 class="label">By Chandrahas Aroori</h2>
+        <span class="label">By Chandrahas Aroori</span>
         <ul><li><a href="https://charoori.com/">charoori.com</a></li><li><a href="https://charoori.com/blog/">Writing</a></li>
           <li><a href="https://github.com/Exorust" target="_blank" rel="noopener">GitHub</a></li><li><a href="https://x.com/charoori_ai" target="_blank" rel="noopener">X</a></li></ul>
       </div>
       <div>
-        <h2 class="label">Source &amp; data</h2>
+        <span class="label">Source and data</span>
         <ul><li><a href="https://github.com/Exorust/undercurrent" target="_blank" rel="noopener">Source code</a></li><li><a href="https://arxiv.org" target="_blank" rel="noopener">arXiv</a></li>
           <li><a href="https://www.semanticscholar.org" target="_blank" rel="noopener">Semantic Scholar</a></li></ul>
       </div>
     </div>
-    <p class="fline">Last updated <span data-k="gen">…</span> · data through <span data-k="last">…</span></p>
+    <p class="fline">Last updated <span data-k="gen">7 November 2026</span> · data through <span data-k="last">October 2026</span></p>
   </div>
 </footer>
 
@@ -452,56 +440,107 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   });
   var MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   var STEPS = [0.5, 0.71, 0.9, 1.11, 1.41, 2.0];
-  var G = ['#2c5f9e','#6c93c3','#a9bcd4','#a6a6a6','#e5b183','#df8743','#c4501b'];   // light map growth steps
-  function ym(s) { if (!s) return '…'; var p = s.split('-'); return MONTHS[+p[1] - 1] + ' ' + p[0]; }
-  function day(s) { if (!s) return '…'; var d = s.slice(0, 10).split('-'); return (+d[2]) + ' ' + MONTHS[+d[1] - 1] + ' ' + d[0]; }
-  function fmt(n) { return n == null ? '…' : Number(n).toLocaleString('en-US'); }
+  var G = ['#2c5f9e','#6c93c3','#a9bcd4','#a6a6a6','#e5b183','#df8743','#c4501b'];   // map growth scale, used as dots only
+  var LEVEL = 1;
+  function ym(s) { var p = s.split('-'); return MONTHS[+p[1] - 1] + ' ' + p[0]; }
+  function day(s) { var d = s.slice(0, 10).split('-'); return (+d[2]) + ' ' + MONTHS[+d[1] - 1] + ' ' + d[0]; }
+  function fmt(n) { return Number(n).toLocaleString('en-US'); }
   function step(g) { var s = 0; while (s < STEPS.length && g >= STEPS[s]) s++; return s; }
-  function x(g) { return '×' + g.toFixed(2); }
   function set(k, v) { document.querySelectorAll('[data-k="' + k + '"]').forEach(function (e) { e.textContent = v; }); }
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]; }); }
-  // sub-topic labels are term lists ("turn, turn taking, duplex, taking"): drop terms contained in a longer one, keep two
+  // sub-topic labels are term lists ("turn, turn taking, duplex, taking"): drop terms contained in a longer one, keep three
   function short(label) {
     var t = label.split(', ');
     return t.filter(function (a) { return !t.some(function (b) { return b !== a && b.indexOf(a) >= 0; }); }).slice(0, 3).join(', ');
   }
-  function badge(g) { return '<span class="badge" style="color:' + G[step(g)] + '">' + x(g) + '</span>'; }
+  function fig(g, n, unit) {
+    return '<span class="fig"><span class="dot" style="background:' + G[step(g)] + '" aria-hidden="true"></span>×' + g.toFixed(2) + ' · ' + fmt(n) + ' ' + unit + '</span>';
+  }
   function list(id, items) {
     document.getElementById(id).innerHTML = items.length ? items.join('') : '<li class="empty">Nothing in this window.</li>';
   }
   function get(f) { return fetch('data/' + f).then(function (r) { if (!r.ok) throw new Error(f + ' ' + r.status); return r.json(); }); }
 
-  Promise.all([get('meta.json'), get('topics-1-6m.json'), get('links-1-6m.json')]).then(function (r) {
+  // eyebrow pill: data month from meta.json, next update after the 1st of the month two after it
+  function pill(last) {
+    var p = last.split('-'), y = +p[0], mo = +p[1] - 1, nm = mo + 2, ny = y + Math.floor(nm / 12); nm %= 12;
+    return '<span>Data through ' + MONTHS[mo] + ' ' + y + '</span> · <span>next update after 1 ' + MONTHS[nm] + (ny !== y ? ' ' + ny : '') + '</span>';
+  }
+
+  // stat strip count-up: the final value is in the HTML; screen readers get it from a hidden copy, only the visual copy animates
+  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var stats = [].slice.call(document.querySelectorAll('[data-s]'));
+  stats.forEach(function (el) {
+    var v = el.textContent.trim();
+    el.dataset.v = v.replace(/[^0-9]/g, '');
+    el.innerHTML = '<span class="sr-only" data-f>' + v + '</span><span aria-hidden="true" data-vis>' + v + '</span>';
+  });
+  function setStat(k, n) {
+    var el = document.querySelector('[data-s="' + k + '"]'); if (!el) return;
+    el.dataset.v = String(n);
+    el.querySelector('[data-f]').textContent = fmt(n);
+    if (!el.dataset.running) el.querySelector('[data-vis]').textContent = fmt(n);
+  }
+  function countUp() {
+    var t0 = null, D = 900;
+    stats.forEach(function (el) { el.dataset.running = '1'; });
+    function frame(t) {
+      if (t0 === null) t0 = t;
+      var k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3);
+      stats.forEach(function (el) { el.querySelector('[data-vis]').textContent = fmt(Math.round(+el.dataset.v * e)); });
+      if (k < 1) requestAnimationFrame(frame);
+      else stats.forEach(function (el) { delete el.dataset.running; el.querySelector('[data-vis]').textContent = fmt(+el.dataset.v); });
+    }
+    requestAnimationFrame(frame);
+  }
+  if (!reduce && 'IntersectionObserver' in window) {
+    var so = new IntersectionObserver(function (es) {
+      if (es.some(function (e) { return e.isIntersecting; })) { so.disconnect(); countUp(); }
+    }, {threshold: 0.5});
+    so.observe(document.getElementById('stats'));
+  }
+
+  Promise.all([get('meta.json'), get('topics-' + LEVEL + '-6m.json'), get('links-' + LEVEL + '-6m.json')]).then(function (r) {
     var m = r[0], T = r[1], L = r[2];
+    document.getElementById('pill').innerHTML = pill(m.last_complete);
     set('last', ym(m.last_complete)); set('n', fmt(m.n_points)); set('gen', day(m.generated));
-    set('topics', fmt(m.levels['1'])); set('subs', fmt(m.levels['0'])); set('months', fmt(m.months.length));
+    setStat('n', m.n_points); setStat('topics', m.levels['1']); setStat('subs', m.levels['0']); setStat('months', m.months.length);
+    var w = T.window;
+    set('vol', '×' + w.vol_ratio.toFixed(2));
     var arr = [], name = {};
-    T.topics.forEach(function (t) { name[t.c] = t.label; (t.arriving || []).forEach(function (a) { arr.push({a: a, p: t.label}); }); });
-    set('arriving', fmt(arr.length));
+    T.topics.forEach(function (t) { name[t.c] = t.label; (t.arriving || []).forEach(function (a) { arr.push({a: a, t: t}); }); });
+    setStat('arriving', arr.length);
+    var topicUrl = function (c) { return 'map/?topic=' + LEVEL + '-' + c; };
 
     list('l-grow', T.topics.filter(function (t) { return t.recent >= 200 && t.growth != null; })
       .sort(function (a, b) { return b.growth - a.growth; }).slice(0, 5).map(function (t) {
-        return '<li><a href="map/"><span class="t">' + esc(t.label) + '<span class="s">' + fmt(t.recent) + ' papers in the window</span></span>' + badge(t.growth) + '</a></li>';
+        return '<li><a href="' + topicUrl(t.c) + '"><span class="t">' + esc(t.label) + '</span>' + fig(t.growth, t.recent, 'papers') +
+          '<span class="s">' + fmt(t.prior) + ' in the 6 months before</span></a></li>';
       }));
     // one per parent topic (the fastest), so five near-identical "agents" sub-topics do not fill the list
     var per = {}, seen = {};
-    arr.forEach(function (o) { per[o.p] = (per[o.p] || 0) + 1; });
+    arr.forEach(function (o) { per[o.t.c] = (per[o.t.c] || 0) + 1; });
     list('l-arr', arr.sort(function (a, b) { return b.a.growth - a.a.growth; })
-      .filter(function (o) { if (seen[o.p]) return false; seen[o.p] = 1; return true; }).slice(0, 5).map(function (o) {
-        var more = per[o.p] > 1 ? ' · ' + per[o.p] + ' arriving here' : '';
-        return '<li><a href="map/"><span class="t">' + esc(short(o.a.label)) + '<span class="s">in ' + esc(o.p) + more + '</span></span>' + badge(o.a.growth) + '</a></li>';
+      .filter(function (o) { if (seen[o.t.c]) return false; seen[o.t.c] = 1; return true; }).slice(0, 5).map(function (o) {
+        var more = per[o.t.c] > 1 ? ' · ' + per[o.t.c] + ' arriving here' : '';
+        return '<li><a href="' + topicUrl(o.t.c) + '"><span class="t">' + esc(o.t.label) + '</span>' + fig(o.a.growth, o.a.recent, 'papers') +
+          '<span class="s">sub-topic: ' + esc(short(o.a.label)) + more + '</span></a></li>';
       }));
     var rank = function (b) { return b.status === 'new' ? 0 : 1; };
     list('l-links', L.bridge_links.filter(function (b) { return b.status === 'new' || b.growth != null; })
       .sort(function (a, b) { return rank(a) - rank(b) || (b.growth || 0) - (a.growth || 0) || b.n_bridge - a.n_bridge; })
       .slice(0, 5).map(function (b) {
-        return '<li><a href="map/"><span class="t">' + esc(name[b.c1]) + ' ↔ ' + esc(name[b.c2]) + '<span class="s">' + fmt(b.n_bridge) + ' bridge papers, ' + fmt(b.n_bridge_prior) + ' before</span></span>' + (b.status === 'new' ? '<span class="badge" style="color:#c4501b;background:#fff4ec">new</span>' : badge(b.growth)) + '</a></li>';
+        var f = b.status === 'new'
+          ? '<span class="fig"><span class="new">new</span>' + fmt(b.n_bridge) + ' bridge papers</span>'
+          : fig(b.growth, b.n_bridge, 'bridge papers');
+        return '<li><a href="map/?link=' + LEVEL + '-' + b.c1 + '-' + b.c2 + '"><span class="t">' + esc(name[b.c1]) + ' ↔ ' + esc(name[b.c2]) + '</span>' + f +
+          '<span class="s">' + fmt(b.n_bridge_prior) + (b.n_bridge_prior === 1 ? ' bridge paper' : ' bridge papers') + ' in the 6 months before</span></a></li>';
       }));
-    var w = T.window;
-    document.getElementById('winnote').textContent = 'Window: ' + ym(w.from) + ' to ' + ym(w.to) + ' vs the 6 months before · corrected for CS growth (×' + w.vol_ratio.toFixed(2) + ')';
-    document.getElementById('bt').textContent = 'Backtest: ' + m.backtest_line;
+    document.getElementById('winnote').textContent = 'Window: ' + ym(w.from) + ' to ' + ym(w.to) + ' against the 6 months before, corrected for CS growth (×' + w.vol_ratio.toFixed(2) + '). Switch to 3 or 12 months on the map.';
+    if (m.backtest_line) document.getElementById('bt').textContent = 'Backtest: ' + m.backtest_line;
   }).catch(function (e) {
     console.warn('undercurrent: could not read the data files', e);
+    document.getElementById('pill').textContent = 'Updated monthly from arXiv';
     ['l-grow', 'l-arr', 'l-links'].forEach(function (id) { list(id, ['<li class="empty">Could not load the data. <a href="map/">Open the map</a>.</li>']); });
   });
 

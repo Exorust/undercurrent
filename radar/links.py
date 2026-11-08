@@ -8,6 +8,8 @@ Usage:
   python -m radar.links --calibrate     read-only: bridge threshold table for T = 2..6 on named pairs, onset share check
   python -m radar.links --selftest      tiny hand-made checks, prints ok lines
   --T N                                 bridge threshold for this run instead of the module constant T
+  python -m radar.links --citelinks-only   only topic_citelinks + citelink_evidence from cite_refs (rerun as references arrive)
+  --db PATH                             database instead of data/radar.duckdb (test copies)
 
 Reads point_index, knn, knn_exact_sample, map_meta (from radar.map), topic_members, topics, papers, signals.
 Months are smallint indices, 0 = first month in papers (2023-11). E = last complete month (arch §6.1).
@@ -304,6 +306,71 @@ def write_phrases(con):
     for k in list(pl)[:5]: print(f"  {k}: " + "; ".join(f"{a}~{b} n {x}/{y} share {s:.2f}/{u:.2f}" for a, b, x, y, s, u in pl[k]), file=sys.stderr)
 
 
+def citelinks(con, own_tx=True):
+    """Citation links between topics from cite_refs (citing_id, cited_id), topics per level from point_index.l0/l1/l2.
+    topic_citelinks: per unordered pair (c1 < c2) and CITING paper's month, n_cites = edges with ends in the two topics,
+    n_1to2 = citing in c1 -> cited in c2, n_2to1 the reverse. All months kept (windows select; the partial month is never
+    in a window). citelink_evidence: per pair, the top 5 papers cited across the pair (all months), n = cross-pair citations.
+    Edges are deduplicated, self-citations and noise (-1) ends dropped. own_tx=False when the caller holds the transaction."""
+    import time
+    t0 = time.time()
+    if not con.execute("select count(*) from information_schema.tables where table_name = 'cite_refs'").fetchone()[0]:
+        print("citelinks: no cite_refs table, skipped", file=sys.stderr); return False
+    if own_tx: con.execute("begin")
+    con.execute("""create or replace temp table _cite_e as
+      select l.level, a.month, b.row cited_row,
+             case l.level when 0 then a.l0 when 1 then a.l1 else a.l2 end ca,
+             case l.level when 0 then b.l0 when 1 then b.l1 else b.l2 end cb
+      from (select distinct citing_id, cited_id from cite_refs where citing_id <> cited_id) r
+      join point_index a on a.id = r.citing_id join point_index b on b.id = r.cited_id
+      cross join (values (0), (1), (2)) l(level)""")
+    con.execute("delete from _cite_e where ca < 0 or cb < 0 or ca = cb")
+    con.execute("""create or replace table topic_citelinks (level tinyint, c1 smallint, c2 smallint, month smallint,
+      n_cites integer not null, n_1to2 integer not null, n_2to1 integer not null, primary key (level, c1, c2, month), check (c1 < c2))""")
+    con.execute("""insert into topic_citelinks select level, least(ca, cb), greatest(ca, cb), month, count(*),
+      count(*) filter (where ca < cb), count(*) filter (where ca > cb) from _cite_e group by all""")
+    con.execute("""create or replace table citelink_evidence (level tinyint, c1 smallint, c2 smallint, cited_row integer,
+      n integer not null, primary key (level, c1, c2, cited_row), check (c1 < c2))""")
+    con.execute("""insert into citelink_evidence select level, c1, c2, cited_row, n from
+      (select level, least(ca, cb) c1, greatest(ca, cb) c2, cited_row, count(*) n from _cite_e group by all)
+      qualify row_number() over (partition by level, c1, c2 order by n desc, cited_row) <= 5""")
+    n_e = con.execute("select count(*) from cite_refs").fetchone()[0]
+    con.execute("drop table _cite_e")
+    if own_tx: con.execute("commit")
+    for tb in ("topic_citelinks", "citelink_evidence"):
+        print(f"{tb}: {con.execute(f'select count(*) from {tb}').fetchone()[0]} rows", file=sys.stderr)
+    print("topic_citelinks pairs: " + ", ".join(f"level {lv} {n} pairs / {c} cites" for lv, n, c in con.execute(
+        "select level, count(distinct (c1, c2)), sum(n_cites) from topic_citelinks group by 1 order by 1").fetchall())
+          + f"; from {n_e} cite_refs rows in {time.time() - t0:.1f}s", file=sys.stderr)
+    return True
+
+
+def citelinks_selftest():
+    """6 papers in 3 topics at level 1; level 2 puts paper 'f' in noise."""
+    con = duckdb.connect()
+    con.execute("create table point_index (row integer, id text, month smallint, l0 smallint, l1 smallint, l2 smallint)")
+    con.executemany("insert into point_index values (?,?,?,?,?,?)", [
+        (0, "a", 3, 0, 0, 0), (1, "b", 3, 0, 0, 0), (2, "c", 4, 1, 1, 1), (3, "d", 5, 1, 1, 1), (4, "e", 5, 2, 2, 2), (5, "f", 6, 2, 2, -1)])
+    con.execute("create table cite_refs (citing_id text, cited_id text)")
+    con.executemany("insert into cite_refs values (?,?)", [
+        ("c", "a"), ("d", "a"), ("d", "b"), ("a", "c"),   # 0~1: c->a (m4), d->a, d->b (m5), a->c (m3, 0 to 1)
+        ("d", "a"),                                       # duplicate edge, counted once
+        ("b", "a"), ("a", "a"),                           # same topic and self-cite, dropped
+        ("e", "a"), ("f", "a"),                           # 0~2: e->a (m5), f->a (m6; noise at level 2)
+        ("x", "a")])                                      # citing paper not on the map, dropped
+    citelinks(con)
+    got = {r[:4]: r[4:] for r in con.execute("select level, c1, c2, month, n_cites, n_1to2, n_2to1 from topic_citelinks").fetchall()}
+    assert got[(1, 0, 1, 3)] == (1, 1, 0) and got[(1, 0, 1, 4)] == (1, 0, 1) and got[(1, 0, 1, 5)] == (2, 0, 2), got
+    assert got[(1, 0, 2, 5)] == (1, 0, 1) and got[(1, 0, 2, 6)] == (1, 0, 1)
+    assert (2, 0, 2, 6) not in got and got[(2, 0, 2, 5)] == (1, 0, 1)
+    assert sum(v[0] for k, v in got.items() if k[0] == 1) == 6 and not any(k[1] == 1 and k[2] == 2 for k in got)
+    ev = con.execute("select cited_row, n from citelink_evidence where level = 1 and c1 = 0 and c2 = 1 order by n desc, cited_row").fetchall()
+    assert ev == [(0, 2), (1, 1), (2, 1)], ev
+    con.execute("drop table cite_refs"); assert citelinks(con) is False
+    print("ok citation links on 6 papers / 3 topics (pair counts, direction columns, citing-month buckets, dedupe, "
+          "self/same-topic/noise/off-map dropped, evidence top paper, missing cite_refs skipped)")
+
+
 def calibrate(con, month, lab, K, E, m0):
     labels = dict(con.execute("select cluster, label from topics where level = 1").fetchall())
     W = (month >= E - 11) & (month <= E)
@@ -355,10 +422,13 @@ def main():
     ap.add_argument("--check-knn", action="store_true"); ap.add_argument("--gate", type=float, default=GATE)
     ap.add_argument("--seed", type=int, default=None)
     ap.add_argument("--T", type=int, default=None, help=f"bridge threshold override (default {T})")
+    ap.add_argument("--citelinks-only", action="store_true", help="only rebuild topic_citelinks + citelink_evidence from cite_refs")
+    ap.add_argument("--db", default=None, help="database path (default data/radar.duckdb)")
     a = ap.parse_args()
     if a.T is not None: T = a.T
-    if a.selftest: selftest(); return
-    con = duckdb.connect(str(DB), read_only=a.calibrate)
+    if a.selftest: selftest(); citelinks_selftest(); return
+    con = duckdb.connect(str(a.db or DB), read_only=a.calibrate)
+    if a.citelinks_only: citelinks(con); return
     month, lab, K, e, m0, E = load(con)
     print(f"{len(month)} points, months {m0}..{m0 + E} (last complete), run_id {meta_get(con, 'run_id')}", file=sys.stderr)
     if a.calibrate: calibrate(con, month, lab, K, E, m0); return
@@ -369,6 +439,7 @@ def main():
     write_phrases(con)
     run_id = meta_get(con, "run_id")
     meta_set(con, bridge_T=int(T), onset_share=ONSET_SHARE, links_run_id=str(run_id))
+    citelinks(con, own_tx=False)
     con.execute("commit")
     print(f"links_run_id = {run_id}", file=sys.stderr)
 

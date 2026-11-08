@@ -1,7 +1,7 @@
 """Static snapshot of the topic workbench for hosting with no server (charoori.com/undercurrent/).
 
 Usage: python -m radar.export [--out site] [--ideas N] [--db data/radar.duckdb]
-       python -m radar.export --selftest
+       python -m radar.export --selftest | --check DIR (F50 size budgets on a finished export)
 
 Loads the same state as radar.serve (radar.duckdb read-only) and calls serve.py's own handlers, so every
 JSON file equals what the live endpoint returns. serve.py's workbench, pid, lock and log paths are pointed
@@ -10,7 +10,8 @@ binds a port. Writes <out>.tmp, then swaps it into <out>. All paths in the site 
 Layout: index.html = radar/landing.html (front page), map/index.html = radar/app.html reading ../data/,
 data/ = the JSON and binary files, preview.png carried over from the previous <out> when present.
 """
-import argparse, gzip, json, pathlib, shutil, sys, tempfile, time
+import argparse, gzip, json, math, pathlib, re, shutil, sys, tempfile, time
+from collections import Counter
 from datetime import datetime
 import numpy as np
 from . import serve
@@ -19,6 +20,13 @@ from .serve import S, P, E
 WINDOWS = {"3m": 3, "6m": 6, "12m": 12}
 SHARD = 10000
 DROP = ("summary", "abstract")
+MIN_INST = 30            # institutions (and countries) with fewer map papers get no row file
+MIN_CITE_LINK = 10       # a citation link needs at least this many cites to be listed
+MAX_CITE_LINKS = 200
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+SITE_VERCEL = ROOT / "tools" / "site-vercel.json"
+FILTER_JS = pathlib.Path(__file__).with_name("filter.js")
+KIND_BIT = {"accepted": 1, "workshop": 2, "submitted": 4}
 
 
 def dumps(obj):
@@ -49,6 +57,89 @@ def cit_bytes(cit):
     """citations per row -> Uint16 LE bytes; null (-1 or None) -> 0, clamp at 65535."""
     a = np.asarray([-1 if c is None else c for c in cit], np.int64)
     return np.clip(a, 0, 65535).astype("<u2").tobytes()
+
+
+def flag_bytes(n, kinds, codes, withdrawn):
+    """Uint8 per row: bit0 accepted, bit1 workshop, bit2 submitted, bit3 has code_url, bit4 withdrawn.
+    kinds/codes/withdrawn are dicts row -> value (rows not present get 0)."""
+    a = np.zeros(n, np.uint8)
+    for r, k in kinds.items(): a[r] |= KIND_BIT.get(k, 0)
+    for r, c in codes.items():
+        if c: a[r] |= 8
+    for r, wd in withdrawn.items():
+        if wd: a[r] |= 16
+    return a.tobytes()
+
+
+def citpct_bytes(n, pct):
+    """Uint8 per row: cit_pct 0..100, 255 unknown. pct is a dict row -> value or None."""
+    a = np.full(n, 255, np.uint8)
+    for r, v in pct.items():
+        if v is not None: a[r] = int(min(max(v, 0), 100))
+    return a.tobytes()
+
+
+def venue_index(venues):
+    """Venue names most frequent first (ties alphabetical) -> (list, name -> idx)."""
+    names = [v for v, _ in sorted(Counter(v for v in venues if v).items(), key=lambda x: (-x[1], x[0]))]
+    return names, {v: i for i, v in enumerate(names)}
+
+
+def rows_bin(rows):
+    """Sorted unique rows -> Uint32 LE bytes."""
+    return np.unique(np.asarray(list(rows), np.int64)).astype("<u4").tobytes()
+
+
+def short_label(label):
+    """landing.html short(): drop terms contained in another term, keep the first three."""
+    t = label.split(", ")
+    return ", ".join([a for a in t if not any(b != a and a in b for b in t)][:3])
+
+
+def landing_rows(T, L, n=5):
+    """The rows of the three front-page lists, same fields and order landing.html reads (level 1, 6m)."""
+    name, arr = {}, []
+    for t in T["topics"]:
+        name[t["c"]] = t["label"]
+        for a in t.get("arriving") or []: arr.append((a, t))
+    grow = sorted([t for t in T["topics"] if t["recent"] >= 200 and t["growth"] is not None], key=lambda t: -t["growth"])[:n]
+    per, seen, arrive = Counter(t["c"] for _, t in arr), set(), []
+    for a, t in sorted(arr, key=lambda o: -(o[0]["growth"] or 0)):
+        if t["c"] in seen: continue
+        seen.add(t["c"]); arrive.append((a, t))
+    rank = lambda b: 0 if b["status"] == "new" else 1
+    bl = sorted([b for b in L["bridge_links"] if b["status"] == "new" or b["growth"] is not None],
+                key=lambda b: (rank(b), -(b["growth"] or 0), -b["n_bridge"]))[:n]
+    return {"window": T["window"],
+            "growing": [{k: t.get(k) for k in ("c", "label", "growth", "recent", "prior")} for t in grow],
+            "arriving": [{"t": {"c": t["c"], "label": t["label"]},
+                          "a": {k: a.get(k) for k in ("label", "growth", "recent")},
+                          "short": short_label(a["label"]), "n_arriving": per[t["c"]]} for a, t in arrive[:n]],
+            "links": [{**{k: b.get(k) for k in ("c1", "c2", "status", "growth", "n_bridge", "n_bridge_prior")},
+                       "name1": name.get(b["c1"]), "name2": name.get(b["c2"])} for b in bl]}
+
+
+def gz(b): return len(gzip.compress(b, 6))
+
+
+def check_dir(d):
+    """F50 budget checks on a real export dir. Prints each number, returns True when all pass."""
+    d, ok = pathlib.Path(d) / "data", True
+    def line(name, val, limit, unit):
+        nonlocal ok
+        good = val <= limit; ok &= good
+        print(f"{'ok  ' if good else 'FAIL'} {name:34s} {val:12,.0f} {unit:6s} (limit {limit:,})")
+    pair = [d / "flags.bin", d / "citpct.bin"]
+    if all(f.exists() for f in pair): line("flags.bin+citpct.bin gzip", sum(gz(f.read_bytes()) for f in pair) / 1024, 600, "KB")
+    else: print("skip flags.bin+citpct.bin (absent)")
+    f = d / "institutions.json"
+    if f.exists(): line("institutions.json gzip", gz(f.read_bytes()) / 1024, 150, "KB")
+    else: print("skip institutions.json (absent)")
+    sizes = [(gz(f.read_bytes()), f.name) for f in sorted((d / "inst").glob("*.bin"))] if (d / "inst").is_dir() else []
+    if sizes: s, nm = max(sizes); line(f"largest inst/*.bin gzip ({nm}, of {len(sizes)})", s / 1024, 64, "KB")
+    else: print("skip inst/*.bin (absent)")
+    line("total files", sum(1 for f in pathlib.Path(d).parent.rglob("*") if f.is_file()), 10000, "files")
+    return ok
 
 
 def centroids(labels, V, k):
@@ -121,6 +212,23 @@ centroids-0.bin: little-endian Float32 matrix of level-0 means, n x 768.
 counts-0.json: {n, parent1, parent2}, parallel arrays of counts and majority parents;
 parent centroid means use counts as weights.
 ideas.json: array of saved idea packs with topic pair, model, shown papers and ideas.
+Newer files (present only when the source tables exist; every paper shard row has three
+trailing fields [..., venue_idx|null, code_url|null, cit_pct|null]):
+flags.bin: one byte per map row; bit0 accepted, bit1 workshop, bit2 submitted,
+bit3 has code link, bit4 withdrawn (from the arXiv comment field).
+citpct.bin: one byte per map row, citation percentile 0..100 among papers of the same month, 255 unknown.
+venues.json: array of venue names; venue_idx in the paper shards indexes it, most frequent first.
+institutions.json: [[inst_id, name, country, n]] for institutions with 30 or more map papers, n descending.
+inst/<inst_id>.bin: sorted little-endian Uint32 map rows of the papers with that institution.
+country/<CC>.bin: same per country (30 or more papers); countries.json: [[CC, n]].
+topic/L-W-c.json: also signals and signals_all ({venue_share, code_share, cit_median_pct,
+top10_share, top_insts, top_venues}) for the window and for the whole snapshot.
+topics-L-W.json rows: also venue_share, code_share, cit_median_pct.
+links-L-W.json: bridge entries also n_cites; cite_links lists pairs linked by citations
+({c1, c2, n_cites, n_1to2, n_2to1}) that are not bridge links.
+link/L-W-c1-c2.json: also cites {n_cites, n_1to2, n_2to1, top}, top = papers most cited across the pair.
+meta.json: also extra {comment_share, venue_share, code_share, inst_known_share, n_institutions, n_cite_refs}.
+landing.json: the five rows of each front-page list: growing, arriving, links.
 """)
 
 
@@ -136,7 +244,103 @@ class Writer:
         g = self.groups.setdefault(group or rel, [0, 0]); g[0] += 1; g[1] += len(data)
 
 
+def tcols(cur, t):
+    try: return {r[0] for r in cur.execute(f"describe {t}").fetchall()}
+    except Exception: return set()
+
+
+def jl(s):
+    try: return json.loads(s) if s else []
+    except Exception: return []
+
+
+class Extra:
+    """Optional tables: whatever is missing leaves its attribute empty and its output skipped."""
+    def __init__(self, cur):
+        self.cur, self.n = cur, S.n
+        have = {t: tcols(cur, t) for t in ("paper_comments", "paper_institutions", "institutions", "extra_meta",
+                                           "paper_cites", "topic_signals", "topic_citelinks", "citelink_evidence")}
+        self.have = {t: bool(c) for t, c in have.items()}
+        self.venue_names, self.venue_of, self.code_of, self.pct = [], {}, {}, {}
+        self.flags = self.citpct = None
+        cc = have["paper_comments"]
+        if cc:
+            f = lambda c: f"c.{c}" if c in cc else "null"
+            q = cur.execute(f"select pi.row, {f('kind')}, {f('venue')}, {f('code_url')}, {f('withdrawn')} "
+                            "from point_index pi join paper_comments c using(id)").fetchall()
+            self.venue_names, vidx = venue_index(v for _, _, v, _, _ in q)
+            kinds, codes, wd = {}, {}, {}
+            for r, k, v, c, w_ in q:
+                if k: kinds[r] = k
+                if c: codes[r], self.code_of[r] = True, c
+                if w_: wd[r] = True
+                if v: self.venue_of[r] = vidx[v]
+            self.flags = flag_bytes(S.n, kinds, codes, wd)
+        if have["paper_cites"]:
+            self.pct = dict(cur.execute("select row, cit_pct from paper_cites").fetchall())
+            self.citpct = citpct_bytes(S.n, self.pct)
+        self.row_fields = bool(cc or have["paper_cites"])
+        self.signals = {}
+        if have["topic_signals"]:
+            for lv, c, win, n, vs, cs, cm, t10, ti, tv in cur.execute(
+                    "select level, cluster, win, n, venue_share, code_share, cit_median_pct, top10_share, top_insts, top_venues from topic_signals").fetchall():
+                self.signals[(lv, c, win)] = {"venue_share": vs, "code_share": cs, "cit_median_pct": cm, "top10_share": t10,
+                                              "top_insts": jl(ti), "top_venues": jl(tv)}
+        self.meta = dict(cur.execute("select key, value from extra_meta").fetchall()) if have["extra_meta"] else {}
+
+    def paper_tail(self, r):
+        p = self.pct.get(r)
+        return [self.venue_of.get(r), self.code_of.get(r), None if p is None else int(p)]
+
+    def sig(self, lv, c, win): return self.signals.get((lv, c, win))
+
+    def put_institutions(self, w):
+        if not (self.have["paper_institutions"] and self.have["institutions"]): return
+        cur = self.cur
+        insts = cur.execute("select inst_id, coalesce(name, ''), coalesce(country, ''), n from institutions where n >= ? order by n desc, inst_id", [MIN_INST]).fetchall()
+        w.put("data/institutions.json", dumps([[i, nm, cc, int(n)] for i, nm, cc, n in insts]))
+        keep = {i for i, _, _, _ in insts}
+        by, byc = {}, {}
+        for i, row, cc in cur.execute("""select distinct a.inst_id, pi.row, i.country from paper_institutions a
+                                         join point_index pi using(id) left join institutions i on i.inst_id = a.inst_id""").fetchall():
+            if i in keep: by.setdefault(i, set()).add(row)
+            if cc and re.fullmatch(r"[A-Za-z]{2}", cc): byc.setdefault(cc.upper(), set()).add(row)
+        for i, rows in sorted(by.items()):
+            if re.fullmatch(r"[A-Za-z0-9_-]+", i): w.put(f"data/inst/{i}.bin", rows_bin(rows), "inst/")
+        cn = sorted(((cc, len(r)) for cc, r in byc.items() if len(r) >= MIN_INST), key=lambda x: (-x[1], x[0]))
+        for cc, _ in cn: w.put(f"data/country/{cc}.bin", rows_bin(byc[cc]), "country/")
+        w.put("data/countries.json", dumps([[cc, n] for cc, n in cn]))
+
+    def extra_meta(self):
+        if not self.meta: return None
+        def num(k):
+            try: return float(self.meta[k])
+            except Exception: return None
+        out = {k: num(k) for k in ("comment_share", "venue_share", "code_share", "inst_known_share")}
+        out["n_institutions"] = num("n_institutions_30"); out["n_cite_refs"] = num("n_cite_refs")
+        return out
+
+    def cite_pairs(self, lv, rf, rt):
+        """(c1, c2) with c1 < c2 -> (n_cites, n_1to2, n_2to1) summed over the window months; {} when absent."""
+        if not self.have["topic_citelinks"]: return {}
+        out = {}
+        for c1, c2, n, a, b in self.cur.execute("select c1, c2, sum(n_cites), sum(n_1to2), sum(n_2to1) from topic_citelinks "
+                                                "where level = ? and month between ? and ? group by 1, 2", [lv, rf, rt]).fetchall():
+            if c1 == c2: continue
+            if c1 > c2: c1, c2, a, b = c2, c1, b, a
+            o = out.get((c1, c2), (0, 0, 0)); out[(c1, c2)] = (o[0] + int(n), o[1] + int(a or 0), o[2] + int(b or 0))
+        return out
+
+    def cite_top(self, lv, c1, c2, k=30):
+        if not self.have["citelink_evidence"]: return []
+        got = self.cur.execute("select cited_row, sum(n) from citelink_evidence where level = ? and ((c1 = ? and c2 = ?) or (c1 = ? and c2 = ?)) "
+                               "group by 1 order by 2 desc, 1 limit ?", [lv, c1, c2, c2, c1, k]).fetchall()
+        n = {int(r): int(x) for r, x in got}
+        return [{**slim(p, url=True), "n": n[p["row"]]} for p in serve.papers(self.cur, list(n))]
+
+
 def win_q(n): return {"from": serve.ym(S.E - n + 1), "to": serve.ym(S.E)}
+def win_q_idx(n): return S.E - n + 1, S.E   # the same window as month indexes (rf, rt)
 
 
 def export(out, n_ideas):
@@ -149,6 +353,8 @@ def export(out, n_ideas):
     w, cur, gen = Writer(tmp), S.con.cursor(), datetime.now().isoformat(timespec="seconds")
     call = lambda fn, q=None, body=None: fn(None, q or {}, body, cur)
 
+    X = Extra(cur)
+    print("extra tables: " + (", ".join(t for t, h in X.have.items() if h) or "none"), flush=True)
     html = P["app"].read_text()
     assert "<head>" in html, "radar/app.html has no <head>"
     w.put("index.html", LANDING.read_bytes())
@@ -156,9 +362,18 @@ def export(out, n_ideas):
     if (pathlib.Path(out) / "preview.png").exists():   # written by the weekly job; keep it until the next one
         w.put("preview.png", (pathlib.Path(out) / "preview.png").read_bytes())
     wins = {k: serve.window(win_q(n))["obj"] for k, n in WINDOWS.items()}
-    w.put("data/meta.json", dumps({**call(serve.h_meta), "static": True, "generated": gen, "windows": wins}))
+    meta = {**call(serve.h_meta), "static": True, "generated": gen, "windows": wins}
+    if X.meta: meta["extra"] = X.extra_meta()
+    w.put("data/meta.json", dumps(meta))
     w.put("data/points.bin", P["points"].read_bytes())
     D = "data/"
+    if FILTER_JS.exists(): w.put("map/filter.js", FILTER_JS.read_bytes())
+    if SITE_VERCEL.exists(): w.put("vercel.json", SITE_VERCEL.read_bytes())
+    if X.flags is not None: w.put(f"{D}flags.bin", X.flags)
+    if X.citpct is not None: w.put(f"{D}citpct.bin", X.citpct)
+    if X.have["paper_comments"]: w.put(f"{D}venues.json", dumps(X.venue_names))
+    X.put_institutions(w)
+    landing_in = {}
     for lv in range(3): w.put(f"{D}labels-{lv}.json", dumps(call(serve.h_labels, {"level": lv})), "labels-*.json")
 
     link_keys = {}
@@ -166,17 +381,30 @@ def export(out, n_ideas):
         q = win_q(n)
         w.put(f"{D}phrases-{wk}.json", dumps(call(serve.h_phrases, {"level": 1, **q})), "phrases-*.json")
         for lv in range(3):
-            w.put(f"{D}topics-{lv}-{wk}.json", dumps(call(serve.h_topics, {"level": lv, **q})), "topics-*.json")
+            T = call(serve.h_topics, {"level": lv, **q})
+            for t in T["topics"]:
+                sg = X.sig(lv, t["c"], n)
+                if sg: t.update({k: sg[k] for k in ("venue_share", "code_share", "cit_median_pct")})
+            w.put(f"{D}topics-{lv}-{wk}.json", dumps(T), "topics-*.json")
             try: L = call(serve.h_links, {"level": lv, **q})
             except E as e: print(f"warning: links level {lv}: {e.msg}; skipped"); continue
+            bl, cp = L["bridge_links"], X.cite_pairs(lv, win_q_idx(n)[0], win_q_idx(n)[1])
+            if cp:
+                for x in bl: x["n_cites"] = cp.get((x["c1"], x["c2"]), (0, 0, 0))[0]
+                have = {(x["c1"], x["c2"]) for x in bl}
+                L["cite_links"] = [{"c1": a, "c2": b, "n_cites": v[0], "n_1to2": v[1], "n_2to1": v[2]} for (a, b), v in
+                                   sorted(cp.items(), key=lambda kv: (-kv[1][0], kv[0])) if v[0] >= MIN_CITE_LINK and (a, b) not in have][:MAX_CITE_LINKS]
             w.put(f"{D}links-{lv}-{wk}.json", dumps(L), "links-*.json")
-            bl = L["bridge_links"]
+            if (lv, wk) == (1, "6m"): landing_in = {"T": T, "L": L}
             top = sorted(bl, key=lambda x: -(x["strength"] if x["strength"] is not None else -1))[:40]
             pairs = {(x["c1"], x["c2"]) for x in top} | ({(x["c1"], x["c2"]) for x in bl if x["n_bridge"] >= 10} if lv == 1 else set())
             strength = {(x["c1"], x["c2"]): x["strength"] or 0 for x in bl}
             for c1, c2 in sorted(pairs):
                 r = call(serve.h_link, {"level": lv, "c1": c1, "c2": c2, **q})
                 r["bridges"] = [slim(p, url=True) for p in r["bridges"]]
+                if (c1, c2) in cp:
+                    v = cp[(c1, c2)]
+                    r["cites"] = {"n_cites": v[0], "n_1to2": v[1], "n_2to1": v[2], "top": X.cite_top(lv, c1, c2)}
                 w.put(f"{D}link/{lv}-{wk}-{c1}-{c2}.json", dumps(r), "link/")
             keys = sorted(f"{a}-{b}" for a, b in pairs)
             w.put(f"{D}link-index-{lv}-{wk}.json", dumps(keys), "link-index-*.json")
@@ -191,6 +419,7 @@ def export(out, n_ideas):
                 with serve.CACHE_LOCK: serve.CACHE.pop(r["sel_id"], None)
                 r["sel_id"] = f"topic-{lv}-{c}"
                 for k in ("top_cited", "newest"): r[k] = [slim(p) for p in r[k]]
+                if X.signals: r["signals"], r["signals_all"] = X.sig(lv, c, n), X.sig(lv, c, 0)
                 w.put(f"{D}topic/{lv}-{wk}-{c}.json", dumps(r), "topic/")
         print(f"  topic level {lv} done ({time.time() - t0:.0f} s)", flush=True)
 
@@ -204,7 +433,8 @@ def export(out, n_ideas):
     for k in range((S.n + SHARD - 1) // SHARD):
         rows = range(k * SHARD, min((k + 1) * SHARD, S.n))
         w.put(f"{D}papers/{k}.json", dumps([[str(S.ids[r]), titles.get(str(S.ids[r])), serve.ym(S.month[r]), serve.catname(S.cat[r]),
-                                              int(S.cit[r]) if S.cit[r] >= 0 else None] for r in rows]), "papers/")
+                                              int(S.cit[r]) if S.cit[r] >= 0 else None] + (X.paper_tail(r) if X.row_fields else [])
+                                             for r in rows]), "papers/")
         if k == 0: gz0 = len(gzip.compress((tmp / D / "papers/0.json").read_bytes(), 6)) / (tmp / D / "papers/0.json").stat().st_size
     del titles
     w.put(f"{D}citations.bin", cit_bytes(S.cit))
@@ -229,6 +459,7 @@ def export(out, n_ideas):
             print(f"  ideas {c1}-{c2}: {len(r['ideas'])} kept, {r['dropped']} dropped", flush=True)
         S.wb.close()
     w.put(f"{D}ideas.json", dumps(ideas))
+    if landing_in: w.put(f"{D}landing.json", dumps(landing_rows(landing_in["T"], landing_in["L"])))
     agent_assets(w)
     nf, nb = sum(g[0] for g in w.groups.values()), sum(g[1] for g in w.groups.values())
     w.put(f"{D}manifest.json", dumps({"files": nf + 1, "bytes": nb, "generated": gen, "run_id": S.run_id}))
@@ -253,8 +484,21 @@ def selftest():
     assert majority(np.array([0, 0, 0, 1, -1]), np.array([2, 2, 1, -1, 0]), 3).tolist() == [2, -1, -1]
     assert static_app("<html><head><title>x</title><head>") == '<html><head>\n<script>window.UC_STATIC={base:"../data/"}</script><title>x</title><head>'
     lp = LANDING.read_text()
-    assert LANDING.exists() and 'href="map/"' in lp and "fetch('data/'" in lp and 'src="preview.png"' in lp
+    assert LANDING.exists() and 'href="map/"' in lp and "fetch('data/'" in lp and re.search(r'<meta property="og:image" content="[^"]*preview\.png"', lp)
     assert not any(s in lp for s in ('href="/', 'src="/', "'/data", '"/data')), "landing.html must use relative URLs only"
+    assert flag_bytes(6, {0: "accepted", 1: "workshop", 2: "submitted", 3: "other"}, {0: True, 4: True}, {5: True}) == bytes([9, 2, 4, 0, 8, 16])
+    assert citpct_bytes(4, {0: 0, 1: 100, 2: None}) == bytes([0, 100, 255, 255])
+    assert venue_index(["b", "a", "b", None, "c", "a", "b"]) == (["b", "a", "c"], {"b": 0, "a": 1, "c": 2})
+    assert np.frombuffer(rows_bin({5, 1, 3}), "<u4").tolist() == [1, 3, 5]
+    assert short_label("agents, llm agents, tools, code, math") == "llm agents, tools, code"
+    T = {"window": {}, "topics": [{"c": c, "label": f"t{c}", "growth": 1.0 + c, "recent": 300, "prior": 5,
+                                   "arriving": [{"label": f"s{c}", "growth": c, "recent": 50}] * 2} for c in range(8)]}
+    L = {"bridge_links": [{"c1": i, "c2": i + 1, "status": "ratio", "growth": i, "n_bridge": 10, "n_bridge_prior": 2} for i in range(1, 9)]
+         + [{"c1": 0, "c2": 9, "status": "new", "growth": None, "n_bridge": 12, "n_bridge_prior": 0}]}
+    lr = landing_rows(T, L)
+    assert [x["c"] for x in lr["growing"]] == [7, 6, 5, 4, 3] and [x["t"]["c"] for x in lr["arriving"]] == [7, 6, 5, 4, 3]
+    assert lr["arriving"][0]["n_arriving"] == 2 and lr["links"][0]["status"] == "new" and len(lr["links"]) == 5 and len(json.dumps(lr)) < 10240
+    assert json.loads(SITE_VERCEL.read_text())["headers"][0]["source"] == "/data/(.*)"
     d = pathlib.Path(tempfile.mkdtemp(prefix="radar-export-selftest-")); out = d / "site"
     out.mkdir(); (out / "old.txt").write_text("old")
     tmp = d / "site.tmp"; tmp.mkdir(); (tmp / "new.txt").write_text("new")
@@ -273,8 +517,10 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--out", default="site"); ap.add_argument("--ideas", type=int, default=0)
     ap.add_argument("--db"); ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--check", metavar="DIR", help="run the F50 size budgets on an existing export dir and exit")
     a = ap.parse_args()
     if a.selftest: return selftest()
+    if a.check: sys.exit(0 if check_dir(a.check) else 1)
     if a.db: P["db"] = pathlib.Path(a.db)
     export(pathlib.Path(a.out), a.ideas)
 
