@@ -119,13 +119,6 @@ nav.top .btn .short { display: none; }
 .frame:hover img { transform: scale(1.01); }
 .frame[hidden] { display: none; }
 
-/* stats */
-.statsec { padding: 0 0 80px; border: 0; }
-.stats { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 28px; max-width: 1200px; margin: 0 auto; background: none; border: 0; box-shadow: none; padding: 0; }
-.stat { display: flex; align-items: baseline; gap: 8px; }
-.stat[hidden] { display: none; }
-.stat .v { font: 400 26px/1.1 var(--sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
-.stat .label { font: 400 14px/1.3 var(--sans); letter-spacing: 0; color: var(--graphite); white-space: nowrap; }
 
 /* reading the map */
 .read { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; margin-top: 32px; }
@@ -193,7 +186,6 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   .now, .method, .read, .agent { grid-template-columns: 1fr; }
   .agent { gap: 16px; }
   section { padding: 64px 0; }
-  .statsec { padding: 0 0 64px; }
 }
 @media (max-width: 640px) {
   .mnote { display: block; }
@@ -290,19 +282,6 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   </div>
 </section>
 
-<section class="statsec" aria-label="Numbers in this snapshot">
-  <div class="wrap">
-    <div class="stats fade" id="stats">
-      <div class="stat"><div class="v" data-s="n">459,249</div><span class="label">papers</span></div>
-      <div class="stat"><div class="v" data-s="topics">114</div><span class="label">topics</span></div>
-      <div class="stat"><div class="v" data-s="subs">373</div><span class="label">sub-topics</span></div>
-      <div class="stat"><div class="v" data-s="months">36</div><span class="label">months</span></div>
-      <div class="stat"><div class="v" data-s="arriving">15</div><span class="label">arriving sub-topics (6 months)</span></div>
-      <div class="stat"><div class="v" data-s="inst" data-suffix=" %">85 %</div><span class="label">with affiliations</span></div>
-      <div class="stat" id="codeStat" hidden><div class="v" data-s="code" data-suffix=" %">0 %</div><span class="label">with code</span></div>
-    </div>
-  </div>
-</section>
 
 <section id="agents">
   <div class="wrap">
@@ -399,40 +378,6 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     return '<span>Data through ' + MONTHS[mo] + ' ' + y + '</span> · <span>next update after 1 ' + MONTHS[nm] + (ny !== y ? ' ' + ny : '') + '</span>';
   }
 
-  // stat strip count-up: the final value is in the HTML; screen readers get it from a hidden copy, only the visual copy animates
-  var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var stats = [].slice.call(document.querySelectorAll('[data-s]'));
-  stats.forEach(function (el) {
-    var v = el.textContent.trim();
-    el.dataset.v = v.replace(/[^0-9]/g, '');
-    el.innerHTML = '<span class="sr-only" data-f>' + v + '</span><span aria-hidden="true" data-vis>' + v + '</span>';
-  });
-  function sfx(el, n) { return fmt(n) + (el.dataset.suffix || ''); }
-  function setStat(k, n) {
-    var el = document.querySelector('[data-s="' + k + '"]'); if (!el) return;
-    el.dataset.v = String(n);
-    el.querySelector('[data-f]').textContent = sfx(el, n);
-    if (!el.dataset.running) el.querySelector('[data-vis]').textContent = sfx(el, n);
-  }
-  function countUp() {
-    var t0 = null, D = 900;
-    stats.forEach(function (el) { el.dataset.running = '1'; });
-    function frame(t) {
-      if (t0 === null) t0 = t;
-      var k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3);
-      stats.forEach(function (el) { el.querySelector('[data-vis]').textContent = sfx({dataset: {suffix: el.dataset.suffix}}, Math.round(+el.dataset.v * e)); });
-      if (k < 1) requestAnimationFrame(frame);
-      else stats.forEach(function (el) { delete el.dataset.running; el.querySelector('[data-vis]').textContent = sfx(el, +el.dataset.v); });
-    }
-    requestAnimationFrame(frame);
-  }
-  if (!reduce && 'IntersectionObserver' in window) {
-    var so = new IntersectionObserver(function (es) {
-      if (es.some(function (e) { return e.isIntersecting; })) { so.disconnect(); countUp(); }
-    }, {threshold: 0.5});
-    so.observe(document.getElementById('stats'));
-  }
-
   // landing.json holds the five rows of each list; if it fails, build the same rows from the full topics and links files
   function fromFull() {
     return Promise.all([get('topics-' + LEVEL + '-6m.json'), get('links-' + LEVEL + '-6m.json')]).then(function (r) {
@@ -450,22 +395,15 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
           .map(function (b) { return {c1: b.c1, c2: b.c2, status: b.status, growth: b.growth, n_bridge: b.n_bridge, n_bridge_prior: b.n_bridge_prior, name1: name[b.c1], name2: name[b.c2]}; })};
     });
   }
-  function pct(x) { return Math.round(x * 100); }
 
   Promise.all([get('meta.json'), get('landing.json').catch(function (e) { console.warn('undercurrent: landing.json failed, using the full files', e); return fromFull(); })]).then(function (r) {
     var m = r[0], D = r[1];
     document.getElementById('pill').innerHTML = pill(m.last_complete);
     set('last', ym(m.last_complete)); set('n', fmt(m.n_points)); set('gen', day(m.generated));
-    setStat('n', m.n_points); setStat('topics', m.levels['1']); setStat('subs', m.levels['0']); setStat('months', m.months.length);
-    var x = m.extra, ik = x && x.inst_known_share, cs = x && x.code_share;
-    if (ik != null && ik > 0) setStat('inst', pct(ik)); else document.querySelector('[data-s="inst"]').parentNode.hidden = true;
-    if (cs != null && cs >= 0.01) { setStat('code', pct(cs)); document.getElementById('codeStat').hidden = false; }
-    else document.getElementById('codeStat').hidden = true;
     var w = D.window || m.windows['6m'];
     var span = w.from && w.to ? (Number(w.to.slice(0, 4)) - Number(w.from.slice(0, 4))) * 12 + Number(w.to.slice(5, 7)) - Number(w.from.slice(5, 7)) + 1 : Number(String(D.window).replace('m', ''));
     var win = [3, 6, 12].indexOf(span) >= 0 ? span : 6;
     set('vol', '×' + w.vol_ratio.toFixed(2));
-    if (D.arriving_total != null) setStat('arriving', D.arriving_total);
     var topicUrl = function (c) { return 'map/?topic=' + LEVEL + '-' + c + '&win=' + win; };
 
     list('l-grow', D.growing.map(function (t) {
