@@ -510,6 +510,7 @@ body.rail .slot .sn .sk{display:none}
 #tourCard{max-height:calc(100dvh - 16px);overflow:auto}
 :focus-visible,tr.hl:focus-visible{outline:2px solid var(--color-accent)!important;outline-offset:2px}
 @media (min-width:701px) and (max-width:1499px){#titleControls .tl{display:none}}
+#titleControls.tb-compact .tl{display:none}
 @media (max-width:1199px){
   #insp{visibility:hidden;transform:none;max-width:100vw}
   body.drawer #insp{visibility:visible}
@@ -679,9 +680,15 @@ body.rail #side #agentBtn{flex:none;width:34px;padding:0;justify-content:center}
 /* ---------- F48 filter: sidebar row, panel in #viewPanel, teal title-bar chips, empty-map message ---------- */
 [data-i=filter]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 3H2l8 9.46V19l4 2v-8.54z'/%3E%3C/svg%3E")}
 #side button.verb .vv:empty{display:none}
-#fChips{display:flex;align-items:center;gap:4px;min-width:0;flex:0 1 auto;overflow-x:auto;scrollbar-width:none}
+#fChips{display:flex;align-items:center;gap:4px;min-width:0;flex:1 1 auto;overflow:hidden;position:relative;min-height:28px}
 #fChips:empty{display:none}
 button.fchip,button.fsel{flex:none;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 9px!important;border-radius:999px!important;border:1px solid var(--color-accent)!important;background:var(--color-accent);color:#ffffff;font-size:12px!important;line-height:26px}
+button.fchip{display:inline-flex;align-items:center;gap:4px;width:max-content;max-width:220px}
+.fchip-label{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+button.fchip-more{width:44px;justify-content:center}
+#fChips .fchip-measuring{position:absolute;visibility:hidden;pointer-events:none}
+#fChips [data-act=fChipX]{min-width:90px}
+#fChips [data-act=fChipX] > [aria-hidden]{flex:none}
 button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:#01555b;color:#ffffff}
 #filterBox .flab{display:block;margin:14px 0 4px;font-size:12px;color:var(--color-muted)}
 #filterBox .fcombo{position:relative}
@@ -696,6 +703,7 @@ button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:#0
 #filterBox .fact{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
 #fEmpty{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:7;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);background:var(--color-surface);border:1px solid var(--color-hair);border-radius:12px;padding:10px 14px;font-size:13px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
 @media (max-width:700px){#fChips{order:4;flex:1 1 100%}}
+@media (max-width:600px){#fChips{flex-wrap:wrap}#fChips .fchip-more{display:none}}
 </style>
 </head>
 <body>
@@ -2568,6 +2576,7 @@ document.addEventListener('click', e => {
     case 'fToggle': FX.f[d.k] = !FX.f[d.k]; applyFilter(); break;
     case 'fCit': FX.f.cit = d.v ? +d.v : null; applyFilter(); break;
     case 'fClear': clearFilters(t); break;
+    case 'fMore': if (VP !== 'filter') openViewPanel('filter'); break;
     case 'fChipX': removeFilter(d.k, d.v, t); break;
   }
 });
@@ -2631,7 +2640,7 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (t.id === 'fInst') return instKey(e);
-  if (t.matches && t.matches('button.fchip,button.fsel') && (e.key === 'Backspace' || e.key === 'Delete')) { e.preventDefault(); t.click(); return; }
+  if (t.matches && t.matches('button.fchip[data-act=fChipX],button.fsel') && (e.key === 'Backspace' || e.key === 'Delete')) { e.preventDefault(); t.click(); return; }
   if (inText) { if (e.key === 'Escape') t.blur(); return; }
   if (t.matches('[data-act=selFocus]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); t.click(); return; }
   // table row navigation
@@ -3183,9 +3192,84 @@ function writeFilterURL() {  // filter params after the existing ones (?topic=, 
   try { history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {}
 }
 function instMsg(t) { const m = $('fInstMsg'); if (m.textContent !== t) m.textContent = t; }
+// Reset before measuring so a previous fit never determines the next chip widths.
+function fitFilterChips() {
+  const box = $('fChips'), chips = [...box.querySelectorAll('[data-act=fChipX]')], more = box.querySelector('[data-act=fMore]');
+  const titleBar = $('titleControls');
+  // Always decide from the labeled layout, independent of the previous fit.
+  titleBar.classList.remove('tb-compact');
+  if (!more) return;
+  const active = document.activeElement;
+  chips.forEach(b => { b.hidden = false; b.style.width = ''; b.tabIndex = 0; });
+  more.hidden = true;
+  more.tabIndex = -1;
+  more.textContent = '';
+  more.removeAttribute('aria-label');
+  const labeledAvailable = box.clientWidth;
+  // A hidden title bar will be measured again when ResizeObserver sees its width.
+  if (!titleBar.clientWidth || matchMedia('(max-width:600px)').matches) {
+    if (active === more) chips[chips.length - 1]?.focus({preventScroll: true});
+    return;
+  }
+  const gap = parseFloat(getComputedStyle(box).columnGap) || 0;
+  const widths = chips.map(b => b.offsetWidth);
+  const minimums = chips.map(b => parseFloat(getComputedStyle(b).minWidth) || 90);
+  // Measure the overflow control outside flex flow, using the rendered chip count.
+  more.textContent = '+' + chips.length;
+  more.classList.add('fchip-measuring');
+  more.hidden = false;
+  const moreWidth = more.offsetWidth;
+  more.hidden = true;
+  more.classList.remove('fchip-measuring');
+  // Reuse the icon-and-count toolbar when labels leave no room for a whole chip.
+  titleBar.classList.toggle('tb-compact', matchMedia('(min-width:1500px)').matches
+    && labeledAvailable < minimums[0] + moreWidth + gap);
+  const available = box.clientWidth;
+  let count = chips.length;
+  let minimum = minimums.reduce((a, b) => a + b, 0) + gap * Math.max(0, count - 1);
+  if (minimum > available) {
+    count = 0;
+    let used = moreWidth;
+    while (count < chips.length && used + gap + minimums[count] <= available) {
+      used += gap + minimums[count++];
+    }
+  }
+  const remaining = chips.length - count;
+  let extra = available - (remaining ? moreWidth + gap * count : gap * Math.max(0, count - 1))
+    - minimums.slice(0, count).reduce((a, b) => a + b, 0);
+  chips.forEach((b, i) => {
+    b.hidden = i >= count;
+    b.tabIndex = b.hidden ? -1 : 0;
+    if (!b.hidden) {
+      const growth = Math.min(Math.max(0, extra), Math.max(0, widths[i] - minimums[i]));
+      b.style.width = (minimums[i] + growth) + 'px';
+      extra -= growth;
+    }
+  });
+  more.hidden = remaining === 0;
+  more.tabIndex = remaining ? 0 : -1;
+  more.textContent = remaining ? '+' + remaining : '';
+  if (remaining) more.setAttribute('aria-label', remaining + ' more filters');
+  if (chips.includes(active) && active.hidden) more.focus({preventScroll: true});
+  else if (active === more && !remaining) chips[chips.length - 1]?.focus({preventScroll: true});
+}
+let filterFitFrame = 0;
+function scheduleFilterFit() {
+  if (filterFitFrame) return;
+  filterFitFrame = requestAnimationFrame(() => { filterFitFrame = 0; fitFilterChips(); });
+}
+const filterChipObserver = new ResizeObserver(scheduleFilterFit);
+filterChipObserver.observe($('titleControls'));
+// Counts and window text can change the available space without resizing the title bar.
+filterChipObserver.observe($('fChips'));
+document.fonts?.ready.then(scheduleFilterFit);
+matchMedia('(max-width:600px)').addEventListener('change', scheduleFilterFit);
 function renderFilterUI() {
   const f = FX.f, put = (el, html) => { if (el._h !== html) { el._h = html; el.innerHTML = html; } };  // unchanged chips are not rebuilt, so keyboard focus stays on them
-  put($('fChips'), filterItems().map(([k, v, label]) => `<button class="fchip nu" data-act="fChipX" data-k="${k}" data-v="${esc(v)}" title="Remove filter: ${esc(label)}">${esc(label)} <span aria-hidden="true">×</span><span class="sr-only">, remove filter</span></button>`).join(''));
+  const items = filterItems();
+  put($('fChips'), items.map(([k, v, label]) => `<button class="fchip nu" data-act="fChipX" data-k="${k}" data-v="${esc(v)}" title="Remove filter: ${esc(label)}"><span class="fchip-label">${esc(label)}</span><span aria-hidden="true">×</span><span class="sr-only">, remove filter</span></button>`).join('') + (items.length ? `<button class="fchip fchip-more nu" data-act="fMore" hidden tabindex="-1"></button>` : ''));
+  fitFilterChips();
+  scheduleFilterFit();
   syncViewRows();
   put($('fSelList'), f.inst.map(id => `<button class="fsel nu" data-act="fChipX" data-k="inst" data-v="${esc(id)}" title="Remove ${esc(instName(id))}">${esc(instName(id))} <span aria-hidden="true">×</span><span class="sr-only">, remove institution</span></button>`).join(''));
   $('fVenue').setAttribute('aria-pressed', String(!!f.venue)); $('fCode').setAttribute('aria-pressed', String(!!f.code));
@@ -3271,10 +3355,10 @@ function pickInst(id) {
   applyFilter();
 }
 function removeFilter(k, v, btn) {
-  const box = btn && btn.parentElement, idx = box ? [...box.querySelectorAll('button')].indexOf(btn) : -1;
+  const box = btn && btn.parentElement, idx = box ? [...box.querySelectorAll('button:not([hidden])')].indexOf(btn) : -1;
   if (k === 'inst') FX.f.inst = FX.f.inst.filter(x => x !== v); else if (k === 'country') FX.f.country = null; else if (k === 'cit') FX.f.cit = null; else FX.f[k] = false;
   applyFilter();  // chips re-render synchronously; focus moves to the neighbouring chip
-  if (box) { const now = [...box.querySelectorAll('button')], nx = now[Math.min(idx, now.length - 1)]; if (nx) nx.focus(); else (box.id === 'fChips' ? $('infoBtn') : $('fInst')).focus(); }
+  if (box) { const now = [...box.querySelectorAll('button:not([hidden])')], nx = now[Math.min(idx, now.length - 1)]; if (nx) nx.focus(); else (box.id === 'fChips' ? $('infoBtn') : $('fInst')).focus(); }
 }
 function clearFilters(btn) {
   FX.f = {inst: [], country: null, venue: false, code: false, cit: null};
