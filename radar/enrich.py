@@ -44,7 +44,9 @@ def post(ids, tries=8, url=URL):
 def refresh(con, older_days, limit):
     """Re-fetch citation counts + venue for papers whose s2_meta row is older than older_days. Keeps tldr/embeddings."""
     todo = [r[0] for r in con.execute(
-        f"select id from s2_meta where s2_id is not null and fetched_at < now() - interval {int(older_days)} day order by fetched_at, id"
+        f"select m.id from s2_meta m left join papers p on p.id = m.id where "
+        f"(m.s2_id is not null and m.fetched_at < now() - interval {int(older_days)} day) or "
+        "(m.s2_id is null and p.submitted >= date_trunc('month', current_date) - interval 2 month) order by m.fetched_at, m.id"
         + (f" limit {int(limit)}" if limit else "")).fetchall()]
     print(f"{len(todo)} papers to refresh", file=sys.stderr)
     url = URL.split("?")[0] + "?fields=" + REFRESH_FIELDS
@@ -52,14 +54,14 @@ def refresh(con, older_days, limit):
     for i in range(0, len(todo), 500):
         batch = todo[i:i + 500]
         res = post(batch, url=url)
-        rows = [(pid, p.get("citationCount"), p.get("influentialCitationCount"), venue_of(p)) for pid, p in zip(batch, res) if p]  # unknown to S2: leave row, retry next time
+        rows = [(pid, p.get("citationCount"), p.get("influentialCitationCount"), venue_of(p), p.get("paperId")) for pid, p in zip(batch, res) if p]  # unknown to S2: leave row, retry next time
         if rows:
             rt = pa.table({"id": [r[0] for r in rows], "citations": pa.array([r[1] for r in rows], pa.int32()),
-                           "influential": pa.array([r[2] for r in rows], pa.int32()), "s2_venue": [r[3] for r in rows]})
+                           "influential": pa.array([r[2] for r in rows], pa.int32()), "s2_venue": [r[3] for r in rows], "s2_id": pa.array([r[4] for r in rows], pa.string())})
             con.register("rt", rt)
             changed += con.execute("select count(*) from s2_meta m join rt using (id) where m.citations is distinct from rt.citations "
                                    "or m.influential is distinct from rt.influential").fetchone()[0]
-            con.execute("update s2_meta set citations = rt.citations, influential = rt.influential, s2_venue = rt.s2_venue, fetched_at = now() "
+            con.execute("update s2_meta set s2_id = coalesce(rt.s2_id, s2_meta.s2_id), citations = rt.citations, influential = rt.influential, s2_venue = rt.s2_venue, fetched_at = now() "
                         "from rt where s2_meta.id = rt.id")
             con.unregister("rt")
             refreshed += len(rows); with_venue += sum(1 for r in rows if r[3])

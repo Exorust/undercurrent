@@ -1,7 +1,7 @@
 """Citation percentiles per paper and venue/code/citation/institution signals per topic and window.
 
 Outputs (replaced atomically, in one transaction):
-  paper_cites   (row, cit_pct)      percentile of citations among same-month papers, 0..100, ties = average rank
+  paper_cites   (row, cit_pct)      percentile of citations among same-month papers, 0..100, share with strictly fewer citations
   topic_signals (level, cluster, win, n, venue_share, code_share, cit_median_pct, top10_share, top_insts, top_venues)
 
 Windows follow radar.serve: win in (3, 6, 12) is the recent window of that many complete months ending at the
@@ -12,10 +12,10 @@ signals are then NULL. Usage: python -m radar.citations [--selftest]
 import sys, time, json, pathlib, tempfile, os
 import duckdb
 from radar.harvest import DB
-from radar.serve import month_window, ym_abs
+from radar.serve import month_window, last_complete_month as serve_last_complete_month
 
 WINDOWS = (0, 3, 6, 12)
-SCRATCH = pathlib.Path("/private/tmp/claude-501/-Users-chandu/5ba53b84-cad4-41dd-bad3-762609d50f86/scratchpad")
+
 
 
 def has(con, t):
@@ -27,15 +27,8 @@ def cols(con, t):
 
 
 def last_complete_month(con):
-    """Same rule as serve.py: min(latest submitted, latest harvested - 1 month) as an index from month0."""
-    m0 = None
-    if has(con, "map_meta"):
-        r = con.execute("select month0 from map_meta order by created desc limit 1").fetchone()
-        m0 = ym_abs(r[0]) if r and r[0] else None
-    if m0 is not None and has(con, "papers"):
-        ms, mh = con.execute("select max(submitted), max(harvested_at) from papers").fetchone()
-        if ms is not None and mh is not None:
-            return min(ym_abs(ms), ym_abs(mh) - 1) - m0
+    if has(con, "papers"):
+        return serve_last_complete_month(con, None if has(con, "map_meta") else {})
     return con.execute("select max(month) from point_index").fetchone()[0]
 
 
@@ -48,15 +41,14 @@ def build_cites(con):
             from point_index p left join s2_meta s on s.id = p.id
         ), r as (
             select row, citations,
-                   rank() over w + (count(*) over (partition by month, citations) - 1) / 2.0 as avg_rank,
+                   rank() over w as min_rank,
                    count(*) over (partition by month) as n_month
             from c where citations is not null
             window w as (partition by month order by citations)
         )
         select c.row,
                case when r.row is null then null
-                    when r.n_month = 1 then 50
-                    else cast(round(100 * (r.avg_rank - 1) / (r.n_month - 1)) as integer) end as cit_pct
+                    else cast(round(100 * (r.min_rank - 1) / r.n_month) as integer) end as cit_pct
         from c left join r on r.row = c.row order by c.row""")
 
 
@@ -142,21 +134,19 @@ def fixture(con):
 
 
 def selftest():
-    SCRATCH.mkdir(parents=True, exist_ok=True)
-    p = SCRATCH / "citations_selftest.duckdb"; p.unlink(missing_ok=True)
+    p = pathlib.Path(tempfile.mkdtemp(prefix="citations_")) / "test.duckdb"
     con = duckdb.connect(str(p)); fixture(con)
     run(con, log=lambda *_: None)   # extras tables absent: must not crash
-    # hand-computed, n=10 non-null: average ranks 0->(1+2+3)/3=2, 1->4, 2->(5+6)/2=5.5, 5->7, 10->(8+9)/2=8.5, 50->10
-    # pct = round(100*(avg-1)/9): 0->11.1->11, 1->33.3->33, 2->50, 5->66.7->67, 10->83.3->83, 50->100; null stays null
-    exp = [11, 11, 11, 33, 50, 50, 67, 83, 83, 100, None]
+    # n=10: min ranks 1,4,5,7,8,10; round(100*(rank-1)/10) = 0,30,40,60,70,90.
+    exp = [0, 0, 0, 30, 40, 40, 60, 70, 70, 90, None]
     got = [r[0] for r in con.execute("select cit_pct from paper_cites order by row").fetchall()]
     assert got == exp, (got, exp)
     sg = {(r[0], r[1], r[2]): r for r in con.execute("select * from topic_signals").fetchall()}
     assert not any(k[0] == 2 for k in sg) and (0, 0, 0) in sg and (1, 0, 3) in sg
     assert sg[(0, 0, 3)][3] == 6 and sg[(0, 1, 3)][3] == 5 and sg[(1, 0, 12)][3] == 11
     assert all(sg[(0, 0, 3)][i] is None for i in (4, 5, 8, 9)), "absent extras give nulls"
-    assert sg[(0, 0, 3)][6] == 22.0 and sg[(0, 0, 3)][7] == 0.0   # median(11,11,11,33,50,50)=22; none >= 90
-    assert sg[(0, 1, 3)][6] == 83.0 and sg[(0, 1, 3)][7] == 0.25  # 67,83,83,100 -> median 83; 1 of 4 non-null >= 90
+    assert sg[(0, 0, 3)][6] == 15.0 and sg[(0, 0, 3)][7] == 0.0   # median(0,0,0,30,40,40)=15; none >= 90
+    assert sg[(0, 1, 3)][6] == 70.0 and sg[(0, 1, 3)][7] == 0.25  # 60,70,70,90 -> median 70; 1 of 4 non-null >= 90
     # with extras: topic 1 = p06..p10
     con.execute("create table paper_comments (id text, comment text, venue text, venue_source text, kind text, year int, code_url text, pages int, withdrawn bool)")
     con.executemany("insert into paper_comments values (?,null,?,null,?,2026,?,null,false)", [
@@ -170,6 +160,17 @@ def selftest():
     assert r[0] == 3 / 5 and r[1] == 2 / 5, r   # accepted/workshop: p06,p07,p09; code_url: p06,p08
     assert json.loads(r[2]) == [["i1", "MIT", 3], ["i2", "CMU", 1]], r[2]   # distinct papers, p06 counted once for i1
     assert json.loads(r[3]) == [["NeurIPS", 2], ["WS", 1]], r[3]
+    # Both metadata layouts and the default month0 follow serve exactly.
+    con.execute("create table papers(submitted date, harvested_at timestamp)")
+    con.execute("insert into papers values ('2026-10-15', '2026-11-01')")
+    assert last_complete_month(con) == 35
+    con.execute("create table map_meta(key text, value text)")
+    con.execute("insert into map_meta values ('month0', '2024-01')")
+    assert last_complete_month(con) == 33
+    con.execute("drop table map_meta")
+    con.execute("create table map_meta(month0 text, created timestamp)")
+    con.execute("insert into map_meta values ('2024-01', now())")
+    assert last_complete_month(con) == 33
     con.close(); p.unlink()
     print("ok")
 

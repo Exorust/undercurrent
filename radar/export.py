@@ -24,7 +24,6 @@ MIN_INST = 30            # institutions (and countries) with fewer map papers ge
 MIN_CITE_LINK = 10       # a citation link needs at least this many cites to be listed
 MAX_CITE_LINKS = 200
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-SITE_VERCEL = ROOT / "tools" / "site-vercel.json"
 FILTER_JS = pathlib.Path(__file__).with_name("filter.js")
 KIND_BIT = {"accepted": 1, "workshop": 2, "submitted": 4}
 
@@ -104,13 +103,13 @@ def landing_rows(T, L, n=5):
         for a in t.get("arriving") or []: arr.append((a, t))
     grow = sorted([t for t in T["topics"] if t["recent"] >= 200 and t["growth"] is not None], key=lambda t: -t["growth"])[:n]
     per, seen, arrive = Counter(t["c"] for _, t in arr), set(), []
-    for a, t in sorted(arr, key=lambda o: -(o[0]["growth"] or 0)):
+    for a, t in sorted(arr, key=lambda o: (not (o[0].get("is_new") or o[0]["growth"] is None), -(o[0]["growth"] or 0))):
         if t["c"] in seen: continue
         seen.add(t["c"]); arrive.append((a, t))
     rank = lambda b: 0 if b["status"] == "new" else 1
     bl = sorted([b for b in L["bridge_links"] if b["status"] == "new" or b["growth"] is not None],
                 key=lambda b: (rank(b), -(b["growth"] or 0), -b["n_bridge"]))[:n]
-    return {"window": T["window"],
+    return {"window": T["window"], "arriving_total": len(arr),   # all arriving sub-topics, before dedupe and the top-n cut
             "growing": [{k: t.get(k) for k in ("c", "label", "growth", "recent", "prior")} for t in grow],
             "arriving": [{"t": {"c": t["c"], "label": t["label"]},
                           "a": {k: a.get(k) for k in ("label", "growth", "recent")},
@@ -216,7 +215,8 @@ Newer files (present only when the source tables exist; every paper shard row ha
 trailing fields [..., venue_idx|null, code_url|null, cit_pct|null]):
 flags.bin: one byte per map row; bit0 accepted, bit1 workshop, bit2 submitted,
 bit3 has code link, bit4 withdrawn (from the arXiv comment field).
-citpct.bin: one byte per map row, citation percentile 0..100 among papers of the same month, 255 unknown.
+citpct.bin: one byte per map row, rounded percent of same-month papers with strictly fewer citations, 255 unknown.
+flags.bin and citpct.bin are always written (all 0 / all 255 when their source table is absent).
 venues.json: array of venue names; venue_idx in the paper shards indexes it, most frequent first.
 institutions.json: [[inst_id, name, country, n]] for institutions with 30 or more map papers, n descending.
 inst/<inst_id>.bin: sorted little-endian Uint32 map rows of the papers with that institution.
@@ -226,9 +226,10 @@ top10_share, top_insts, top_venues}) for the window and for the whole snapshot.
 topics-L-W.json rows: also venue_share, code_share, cit_median_pct.
 links-L-W.json: bridge entries also n_cites; cite_links lists pairs linked by citations
 ({c1, c2, n_cites, n_1to2, n_2to1}) that are not bridge links.
-link/L-W-c1-c2.json: also cites {n_cites, n_1to2, n_2to1, top}, top = papers most cited across the pair.
+link/L-W-c1-c2.json: also cites {n_cites, n_1to2, n_2to1, top}, top = up to 30 papers most cited across both orientations of the pair, with summed n.
 meta.json: also extra {comment_share, venue_share, code_share, inst_known_share, n_institutions, n_cite_refs}.
-landing.json: the five rows of each front-page list: growing, arriving, links.
+landing.json: window bounds, arriving_total, and five rows per front-page list: growing, arriving, links.
+Arriving growth null means new and sorts first; deep links pin the window to 3, 6, or 12 months.
 """)
 
 
@@ -368,9 +369,9 @@ def export(out, n_ideas):
     w.put("data/points.bin", P["points"].read_bytes())
     D = "data/"
     if FILTER_JS.exists(): w.put("map/filter.js", FILTER_JS.read_bytes())
-    if SITE_VERCEL.exists(): w.put("vercel.json", SITE_VERCEL.read_bytes())
-    if X.flags is not None: w.put(f"{D}flags.bin", X.flags)
-    if X.citpct is not None: w.put(f"{D}citpct.bin", X.citpct)
+    if S.n:   # always both files (defaults when a source table is absent): the page's filters need both
+        w.put(f"{D}flags.bin", X.flags if X.flags is not None else flag_bytes(S.n, {}, {}, {}))
+        w.put(f"{D}citpct.bin", X.citpct if X.citpct is not None else citpct_bytes(S.n, {}))
     if X.have["paper_comments"]: w.put(f"{D}venues.json", dumps(X.venue_names))
     X.put_institutions(w)
     landing_in = {}
@@ -388,12 +389,7 @@ def export(out, n_ideas):
             w.put(f"{D}topics-{lv}-{wk}.json", dumps(T), "topics-*.json")
             try: L = call(serve.h_links, {"level": lv, **q})
             except E as e: print(f"warning: links level {lv}: {e.msg}; skipped"); continue
-            bl, cp = L["bridge_links"], X.cite_pairs(lv, win_q_idx(n)[0], win_q_idx(n)[1])
-            if cp:
-                for x in bl: x["n_cites"] = cp.get((x["c1"], x["c2"]), (0, 0, 0))[0]
-                have = {(x["c1"], x["c2"]) for x in bl}
-                L["cite_links"] = [{"c1": a, "c2": b, "n_cites": v[0], "n_1to2": v[1], "n_2to1": v[2]} for (a, b), v in
-                                   sorted(cp.items(), key=lambda kv: (-kv[1][0], kv[0])) if v[0] >= MIN_CITE_LINK and (a, b) not in have][:MAX_CITE_LINKS]
+            bl = L["bridge_links"]
             w.put(f"{D}links-{lv}-{wk}.json", dumps(L), "links-*.json")
             if (lv, wk) == (1, "6m"): landing_in = {"T": T, "L": L}
             top = sorted(bl, key=lambda x: -(x["strength"] if x["strength"] is not None else -1))[:40]
@@ -402,9 +398,7 @@ def export(out, n_ideas):
             for c1, c2 in sorted(pairs):
                 r = call(serve.h_link, {"level": lv, "c1": c1, "c2": c2, **q})
                 r["bridges"] = [slim(p, url=True) for p in r["bridges"]]
-                if (c1, c2) in cp:
-                    v = cp[(c1, c2)]
-                    r["cites"] = {"n_cites": v[0], "n_1to2": v[1], "n_2to1": v[2], "top": X.cite_top(lv, c1, c2)}
+                r["cites"]["top"] = [slim(p, url=True) for p in r["cites"]["top"]]
                 w.put(f"{D}link/{lv}-{wk}-{c1}-{c2}.json", dumps(r), "link/")
             keys = sorted(f"{a}-{b}" for a, b in pairs)
             w.put(f"{D}link-index-{lv}-{wk}.json", dumps(keys), "link-index-*.json")
@@ -497,8 +491,10 @@ def selftest():
          + [{"c1": 0, "c2": 9, "status": "new", "growth": None, "n_bridge": 12, "n_bridge_prior": 0}]}
     lr = landing_rows(T, L)
     assert [x["c"] for x in lr["growing"]] == [7, 6, 5, 4, 3] and [x["t"]["c"] for x in lr["arriving"]] == [7, 6, 5, 4, 3]
+    T["topics"][0]["arriving"] = [{"label": "new", "growth": None, "is_new": True, "recent": 50}] * 2
+    assert landing_rows(T, L)["arriving"][0]["t"]["c"] == 0
+    assert lr["arriving_total"] == 16, "arriving_total counts before dedupe and truncation"
     assert lr["arriving"][0]["n_arriving"] == 2 and lr["links"][0]["status"] == "new" and len(lr["links"]) == 5 and len(json.dumps(lr)) < 10240
-    assert json.loads(SITE_VERCEL.read_text())["headers"][0]["source"] == "/data/(.*)"
     d = pathlib.Path(tempfile.mkdtemp(prefix="radar-export-selftest-")); out = d / "site"
     out.mkdir(); (out / "old.txt").write_text("old")
     tmp = d / "site.tmp"; tmp.mkdir(); (tmp / "new.txt").write_text("new")

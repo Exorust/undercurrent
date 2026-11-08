@@ -171,6 +171,7 @@ td.n,th.n{text-align:right} tr[tabindex]{cursor:pointer} tr.hl{background:var(--
 #inspBody b.gr.num{font:400 20px/1.2 "Inter",system-ui,sans-serif;padding:1px 9px;margin:4px 6px 4px 0;vertical-align:-2px;background:transparent;color:var(--color-text);box-shadow:inset 0 0 0 100px transparent}
 .wellbox{background:var(--color-well);border-radius:10px;padding:6px 5px 4px;margin:6px 0;width:max-content;max-width:100%}
 .plist>div{padding:5px 0;border-bottom:1px solid var(--color-hair)}.plist small{color:var(--color-muted);display:block;font-size:12px}
+.vp{display:inline-block;border:1px solid var(--color-hair);border-radius:9px;padding:0 6px;margin-left:4px;font-size:11px;line-height:16px;color:var(--color-muted);white-space:nowrap}.sigl{margin:3px 0}
 .def{background:var(--color-well);border:1px solid var(--color-hair);border-radius:10px;padding:6px 8px;font-size:12px;color:var(--color-muted);margin:6px 0}
 .dd{position:relative} .dd>div{position:absolute;z-index:20;background:var(--color-pop);border:1px solid var(--color-border);border-radius:10px;padding:4px;min-width:220px;max-height:300px;overflow:auto;right:0;box-shadow:0 8px 24px rgba(0,0,0,.08)}
 .dd>div button{display:block;width:100%;text-align:left;border:0;background:transparent;white-space:normal}
@@ -675,6 +676,26 @@ dialog.dlg::backdrop{background:rgba(28,28,28,.35)}
 #sideFoot{flex-wrap:wrap;row-gap:2px}
 body.rail #side #agentBtn{flex:none;width:34px;padding:0;justify-content:center}
 #abBlock #ideaDlgRow{margin-top:10px}
+/* ---------- F48 filter: sidebar row, panel in #viewPanel, teal title-bar chips, empty-map message ---------- */
+[data-i=filter]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 3H2l8 9.46V19l4 2v-8.54z'/%3E%3C/svg%3E")}
+#side button.verb .vv:empty{display:none}
+#fChips{display:flex;align-items:center;gap:4px;min-width:0;flex:0 1 auto;overflow-x:auto;scrollbar-width:none}
+#fChips:empty{display:none}
+button.fchip,button.fsel{flex:none;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 9px!important;border-radius:999px!important;border:1px solid var(--color-accent)!important;background:var(--color-accent);color:#ffffff;font-size:12px!important;line-height:26px}
+button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:#01555b;color:#ffffff}
+#filterBox .flab{display:block;margin:14px 0 4px;font-size:12px;color:var(--color-muted)}
+#filterBox .fcombo{position:relative}
+#fInstList{position:absolute;z-index:30;left:0;right:0;top:100%;margin:2px 0 0;padding:4px;list-style:none;background:var(--color-surface);border:1px solid var(--color-border);border-radius:10px;max-height:300px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.08)}
+#fInstList li{padding:4px 6px;font-size:13px;border-radius:6px;cursor:pointer;color:var(--color-text)}
+#fInstList li .fsub{font-size:12px;color:#5c5a55}
+#fInstList li[aria-selected=true],#fInstList li:hover{background:var(--color-hover)}
+#fSelList{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+#fSelList:empty{display:none}
+#fSigs{display:flex;gap:6px;flex-wrap:wrap}
+#filterBox .seg{flex-wrap:wrap}
+#filterBox .fact{display:flex;align-items:center;gap:10px;margin-top:16px;flex-wrap:wrap}
+#fEmpty{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:7;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);background:var(--color-surface);border:1px solid var(--color-hair);border-radius:12px;padding:10px 14px;font-size:13px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+@media (max-width:700px){#fChips{order:4;flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -697,6 +718,7 @@ body.rail #side #agentBtn{flex:none;width:34px;padding:0;justify-content:center}
     <button class="verb nu" id="vLevel" data-act="viewPanel" data-v="level" aria-expanded="false" aria-controls="viewPanel" title="Level"><i data-i="layers"></i><span class="vl">Level</span><span class="vv" id="vLevelVal">topics</span></button>
     <button class="verb nu" id="vColour" data-act="viewPanel" data-v="colour" aria-expanded="false" aria-controls="viewPanel" title="Colour by"><i data-i="palette"></i><span class="vl">Colour by</span><span class="vv" id="vColourVal">growth</span></button>
     <button class="verb nu" id="vLayers" data-act="viewPanel" data-v="layers" aria-expanded="false" aria-controls="viewPanel" title="Map layers"><i data-i="merge"></i><span class="vl">Map layers</span><span class="vv" id="vLayersVal">0 on</span></button>
+    <button class="verb nu" id="vFilter" data-act="viewPanel" data-v="filter" aria-expanded="false" aria-controls="viewPanel" title="Filter"><i data-i="filter"></i><span class="vl" id="vFilterLbl">Filter</span><span class="vv" id="vFilterVal">none</span></button>
   </div>
   <div id="selSec">
     <h2 class="sech">Selections</h2>
@@ -739,6 +761,7 @@ body.rail #side #agentBtn{flex:none;width:34px;padding:0;justify-content:center}
       </div>
     </details>
     <button id="infoBtn" data-act="helpDlg" aria-label="Help" aria-haspopup="dialog" title="Help (?)">?</button>
+    <div id="fChips" role="group" aria-label="Active filters"></div>
   </div>
   <div id="tbar" role="toolbar" aria-label="Tables">
     <button class="tb nu" id="tbTopics" aria-label="Topics table" data-act="sheet" data-t="topics" aria-pressed="false" title="Topics table"><i data-i="table"></i><span class="tl">Topics</span><span class="tc" id="cTopics">–</span></button>
@@ -761,6 +784,7 @@ body.rail #side #agentBtn{flex:none;width:34px;padding:0;justify-content:center}
   <div id="hintWrap"><div id="hint" role="status" aria-live="polite" hidden></div></div>
   <div id="zoomBtns"><button tabindex="-1" data-act="zin" aria-label="Zoom in">+</button><button tabindex="-1" data-act="zout" aria-label="Zoom out">−</button><button tabindex="-1" data-act="fit" aria-label="Fit map">⤢</button></div>
   <div id="caption"></div>
+  <div id="fEmpty" hidden><span>No papers match these filters.</span><button data-act="fClear">Clear filters</button></div>
   <div id="tip" role="tooltip"></div>
   <div id="composer">
     <div id="searchBox">
@@ -826,6 +850,25 @@ body.rail #side #agentBtn{flex:none;width:34px;padding:0;justify-content:center}
       <input type="range" id="edgeN" min="10" max="200" step="1" value="40" aria-label="Number of edges">
       <p class="vexp">Edges shown: how many of the strongest topic pairs get a bridge line.</p>
     </div></details>
+    <div id="filterBox" data-vp="filter">
+      <p class="vexp" id="fCov">Affiliations known for – % of papers.</p>
+      <label class="flab" for="fInst">Institution (up to 5, any of them)</label>
+      <div class="fcombo">
+        <input type="text" id="fInst" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="fInstList" aria-describedby="fInstMsg" autocomplete="off" spellcheck="false" placeholder="Type a university or lab…">
+        <ul id="fInstList" role="listbox" aria-label="Institutions" hidden></ul>
+      </div>
+      <p class="vexp" id="fInstMsg" role="status" aria-live="polite"></p>
+      <div id="fSelList" role="group" aria-label="Selected institutions"></div>
+      <label class="flab" for="fCountry">Country</label>
+      <select id="fCountry"><option value="">Any country</option></select>
+      <span class="flab" id="fSigLbl">Paper signals</span>
+      <div id="fSigs" role="group" aria-labelledby="fSigLbl"><button class="chipbtn nu" id="fVenue" data-act="fToggle" data-k="venue" aria-pressed="false">At a venue</button><button class="chipbtn nu" id="fCode" data-act="fToggle" data-k="code" aria-pressed="false">Has code</button></div>
+      <p class="vexp">At a venue: the arXiv comment says accepted at a conference, journal or workshop. Has code: the comment links code.</p>
+      <span class="flab" id="fCitLbl">Citations</span>
+      <span class="seg" id="fCit" role="radiogroup" aria-labelledby="fCitLbl"><button role="radio" data-act="fCit" data-v="" aria-checked="true">Any</button><button role="radio" data-act="fCit" data-v="50" aria-checked="false" aria-label="Top 50 % of their month">Top 50 %</button><button role="radio" data-act="fCit" data-v="25" aria-checked="false" aria-label="Top 25 % of their month">Top 25 %</button><button role="radio" data-act="fCit" data-v="10" aria-checked="false" aria-label="Top 10 % of their month">Top 10 %</button></span>
+      <p class="vexp">of their month: percentile compares a paper with others submitted the same month.</p>
+      <div class="fact"><button data-act="fClear" id="fClearBtn">Clear filters</button><span class="vexp" id="fCount" aria-live="polite"></span></div>
+    </div>
     <div id="largeLine" class="tiny muted" hidden></div>
   </section>
 </aside>
@@ -946,7 +989,11 @@ const S = {
   sort: {col: 'default', dir: -1}, linkSort: {col: 'default', dir: -1}, phSort: {col: 'growth', dir: -1}, lowOpen: false, mode: 'pan', hoverEdge: null,
   pending: new Set(), down: false, ideasBusy: false, ideasWait: null,
 };
-const P = {n: 0, xy: null, month: null, lvl: null, cat: null, draw: null, xyDraw: null, colours: null, mask: null, bbox: null};
+const P = {n: 0, xy: null, month: null, lvl: null, cat: null, draw: null, xyDraw: null, colours: null, mask: null, bbox: null, cv: 0, pd: null, pdv: -1};
+// F48 filter state: f is the filter (UCFilter shape), mask the per-row match (reused buffer), rows the cached inst/country row lists
+const FILTER_KEYS = ['inst', 'country', 'venue', 'code', 'cit'];
+const FX = {f: {inst: [], country: null, venue: false, code: false, cit: null}, flags: null, citpct: null, insts: null, lc: null, instById: new Map(), countries: null,
+  rows: new Map(), mask: null, maskOn: false, ver: 0, counts: null, countsKey: '', nMatch: null, seq: 0, qseq: 0, ai: -1, err: '', libP: null, baseP: null, instP: null, ctryP: null};
 const R = window.__radar = window.__wb = {
   static: !!ST, ready: false, firstDrawMs: null, firstRecolorMs: null, lastRecolorMs: null, lastFrameMs: null, maxFrameMs: null, lastLassoMs: null, animCount: 0, renderer: null,
   get nPoints() { return P.draw ? P.draw.length : P.n; }, get nDrawn() { return P.draw ? P.draw.length : P.n; },
@@ -956,7 +1003,10 @@ const R = window.__radar = window.__wb = {
   visibleLabels(withBoxes) { return withBoxes ? LBL.map(l => ({text: l.text.replace(/\n/g, ' '), box: l.box, size: l.size})) : LBL.map(l => l.text.replace(/\n/g, ' ')); },
   layers() { return (DK ? DK.props.layers : []).map(l => { const o = {id: l.id}; const d = l.props.data; o.n = d ? (d.length ?? 0) : 0; if (Array.isArray(d)) o.data = d.slice(0, 400).map(x => { const y = {}; for (const k in x) if (typeof x[k] !== 'object' || k === 'colour') y[k] = x[k]; return y; }); for (const k in l.props) { const v = l.props[k]; if (['number', 'string', 'boolean'].includes(typeof v)) o[k] = v; } return o; }); },
   zoomTo(f, xy, ms) { flyTo({target: xy || VS.target, zoom: Z0 + Math.log2(f)}, ms ?? 0); },
+  filterApplyMs: null, filterApplyHist: [], instSuggestMs: null,
+  filter() { return {...FX.f, inst: [...FX.f.inst], active: FX.maskOn, nMatch: FX.nMatch, err: FX.err || null, loaded: {base: !!FX.flags, insts: !!FX.insts, countries: !!FX.countries, rowFiles: [...FX.rows.keys()]}}; },
 };
+window.__ucPerf = R;
 const anim = (el, props) => { R.animCount++; if (window.anime && anime.animate) anime.animate(el, {...props, duration: RM.matches ? 0 : (props.duration || 200)}); };
 
 function announce(text) { $('announcements').textContent = text; }
@@ -1030,7 +1080,10 @@ function sWin(from, to) {
   throw sErr(400, `Window ${from} to ${to}: the web version has the last 3, 6 and 12 months; custom windows are ${LOCAL_ONLY}.`);
 }
 const curWin = () => sWin(winObj().from, winObj().to);
-async function sPaper(r) { const s = await sget(`papers/${Math.floor(r / 10000)}.json`), x = s[r % 10000]; return {row: r, id: x[0], title: x[1], month: x[2], cat: x[3], citations: x[4]}; }
+async function sPaper(r) {
+  const s = await sget(`papers/${Math.floor(r / 10000)}.json`), x = s[r % 10000], vn = x[5] != null ? await sget('venues.json').catch(() => null) : null;
+  return {row: r, id: x[0], title: x[1], month: x[2], cat: x[3], citations: x[4], venue: x[5] != null && vn ? vn[x[5]] : null, code_url: x[6] ?? null, cit_pct: x[7] ?? null};
+}
 function sTitles(note) {  // all 46 shards, lower-cased titles by row; shards stay cached for paper lookups
   if (!SX.titles) SX.titles = (async () => {
     const K = Math.ceil(P.n / 10000), out = new Array(P.n); let done = 0;
@@ -1204,6 +1257,7 @@ function areaHue(a, t) {  // 20 hues, topics vary ±10% lightness
   const h = (a * 137.508) % 360, l = 0.55 + ((t * 7919 % 21) - 10) / 100, s = 0.55, k = n => (n + h / 30) % 12, q = s * Math.min(l, 1 - l);
   return [0, 8, 4].map(n => Math.round(255 * (l - q * Math.max(-1, Math.min(k(n) - 3, 9 - k(n), 1)))));
 }
+const FDIM = 20;  // 8 % of 255
 function recolour() {
   if (!P.n) return;
   const t0 = performance.now(), out = new Uint8Array(P.colours.length), D = P.draw, N = D ? D.length : P.n;
@@ -1213,15 +1267,16 @@ function recolour() {
   else if (mode === 'date') { lut = new Uint8Array(4 * 64); for (let m = 0; m < 64; m++) { const t = Math.min(1, m / Math.max(1, S.E)); lut.set([232, 231, 227].map(v => Math.round(v + (28 - v) * t)), 4 * m); } lv = P.month; }
   else if (mode === 'dist' && S.distLut) { lut = S.distLut; lv = P.lvl[0]; }
   else if (mode === 'topic') { lut = new Uint8Array(4 * 512 * 32); lv = null; }
-  const grey = [207, 206, 203];
+  const grey = [207, 206, 203], dim = Math.round(base * 0.22), FM = FX.maskOn ? FX.mask : null;
   for (let k = 0; k < N; k++) {
     const i = D ? D[k] : k, o = 4 * k;
     if (mode === 'grey' || !lut) { out[o] = grey[0]; out[o + 1] = grey[1]; out[o + 2] = grey[2]; }
     else if (mode === 'topic') { const c = areaHue(P.lvl[2][i], P.lvl[1][i]); out[o] = c[0]; out[o + 1] = c[1]; out[o + 2] = c[2]; }
     else { const c = 4 * lv[i]; out[o] = lut[c]; out[o + 1] = lut[c + 1]; out[o + 2] = lut[c + 2]; }
-    out[o + 3] = anySel && !P.mask[i] ? Math.round(base * 0.22) : base;
+    if (FM && !FM[i]) { out[o] = 217; out[o + 1] = 217; out[o + 2] = 214; out[o + 3] = FDIM; }  // filter: non-matching points go to the no-data grey at 8 % alpha
+    else out[o + 3] = anySel && !P.mask[i] ? dim : base;  // selection dimming keeps the 22 % rule
   }
-  P.colours = out; colourStart = t0; render();
+  P.colours = out; P.cv++; colourStart = t0; render();
 }
 let colourStart = null;
 function updateMask() {
@@ -1318,6 +1373,12 @@ function hullOf(rows) {  // monotone chain convex hull in world coordinates
   return lo.slice(0, -1).concat(up.slice(0, -1));
 }
 const slotRGB = s => s === S.A ? A_RGB : s === S.B ? B_RGB : W_RGB;
+function maskedRows(s) {  // overlay rows that pass the active filter (rings, B outline); cached per selection rows and filter version
+  if (!FX.maskOn || !FX.mask) return s.rows;
+  if (s.mrRows === s.rows && s.mrVer === FX.ver) return s.mr;
+  const m = FX.mask, out = []; for (const r of s.rows) if (m[r]) out.push(r);
+  s.mr = out; s.mrRows = s.rows; s.mrVer = FX.ver; return out;
+}
 const slotTag = s => s === S.A ? 'A' : s === S.B ? 'B' : '';
 
 function drawnEdges() {
@@ -1341,8 +1402,10 @@ function render() {
   updateMapSummary();
   if (!DK || !R.deckReady || !pointsReady || !P.n) return;
   const f = zf(), layers = [], lv = S.level, T = S.topics[lv];
+  // one binary colour attribute; the data object is rebuilt only when the colours change (recolour or a filter change), so a pan re-uploads nothing
+  if (P.pdv !== P.cv || !P.pd) { P.pd = {length: P.colours.length / 4, attributes: {getPosition: {value: P.xyDraw, size: 2}, getFillColor: {value: P.colours, size: 4, normalized: true}}}; P.pdv = P.cv; }
   layers.push(new deck.ScatterplotLayer({
-    id: 'points', parameters: {blend: true, blendColorSrcFactor: 'src-alpha', blendColorDstFactor: 'one-minus-src-alpha', blendAlphaSrcFactor: 'one', blendAlphaDstFactor: 'one-minus-src-alpha'}, data: {length: P.colours.length / 4, attributes: {getPosition: {value: P.xyDraw, size: 2}, getFillColor: {value: P.colours, size: 4, normalized: true}}},
+    id: 'points', parameters: {blend: true, blendColorSrcFactor: 'src-alpha', blendColorDstFactor: 'one-minus-src-alpha', blendAlphaSrcFactor: 'one', blendAlphaDstFactor: 'one-minus-src-alpha'}, data: P.pd, updateTriggers: {getFillColor: P.cv},
     radiusUnits: 'pixels', getRadius: 1, radiusScale: Math.min(4, Math.pow(f, 0.5)) * PT_K(), radiusMinPixels: 0.8 * PT_K(), radiusMaxPixels: 4 * PT_K(), stroked: false, pickable: false,
   }));
   // Always submit points alone until their first frame has drawn and fonts are ready.
@@ -1353,10 +1416,12 @@ function render() {
     if (!s) continue; const col = s.flash ? W_RGB : slotRGB(s);
     if (s.poly) { polys.push({polygon: s.poly, dashed: s === S.B, line: col, fill: s === S.cur || s.flash ? [0, 0, 0, 0] : [...col, 38]}); const top = s.poly.reduce((a, p) => p[1] > a[1] ? p : a, s.poly[0]); if (slotTag(s) && !s.flash) tags.push({p: top, t: slotTag(s), c: col}); }
     else if (s.rows && s.rows.length && s.kind !== 'topic') {
+      const mr = maskedRows(s);  // filter on: papers the filter hides get no ring / outline (they stay filter-grey)
+      if (!mr.length) continue;
       if (s === S.B) { // Scattered B matches get a dashed enclosing outline; the point mask still shows exact membership.
-        if (s.outlineRows !== s.rows) { s.outlineRows = s.rows; s.outlineHull = hullOf(s.rows); }
+        if (s.outlineRows !== mr) { s.outlineRows = mr; s.outlineHull = hullOf(mr); }
         if (s.outlineHull.length > 2) polys.push({polygon: s.outlineHull, dashed: true, line: col, fill: [0, 0, 0, 0]});
-      } else rings.push({rows: s.rows, c: col});
+      } else rings.push({rows: mr, c: col});
     }
   }
   if (polys.length) layers.push(new deck.PolygonLayer({id: 'hulls', data: polys, getPolygon: d => d.polygon, getLineColor: d => d.line, getFillColor: d => d.fill, lineWidthUnits: 'pixels', getLineWidth: 2, stroked: false, filled: true, pickable: false, updateTriggers: {getLineColor: polys.map(p => p.line.join()).join('|'), getFillColor: polys.map(p => p.fill.join()).join('|')}}));
@@ -1364,8 +1429,8 @@ function render() {
     getPath: d => [...d.polygon, d.polygon[0]], getColor: d => d.line, widthUnits: 'pixels', getWidth: 2,
     getDashArray: d => d.dashed ? [3, 2] : [0, 0], dashJustified: false,
     extensions: [new deck.PathStyleExtension({dash: true, highPrecisionDash: true})], pickable: false}));
-  rings.forEach((g, k) => layers.push(new deck.ScatterplotLayer({id: 'rings' + k, data: {length: g.rows.length}, getPosition: (_, {index}) => [P.xy[2 * g.rows[index]], P.xy[2 * g.rows[index] + 1]], radiusUnits: 'pixels', getRadius: 2, stroked: true, filled: true, getFillColor: [255, 255, 255, 200], getLineColor: [...g.c, 255], lineWidthUnits: 'pixels', getLineWidth: 2, updateTriggers: {getPosition: g.rows.length + ':' + g.rows[0], getLineColor: g.c.join()}})));
-  if (S.ev && S.ev.onMap && S.ev.data) { const br = S.ev.data.bridges.filter(b => b.row != null); layers.push(new deck.ScatterplotLayer({id: 'bridgepts', data: br, getPosition: b => [P.xy[2 * b.row], P.xy[2 * b.row + 1]], radiusUnits: 'pixels', getRadius: 3, getFillColor: [28, 28, 28, 255]})); }
+  rings.forEach((g, k) => layers.push(new deck.ScatterplotLayer({id: 'rings' + k, data: {length: g.rows.length}, getPosition: (_, {index}) => [P.xy[2 * g.rows[index]], P.xy[2 * g.rows[index] + 1]], radiusUnits: 'pixels', getRadius: 2, stroked: true, filled: true, getFillColor: [255, 255, 255, 200], getLineColor: [...g.c, 255], lineWidthUnits: 'pixels', getLineWidth: 2, updateTriggers: {getPosition: g.rows.length + ':' + g.rows[0] + ':' + FX.ver, getLineColor: g.c.join()}})));
+  if (S.ev && S.ev.onMap && S.ev.data) { const FM = FX.maskOn ? FX.mask : null, br = S.ev.data.bridges.filter(b => b.row != null && (!FM || FM[b.row])); layers.push(new deck.ScatterplotLayer({id: 'bridgepts', data: br, getPosition: b => [P.xy[2 * b.row], P.xy[2 * b.row + 1]], radiusUnits: 'pixels', getRadius: 3, getFillColor: [28, 28, 28, 255]})); }
   // edges and nodes
   const E = drawnEdges(); let edges = [];
   if (S.bridges && T) {
@@ -1897,13 +1962,13 @@ function renderTopics() {
   const T = S.topics[S.level], el = $('pTopics'), lv = S.level;
   if (!T) { el.innerHTML = '<div class="tabhead">Loading topics…</div>'; return; }
   const badges = lv === 1 ? badgeTopics() : [], bRank = new Map(badges.map((t, i) => [t.c, i + 1]));
-  const gv = t => t.is_new ? Infinity : (t.growth ?? -1);
-  const col = S.sort.col, dir = S.sort.dir, val = {topic: t => t.label, area: t => areaOf(lv, t.c), recent: t => t.recent, prior: t => t.prior, growth: gv};
+  const gv = t => t.is_new ? Infinity : (t.growth ?? -1), mc = filterCounts();
+  const col = S.sort.col === 'match' && !mc ? 'default' : S.sort.col, dir = S.sort.dir, val = {venue: t => t.venue_share ?? -1, code: t => t.code_share ?? -1, cited: t => t.cit_median_pct ?? -1, topic: t => t.label, area: t => areaOf(lv, t.c), recent: t => t.recent, prior: t => t.prior, growth: gv, match: t => mc ? mc[t.c] || 0 : 0};
   const rows = [...T.topics].sort(col === 'default' ? (a, b) => (bRank.get(a.c) || 99) - (bRank.get(b.c) || 99) || gv(b) - gv(a) : (a, b) => { const x = val[col](a), y = val[col](b); return (x < y ? -1 : x > y ? 1 : 0) * dir; });
   const th = (k, label, cls = '') => `<th class="${cls}" aria-sort="${col === k ? (dir < 0 ? 'descending' : 'ascending') : 'none'}"><button data-act="sort" data-k="${k}">${label}${col === k ? (dir < 0 ? ' ▼' : ' ▲') : ''}</button></th>`;
-  el.innerHTML = (lv === 1 ? '<div class="tabhead">Ranked: topics with 200+ papers in the window.</div>' : '') +
-    `<table id="topicsTable"><thead><tr><th>#</th>${th('topic', 'topic')}${th('area', 'area')}${th('recent', 'papers (window)', 'n')}${th('prior', 'prior', 'n')}${th('growth', 'growth vs CS', 'n')}<th>arriving sub-topics</th></tr></thead><tbody>` +
-    rows.map((t, i) => `<tr tabindex="${i ? -1 : 0}" data-c="${t.c}"><td>${bRank.has(t.c) ? `<span class="rank">${bRank.get(t.c)}</span>` : ''}</td><td>${esc(t.label)}</td><td class="sub2">${esc(areaOf(lv, t.c))}</td><td class="n">${fmt(t.recent)}</td><td class="n">${fmt(t.prior)}</td><td class="n">${gCell(t)}</td><td>${lv === 0 ? '' : (t.arriving || []).map(chip).join('')}</td></tr>`).join('') + '</tbody></table>';
+  el.innerHTML = (lv === 1 ? '<div class="tabhead">Ranked: topics with 200+ papers in the window.</div>' : '') + (mc ? `<div class="tabhead">Matching: papers in each ${LEVEL_ONE[lv].toLowerCase()} that pass the filters (${esc(filterLabels().join(', '))}), all months.</div>` : '') +
+    `<table id="topicsTable"><thead><tr><th>#</th>${th('topic', 'topic')}${th('area', 'area')}${th('recent', 'papers (window)', 'n')}${mc ? th('match', 'Matching', 'n') : ''}${th('prior', 'prior', 'n')}${th('growth', 'growth vs CS', 'n')}${th('venue', 'At a venue %', 'n')}${th('code', 'With code %', 'n')}${th('cited', 'Cited', 'n')}<th>arriving sub-topics</th></tr></thead><tbody>` +
+    rows.map((t, i) => `<tr tabindex="${i ? -1 : 0}" data-c="${t.c}"><td>${bRank.has(t.c) ? `<span class="rank">${bRank.get(t.c)}</span>` : ''}</td><td>${esc(t.label)}</td><td class="sub2">${esc(areaOf(lv, t.c))}</td><td class="n">${fmt(t.recent)}</td>${mc ? `<td class="n">${fmt(mc[t.c] || 0)}</td>` : ''}<td class="n">${fmt(t.prior)}</td><td class="n">${gCell(t)}</td><td class="n">${t.venue_share == null ? '' : pctShare(t.venue_share)}</td><td class="n">${t.code_share == null ? '' : pctShare(t.code_share)}</td><td class="n">${t.cit_median_pct == null ? '' : Math.round(t.cit_median_pct)}</td><td>${lv === 0 ? '' : (t.arriving || []).map(chip).join('')}</td></tr>`).join('') + '</tbody></table>';
   renderTopicsHL(); updateCounts();
 }
 const areaOf = (lv, c) => { if (lv === 2) return ''; let l = S.labels[lv] && S.labels[lv][c]; if (!l) return ''; if (lv === 0) { l = S.labels[1] && S.labels[1][l.parent]; if (!l) return ''; } return lblOf(2, l.parent); };
@@ -1925,10 +1990,10 @@ function renderLinks() {
   const th = (k, label) => `<th class="n" aria-sort="${col === k ? (dir < 0 ? 'descending' : 'ascending') : 'none'}"><button data-act="linksort" data-k="${k}">${label}${col === k ? (dir < 0 ? ' ▼' : ' ▲') : ''}</button></th>`;
   S.linkRows = [...main, ...low];
   let h = `<div class="tabhead">Bridge paper: ${T} or more of its 14 nearest neighbours in the other topic. Width = bridge papers. Strength = bridges / √(papers₁ × papers₂). Growth = change in bridge share vs the prior window.</div>
-  <table id="linksTable"><thead><tr><th>#</th><th>topic 1</th><th>topic 2</th>${th('n_bridge', 'bridges')}<th class="n">share now</th><th class="n">share before</th>${th('growth', 'link growth')}${th('strength', 'strength')}<th>status</th></tr></thead><tbody>`;
-  h += main.map((e, i) => `<tr tabindex="${i ? -1 : 0}" data-li="${i}"${S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2 ? ' class="hl"' : ''}><td>${ranks.has(e) ? `<span class="rank">${ranks.get(e)}</span>` : ''}</td><td>${nm(e.c1)}</td><td>${nm(e.c2)}</td><td class="n">${fmt(e.n_bridge)}</td><td class="n">${pct(e.share_now)}</td><td class="n">${pct(e.share_prior)}</td><td class="n">${linkGCell(e)}</td><td class="n">${e.strength.toFixed(3)}</td><td><span class="pill" data-status="${statusOf(e)}">${statusOf(e)}</span></td></tr>`).join('');
-  h += `<tr tabindex="-1" data-act="lowToggle" aria-expanded="${S.lowOpen}"><td colspan="9" class="muted">${S.lowOpen ? '▾' : '▸'} Pairs with fewer than 10 bridge papers (growth not computed) (${fmt(low.length)})</td></tr>`;
-  if (S.lowOpen) h += low.map((e, i) => `<tr tabindex="-1" data-li="${main.length + i}"><td></td><td>${nm(e.c1)}</td><td>${nm(e.c2)}</td><td class="n">${e.n_bridge}</td><td colspan="3"></td><td class="n">${e.strength.toFixed(3)}</td><td></td></tr>`).join('');
+  <table id="linksTable"><thead><tr><th>#</th><th>topic 1</th><th>topic 2</th>${th('n_bridge', 'bridges')}${th('n_cites', 'Citations')}<th class="n">share now</th><th class="n">share before</th>${th('growth', 'link growth')}${th('strength', 'strength')}<th>status</th></tr></thead><tbody>`;
+  h += main.map((e, i) => `<tr tabindex="${i ? -1 : 0}" data-li="${i}"${S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2 ? ' class="hl"' : ''}><td>${ranks.has(e) ? `<span class="rank">${ranks.get(e)}</span>` : ''}</td><td>${nm(e.c1)}</td><td>${nm(e.c2)}</td><td class="n">${fmt(e.n_bridge)}</td><td class="n">${fmt(e.n_cites || 0)}</td><td class="n">${pct(e.share_now)}</td><td class="n">${pct(e.share_prior)}</td><td class="n">${linkGCell(e)}</td><td class="n">${e.strength.toFixed(3)}</td><td><span class="pill" data-status="${statusOf(e)}">${statusOf(e)}</span></td></tr>`).join('');
+  h += `<tr tabindex="-1" data-act="lowToggle"><td colspan="10" class="muted"><span class="sr-only">${S.lowOpen ? 'Expanded: ' : 'Collapsed: '}</span>${S.lowOpen ? '▾' : '▸'} Pairs with fewer than 10 bridge papers (growth not computed) (${fmt(low.length)})</td></tr>`;
+  if (S.lowOpen) h += low.map((e, i) => `<tr tabindex="-1" data-li="${main.length + i}"><td></td><td>${nm(e.c1)}</td><td>${nm(e.c2)}</td><td class="n">${e.n_bridge}</td><td class="n">${fmt(e.n_cites || 0)}</td><td colspan="3"></td><td class="n">${e.strength.toFixed(3)}</td><td></td></tr>`).join('');
   h += `</tbody></table><div class="tabhead" style="margin-top:8px">Phrase links use all 36 months and do not follow the window. A phrase links two topics when 10+ papers and 20%+ of its papers are in each, and it spans at most 4 topics.</div><table><tbody>` +
     (L.phrase_links || []).filter(hit).map(p => `<tr><td>${nm(p.c1)} ↔ ${nm(p.c2)}</td><td class="small">${p.phrases.map(x => typeof x === 'string' ? esc(x) : `${esc(x.phrase)} <span class="muted">(${x.n1} / ${x.n2})</span>`).join(', ')}</td></tr>`).join('') + '</tbody></table>';
   el.innerHTML = h; syncPreset(); updateCounts();
@@ -1992,7 +2057,35 @@ function bars(months, sel) {
   for (let i = 0; i < n; i++) { const v = months[i] || 0, bh = Math.max(1, 40 * v / mx); h += `<rect x="${i * w + 1}" y="${44 - bh}" width="${w - 2}" height="${bh}" rx="1" fill="url(#${gid})" opacity="${i >= x.a && i <= x.b ? 1 : 0.4}"><title>${mLabel(i)}: ${fmt(v)} papers</title></rect>`; }
   return h + '</svg></div>';
 }
-function plist(ps) { return `<div class="plist">${ps.map(p => `<div><a href="${ARXIV}${esc(p.id)}" target="_blank" rel="noopener">${esc(p.title)}</a><small>arXiv:${esc(p.id)} · ${monthName(p.month)} · ${fmt(p.citations ?? 0)} citations</small></div>`).join('')}</div>`; }
+const safeUrl = u => /^https?:\/\//i.test(u || '') ? u : null;
+function ordinal(n) { n = Math.round(n); const t = n % 100, o = n % 10; return n + (t >= 11 && t <= 13 ? 'th' : o === 1 ? 'st' : o === 2 ? 'nd' : o === 3 ? 'rd' : 'th'); }
+const pctShare = x => { const v = 100 * x; return (v < 10 && v > 0 ? v.toFixed(1) : String(Math.round(v))) + ' %'; };
+let kindWait = false;
+function paperKind(p) {  // accepted / workshop / submitted from the per-row flags; loads them once if a paper list needs them
+  if (!FX.flags) { if (!kindWait && p.row != null) { kindWait = true; ensureBase().then(() => { if (S.focus && S.view === 'sel') renderInspector(); }).catch(() => {}); } return ''; }
+  const f = p.row != null ? FX.flags[p.row] || 0 : 0;
+  return f & 2 ? 'workshop' : f & 4 ? 'submitted' : '';
+}
+function citeText(p) {
+  const c = `${fmt(p.citations ?? 0)} citations`;
+  return p.cit_pct == null || p.citations === 0 ? c : `${c} · top ${Math.max(1, Math.round(100 - p.cit_pct))} % of its month`;
+}
+function paperSmall(p, mid) {  // the grey line under a paper title: id, month, mid text, venue pill, citations, code link
+  const k = p.venue ? paperKind(p) : '', u = safeUrl(p.code_url);
+  return `arXiv:${esc(p.id)} · ${monthName(p.month)}${mid ? ' · ' + mid : ''} · ${citeText(p)}${p.venue ? `<span class="vp">${esc(p.venue)}${k ? ' · ' + k : ''}</span>` : ''}${u ? ` · <a href="${esc(u)}" target="_blank" rel="noopener">code</a>` : ''}`;
+}
+function plist(ps) { return `<div class="plist">${ps.map(p => `<div><a href="${ARXIV}${esc(p.id)}" target="_blank" rel="noopener">${esc(p.title)}</a><small>${paperSmall(p)}</small></div>`).join('')}</div>`; }
+function sigLines(sg) {  // F47.2 step 2, F48.2 step 9, F49.2 step 2: each line hidden when its data is null
+  if (!sg) return '';
+  const L = [], a = [];
+  if (sg.venue_share != null) a.push(`At a venue ${pctShare(sg.venue_share)}`);
+  if (sg.code_share != null) a.push(`With code ${pctShare(sg.code_share)}`);
+  if (a.length) L.push(a.join(' · '));
+  if (sg.top_venues && sg.top_venues.length) L.push('Top venues: ' + sg.top_venues.slice(0, 3).map(v => `${esc(v[0])} ${fmt(v[1])}`).join(', '));
+  if (sg.top_insts && sg.top_insts.length) L.push('Top institutions: ' + sg.top_insts.slice(0, 5).map(v => `${esc(v[1])} ${fmt(v[2])}`).join(', '));
+  if (sg.cit_median_pct != null) L.push(`Citations: median at the ${ordinal(sg.cit_median_pct)} percentile of their month` + (sg.top10_share != null ? ` · ${Math.round(100 * sg.top10_share)} % in the top tenth` : ''));
+  return L.length ? `<div class="small" id="sigBlock">${L.map(x => `<div class="sigl">${x}</div>`).join('')}</div>` : '';
+}
 function selHeader(s) {
   if (s.kind === 'topic') {
     const l = S.labels[s.level] && S.labels[s.level][s.c];
@@ -2005,6 +2098,7 @@ function selHeader(s) {
 function selView(s) {
   const j = s.data, v = (j && j.growth && j.growth.window && j.growth.window.vol_ratio) || volOf() || 1;
   let h = `<h2 style="margin:0 0 2px;font-size:16px">${esc(s.label)}</h2><div class="sub2">${selHeader(s)}</div>`;
+  const fm = filterMatchIn(s); if (fm != null) h += `<div class="small" id="fFromLine" style="margin:4px 0">From this filter: <b>${fmt(fm)}</b> papers <span class="muted">(${esc(filterLabels().join(', '))}; all months)</span></div>`;
   if (s.saveOpen) h += `<div style="margin:6px 0"><input type="text" id="saveName" aria-label="Name for the saved selection" value="${esc(s.label)}"><div id="saveMsg" class="tiny muted"></div></div>`;
   if (s.kind === 'saved' && s.savedWin) h += `<div class="small muted">saved with window ${esc(textOfWin(s.savedWin))}</div>`;
   if (s.note) h += `<div class="def">${esc(s.note)}</div>`;
@@ -2030,6 +2124,10 @@ function selView(s) {
   else { const raw = (r + 1) / (p + 1); h += `<div><b style="--gc:${growthTextHex(g.growth)}" class="num gr">×${g.growth.toFixed(1)}</b> after correction (raw ×${raw.toFixed(1)}; all CS grew ×${v.toFixed(2)})</div>`; }
   h += `<div class="tiny muted">${winText()}</div>${bars(j.months || [], s)}`;
   const T = s.kind === 'topic' && S.topics[s.level] && S.topics[s.level].topics.find(t => t.c === s.c);
+  if (s.kind === 'topic') {
+    if (!j.signals && j.signals_all) h += '<div class="tiny muted">All months (this window has no cached signals)</div>';
+    h += sigLines(j.signals || j.signals_all);
+  }
   if (T && T.arriving && T.arriving.length) h += `<h3 data-i="trend">Arriving sub-topics</h3>${T.arriving.map(chip).join('')}`;
   h += `<h3 data-i="hash">Distinctive phrases</h3>` + (j.n >= 30 && j.terms && j.terms.length ? j.terms.slice(0, 20).map(t => `<button class="chip" data-act="phrase" data-ph="${esc(t.term)}" title="share in selection ${(100 * t.share_sel).toFixed(0)}% vs ${(100 * t.share_all).toFixed(1)}% in all papers (z ${(+t.z).toFixed(1)})">${esc(t.term)} <span class="muted">${t.k}</span></button>`).join('') : j.terms_local ? '<div class="muted small">Distinctive phrases are in the local version</div>' : '<div class="muted small">too few papers for distinctive phrases</div>');
   h += `<h3 data-i="file">Top cited</h3>${plist(j.top_cited || [])}<h3 data-i="clock">Newest</h3>${plist(j.newest || [])}`;
@@ -2058,6 +2156,13 @@ function summaryView() {
   h += '<h3 data-i="trend">Arriving sub-topics, all CS</h3>' + (arr.length ? arr.slice(0, 10).map(a => `<div class="small" style="padding:2px 0"><a href="#" data-act="sub" data-c="${a.c}">${esc(a.label)}</a> · ${esc(a.parent)} · ${fmt(a.recent)} papers in window · ${a.is_new ? '<span class="new">new</span>' : '×' + a.growth.toFixed(1)}</div>`).join('') : '<div class="muted small">none in this window</div>');
   return h + '<p class="tiny muted" style="margin-top:14px">Click a topic, press L to lasso, or / to search.</p>';
 }
+function citePairHTML(d, e, lv, n1, n2) {  // F49.2 step 6: hidden when there are no citations between the two topics
+  const ct = d && d.cites; if (!ct || !(ct.n_cites > 0)) return '';
+  const top = (ct.top || []).slice(0, 5), nm = c => esc(lblOf(lv, c));
+  return `<div class="small" id="citePair" style="margin:6px 0"><b>${fmt(e.n_bridge ?? d.n_bridge ?? 0)}</b> bridge papers · <b>${fmt(ct.n_cites)}</b> citations between these topics</div>` +
+    (top.length ? `<div class="small" style="margin-top:6px">Most-cited across the pair:</div><div class="plist">${top.map(p => { const own = p.row != null && P.lvl[lv] ? P.lvl[lv][p.row] : null, other = own === e.c1 ? e.c2 : own === e.c2 ? e.c1 : null;
+      return `<div><a href="${ARXIV}${esc(p.id)}" target="_blank" rel="noopener">${esc(p.title)}</a><small>${paperSmall(p, `cited ${fmt(p.n)} times${other != null ? ' from ' + nm(other) : ''}${own === e.c1 || own === e.c2 ? ' into ' + nm(own) : ''}`)}</small></div>`; }).join('')}</div>` : '');
+}
 function evidenceView() {
   const ev = S.ev, e = ev.link, lv = ev.level, n1 = lblOf(lv, e.c1), n2 = lblOf(lv, e.c2), d = ev.data, T = (S.meta && S.meta.bridge_T) || 4;
   const st = statusOf(e);
@@ -2067,12 +2172,13 @@ function evidenceView() {
   else h += `<div class="kv"><span>bridge papers in window:</span><span class="num">${fmt(e.n_bridge)}</span><span>in prior window:</span><span class="num">${fmt(e.n_prior ?? e.n_bridge_prior ?? (d && (d.n_prior ?? d.n_bridge_prior)) ?? NaN)}</span><span>share now</span><span class="num">${pct(e.share_now)}</span><span>share before</span><span class="num">${pct(e.share_prior)}</span><span>link growth</span><span class="num">${e.status === 'new' ? 'new' : '×' + e.growth.toFixed(2)}</span><span>strength</span><span class="num">${e.strength.toFixed(3)}</span></div>`;
   h += `<div class="def">Bridge paper: ${T} or more of its 14 nearest neighbours in the other topic. <a href="#" data-act="helpDlg" data-sec="bridge" aria-haspopup="dialog">how this is measured</a></div>`;
   if (!d) return h + (ev.err ? `<div class="err">${esc(ev.err)}</div>` : '<div class="prog on" style="position:relative"></div><p class="muted small">Loading bridge papers…</p>');
+  h += citePairHTML(d, e, lv, n1, n2);
   const bs = [...d.bridges].sort(ev.newest ? (a, b) => String(b.month).localeCompare(String(a.month)) : (a, b) => (b.citations || 0) - (a.citations || 0)).slice(0, 30);
   const pg = bs.slice(ev.page * 10, ev.page * 10 + 10);
   const split = b => { const own = b.row != null ? P.lvl[lv][b.row] : null; return own === e.c2 ? `${b.k1} of 14 neighbours in ${n1}` : `${b.k2} of 14 neighbours in ${n2}`; };
   h += `<h3 data-i="file">Bridge papers · ${ev.newest ? 'newest first' : 'most cited'} · ${bs.length ? ev.page * 10 + 1 : 0}–${ev.page * 10 + pg.length} of ${fmt(d.n_bridge ?? bs.length)}</h3>
     <div style="display:flex;gap:6px;margin-bottom:4px"><button data-act="evSort" aria-pressed="${!!ev.newest}">newest first</button><button data-act="evPage" data-d="-1" ${ev.page ? '' : 'disabled'}>prev</button><button data-act="evPage" data-d="1" ${(ev.page + 1) * 10 < bs.length ? '' : 'disabled'}>next</button></div>
-    <div class="plist">${pg.map(b => `<div><a href="${ARXIV}${esc(b.id)}" target="_blank" rel="noopener">${esc(b.title)}</a><small>arXiv:${esc(b.id)} · ${monthName(b.month)} · ${split(b)}</small></div>`).join('') || '<div class="muted">no bridge papers in this window</div>'}</div>`;
+    <div class="plist">${pg.map(b => `<div><a href="${ARXIV}${esc(b.id)}" target="_blank" rel="noopener">${esc(b.title)}</a><small>${paperSmall(b, split(b))}</small></div>`).join('') || '<div class="muted">no bridge papers in this window</div>'}</div>`;
   h += `<h3 data-i="hash">Shared rising phrases · all 36 months</h3>` + (d.phrases && d.phrases.length ? d.phrases.map(p => `<button class="chip" data-act="phrase" data-ph="${esc(p.phrase)}">${esc(p.phrase)} <span class="muted">${p.n1} / ${p.n2} papers</span></button>`).join('') + ' <span class="tiny muted">all 36 months</span>' : '<div class="muted small">no shared rising phrases</div>');
   const pre = ST && SX.ideas.find(g => g.level === lv && g.window === curWin() && g.c1 === Math.min(e.c1, e.c2) && g.c2 === Math.max(e.c1, e.c2));
   if (pre) h += `<h3 data-i="bulb">Ideas for this pair (precomputed)</h3>` + ideasHTML({ideas: pre.ideas, created: pre.created, window: SX.meta.windows[pre.window], shown: pre.shown});
@@ -2347,7 +2453,7 @@ function toggleSide() {
 }
 for (const mq of [COMPACT, NARROW, PHONE]) mq.addEventListener('change', () => { sideOpen = false; document.body.classList.remove('drawer'); layout(); });
 // ---------- view rows (sidebar) -> controls as an inspector panel ----------
-const VIEW_TITLE = {level: 'Level', colour: 'Colour by', layers: 'Map layers'};
+const VIEW_TITLE = {level: 'Level', colour: 'Colour by', layers: 'Map layers', filter: 'Filter'};
 let VP = null, vpDrawerBefore = false;
 function syncViewRows() {
   const col = S.grey ? 'grey (links view)' : S.colour === 'dist' ? 'distance to A' : S.colour, on = [S.nodes, S.bridges, S.phrases].filter(Boolean).length;
@@ -2358,6 +2464,11 @@ function syncViewRows() {
     b.setAttribute('aria-label', `${VIEW_TITLE[k]}: ${v}`); b.title = `${VIEW_TITLE[k]}: ${v}`;
     b.setAttribute('aria-expanded', String(VP === k)); b.classList.toggle('on', VP === k);
   }
+  const fb = $('vFilter'), n = filterCount(), lbl = n ? `Filter · ${n}` : 'Filter';
+  if ($('vFilterLbl').textContent !== lbl) $('vFilterLbl').textContent = lbl;
+  $('vFilterVal').textContent = n ? '' : 'none';
+  fb.setAttribute('aria-label', n ? `${lbl} active` : 'Filter: none'); fb.title = n ? `${lbl} active: ${filterLabels().join(', ')}` : 'Filter: none';
+  fb.setAttribute('aria-expanded', String(VP === 'filter')); fb.classList.toggle('on', VP === 'filter');
 }
 function openViewPanel(k, focus = true) {
   if (VP === k) return closeViewPanel();
@@ -2368,13 +2479,15 @@ function openViewPanel(k, focus = true) {
   if (NARROW.matches) document.body.classList.add('drawer');
   if (sideOpen) { sideOpen = false; layout(); }
   syncViewRows(); if (focus) $('vpTitle').focus({preventScroll: true});
+  if (k === 'filter') openFilterPanel();
 }
 function closeViewPanel(focusRow = true) {
   if (!VP) return; const k = VP; VP = null;
   $('viewPanel').hidden = true; $('insp').classList.remove('vp');
   if (NARROW.matches && !vpDrawerBefore) document.body.classList.remove('drawer');
   syncViewRows();
-  if (focusRow) { const b = $({level: 'vLevel', colour: 'vColour', layers: 'vLayers'}[k]); if (b && onScreen(b)) b.focus({preventScroll: true}); }
+  hideInstList();
+  if (focusRow) { const b = $({level: 'vLevel', colour: 'vColour', layers: 'vLayers', filter: 'vFilter'}[k]); if (b && onScreen(b)) b.focus({preventScroll: true}); }
 }
 R.viewPanel = () => VP;
 
@@ -2451,6 +2564,11 @@ document.addEventListener('click', e => {
     case 'sendIdeas': sendIdeas(); break;
     case 'stopWait': if (S.ideasWait) { S.ideasWait.stopped = true; renderAB(); } break;
     case 'toastOpen': $('toast').hidden = true; $('toast')._open && $('toast')._open(); break;
+    case 'fPick': pickInst(d.id); break;
+    case 'fToggle': FX.f[d.k] = !FX.f[d.k]; applyFilter(); break;
+    case 'fCit': FX.f.cit = d.v ? +d.v : null; applyFilter(); break;
+    case 'fClear': clearFilters(t); break;
+    case 'fChipX': removeFilter(d.k, d.v, t); break;
   }
 });
 document.addEventListener('change', e => {
@@ -2461,11 +2579,13 @@ document.addEventListener('change', e => {
   else if (t.id === 'tBridges') { S.bridges = t.checked; render(); syncPreset(); }
   else if (t.id === 'tPhrases') { S.phrases = t.checked; render(); syncPreset(); }
   else if (t.id === 'cFrom' || t.id === 'cTo') checkCustom();
+  else if (t.id === 'fCountry') { FX.f.country = t.value || null; applyFilter(); }
   else if (t.name === 'smode') { if ($('q').value.trim()) { $('q').focus(); suggest(); } }
 });
 document.addEventListener('input', e => {
   if (e.target.id === 'edgeN') { S.edgeN = +e.target.value; render(); syncPreset(); }
   else if (e.target.id === 'q') suggest();
+  else if (e.target.id === 'fInst') instSuggest();
   else if (e.target.id === 'phFilter') renderPhrases();
   else if (e.target.id === 'lkFilter') renderLinks();
 });
@@ -2480,6 +2600,7 @@ function howHTML() {  // F52: the title-bar (i) note and the link-evidence "how 
   <p><b>Phrase links</b> use all 36 months and do not follow the window: 10+ papers and 20%+ of the phrase's papers in each topic, spread over at most 4 topics.</p>
   <p><b>kNN precision.</b> recall@14 ${m.knn_recall14 != null ? m.knn_recall14 : '–'}${m.knn_bridge_agree != null ? `, bridge agreement ${m.knn_bridge_agree}%` : ''} against an exact search.</p></section>
   <section id="howBacktest"><h3>Track record (backtest)</h3><p>Going back to four earlier cutoffs, the top 50 rising phrases went on to grow at least 1.5× faster than CS in 36 % of cases, against a 27 % baseline (every phrase that passed the filters). 22 % of them faded, the same as the baseline (22 %). A real but modest lift: treat the map as a place to start reading, not a forecast.</p></section>
+  <section id="howCites"><h3>Citations</h3><p>Citation counts from Semantic Scholar, refreshed monthly. Percentile compares a paper with others submitted the same month. Citation links count references between papers in the map; papers from 2024 cite mostly older work, so links undercount topics whose papers are mostly from 2024.</p></section>
   <p class="muted small">Colour mode resets to growth on reload (or to the default chosen in Settings).</p>`;
 }
 function escLayer() {  // innermost first; F43.5: sheet -> lasso/compare -> current -> B -> A -> overview preset
@@ -2509,6 +2630,8 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); if (!ul.hidden) return hideSugg(); t.value = ''; hideSugg(); t.blur(); return; }
     return;
   }
+  if (t.id === 'fInst') return instKey(e);
+  if (t.matches && t.matches('button.fchip,button.fsel') && (e.key === 'Backspace' || e.key === 'Delete')) { e.preventDefault(); t.click(); return; }
   if (inText) { if (e.key === 'Escape') t.blur(); return; }
   if (t.matches('[data-act=selFocus]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); t.click(); return; }
   // table row navigation
@@ -2973,6 +3096,203 @@ grip($('sideGrip'), {key: 'sw', axis: 'x', sign: 1, cur: () => sideW(), lim: lim
 grip($('inspGrip'), {key: 'iw', axis: 'x', sign: -1, cur: () => inspW(), lim: limInsp, px2v: d => d});
 grip($('handle'), {key: 'sh', axis: 'y', sign: -1, cur: () => { const mh = $('mapwrap').clientHeight || 1; return 100 * $('tabs').getBoundingClientRect().height / mh; }, lim: () => LAY_LIM.sh, px2v: d => 100 * d / ($('mapwrap').clientHeight || 1)});
 { let rq = 0; addEventListener('resize', () => { if (!rq) rq = requestAnimationFrame(() => { rq = 0; applyLayout(); }); }); }
+
+// ---------- F48 filter (institution, country, venue, code, citation percentile) ----------
+// Nothing here loads before the Filter panel first opens or the URL carries a filter (F50.1 step 2). Pure logic lives in filter.js (UCFilter).
+const REGION = (() => { try { return new Intl.DisplayNames(['en'], {type: 'region'}); } catch (e) { return null; } })();
+function ccName(cc) { try { return (REGION && REGION.of(cc)) || cc; } catch (e) { return cc; } }
+function filterItems() {
+  const f = FX.f, out = f.inst.map(id => ['inst', id, instName(id)]);
+  if (f.country) out.push(['country', f.country, f.country]);
+  if (f.venue) out.push(['venue', '1', 'At a venue']);
+  if (f.code) out.push(['code', '1', 'Has code']);
+  if (f.cit) out.push(['cit', String(f.cit), `Top ${f.cit} %`]);
+  return out;
+}
+function filterCount() { return filterItems().length; }
+function filterLabels() { return filterItems().map(x => x[2]); }
+function instNames() { try { return JSON.parse(lsGet('uc.instNames') || '{}') || {}; } catch (e) { return {}; } }
+function instName(id) { const r = FX.instById.get(id); if (r) return r[1]; const c = instNames()[id]; return c ? c[0] : id; }
+function loadFilterLib() {
+  if (window.UCFilter) return Promise.resolve();
+  return FX.libP || (FX.libP = new Promise((res, rej) => {
+    const sc = document.createElement('script'); sc.src = ST ? 'filter.js' : '/filter.js';
+    sc.onload = () => window.UCFilter ? res() : rej(new Error('filter.js loaded without UCFilter'));
+    sc.onerror = () => { FX.libP = null; sc.remove(); rej(new Error('filter.js could not load')); };
+    document.head.append(sc);
+  }));
+}
+function ensureBase() {  // per-row flags + citation percentile (static: two files; local: one /filterdata body split at X-N)
+  return FX.baseP || (FX.baseP = (async () => {
+    let fl, cp;
+    if (ST) {  // either file absent (404, or an HTML fallback page) = defaults: flags 0, citpct 255; other errors still throw
+      const opt = async (f, fill) => {
+        const r = await fetch(BASE + f);
+        if (r.status === 404 || /text\/html/.test(r.headers.get('content-type') || '')) return new Uint8Array(P.n).fill(fill);
+        if (!r.ok) throw new Error(`${f}: HTTP ${r.status}`);
+        return new Uint8Array(await r.arrayBuffer());
+      };
+      [fl, cp] = await Promise.all([opt('flags.bin', 0), opt('citpct.bin', 255)]);
+    }
+    else {
+      const r = await fetch('/filterdata'); if (!r.ok) throw new Error('filter data: HTTP ' + r.status);
+      const buf = await r.arrayBuffer(), n = +r.headers.get('X-N') || buf.byteLength / 2; fl = new Uint8Array(buf, 0, n); cp = new Uint8Array(buf, n, n);
+    }
+    if (P.n && (fl.length !== P.n || cp.length !== P.n)) throw new Error(`filter data has ${fl.length} rows, the map ${P.n}`);
+    FX.flags = fl; FX.citpct = cp;
+  })().catch(e => { FX.baseP = null; throw e; }));
+}
+function ensureInstList() {  // static only: the whole list once, filtered in memory
+  return FX.instP || (FX.instP = sget('institutions.json').then(L => { FX.insts = L; FX.lc = L.map(r => String(r[1]).toLowerCase()); for (const r of L) FX.instById.set(r[0], r); return L; })
+    .catch(e => { FX.instP = null; throw e; }));
+}
+function ensureCountries() {
+  return FX.ctryP || (FX.ctryP = (async () => {
+    const C = ST ? await sget('countries.json') : await api('/countries'); FX.countries = C;
+    const sel = $('fCountry');
+    sel.innerHTML = '<option value="">Any country</option>' + C.map(([cc, n]) => `<option value="${esc(cc)}">${esc(ccName(cc))} (${esc(cc)}) · ${fmt(n)} papers</option>`).join('');
+    sel.value = FX.f.country || '';
+  })().catch(e => { FX.ctryP = null; throw e; }));
+}
+function rowsFor(kind, key) {  // sorted Uint32 rows of one institution or country, fetched once and cached
+  const k = kind + ':' + key;
+  if (!FX.rows.has(k)) FX.rows.set(k, (async () => {
+    const r = await fetch(ST ? `${BASE}${kind}/${encodeURIComponent(key)}.bin` : `/rows?${kind}=${encodeURIComponent(key)}`);
+    if (r.status === 404 || /text\/html/.test(r.headers.get('content-type') || '')) return new Uint32Array(0);  // fewer than 30 papers: no row file
+    if (!r.ok) throw new Error(`${kind} ${key}: HTTP ${r.status}`);
+    const b = await r.arrayBuffer(); return new Uint32Array(b, 0, b.byteLength >> 2);
+  })().catch(e => { FX.rows.delete(k); throw e; }));
+  return FX.rows.get(k);
+}
+function filterCounts() {  // Matching column: papers per topic at the current level that pass the filter
+  if (!FX.maskOn || !FX.mask || !window.UCFilter || !P.lvl) return null;
+  const key = FX.ver + ':' + S.level;
+  if (FX.countsKey !== key) { const k = Math.max(512, (S.meta && +S.meta.levels[String(S.level)]) || 0); FX.counts = UCFilter.countByTopic(FX.mask, P.lvl[S.level], k); FX.countsKey = key; }
+  return FX.counts;
+}
+function filterMatchIn(s) {
+  if (!FX.maskOn || !FX.mask || !s || !s.rows) return null;
+  if (s.kind === 'topic' && s.level === S.level) { const c = filterCounts(); if (c) return c[s.c] || 0; }
+  let n = 0; const m = FX.mask; for (const r of s.rows) n += m[r]; return n;
+}
+function writeFilterURL() {  // filter params after the existing ones (?topic=, ?link=, ?win= … stay); params is kept in step for the tour's replaceState
+  for (const k of FILTER_KEYS) params.delete(k);
+  const rest = params.toString(), fq = UCFilter.toQuery(FX.f);
+  for (const [k, v] of new URLSearchParams(fq)) params.set(k, v);
+  const qs = [rest, fq].filter(Boolean).join('&');
+  try { history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {}
+}
+function instMsg(t) { const m = $('fInstMsg'); if (m.textContent !== t) m.textContent = t; }
+function renderFilterUI() {
+  const f = FX.f, put = (el, html) => { if (el._h !== html) { el._h = html; el.innerHTML = html; } };  // unchanged chips are not rebuilt, so keyboard focus stays on them
+  put($('fChips'), filterItems().map(([k, v, label]) => `<button class="fchip nu" data-act="fChipX" data-k="${k}" data-v="${esc(v)}" title="Remove filter: ${esc(label)}">${esc(label)} <span aria-hidden="true">×</span><span class="sr-only">, remove filter</span></button>`).join(''));
+  syncViewRows();
+  put($('fSelList'), f.inst.map(id => `<button class="fsel nu" data-act="fChipX" data-k="inst" data-v="${esc(id)}" title="Remove ${esc(instName(id))}">${esc(instName(id))} <span aria-hidden="true">×</span><span class="sr-only">, remove institution</span></button>`).join(''));
+  $('fVenue').setAttribute('aria-pressed', String(!!f.venue)); $('fCode').setAttribute('aria-pressed', String(!!f.code));
+  document.querySelectorAll('#fCit [data-act=fCit]').forEach(b => b.setAttribute('aria-checked', String(String(f.cit ?? '') === b.dataset.v)));
+  const sel = $('fCountry'); if (f.country && ![...sel.options].some(o => o.value === f.country)) sel.add(new Option(f.country, f.country)); sel.value = f.country || '';
+  const ex = (S.meta && S.meta.extra) || {}, sh = parseFloat(ex.inst_known_share);
+  $('fCov').textContent = `Affiliations known for ${Number.isFinite(sh) ? Math.round(100 * sh) : '–'} % of papers.`;
+  $('fCount').textContent = FX.err ? `Filter data could not load: ${FX.err}` : FX.maskOn && FX.nMatch != null ? `${fmt(FX.nMatch)} of ${fmt(P.n)} papers match.` : filterCount() ? 'Applying…' : 'No filter: every paper is shown.';
+  $('fInst').placeholder = f.inst.length >= 5 ? 'Up to 5 institutions' : 'Type a university or lab…';
+}
+async function applyFilter() {
+  const seq = ++FX.seq; FX.err = '';
+  renderFilterUI();
+  try {
+    await loadFilterLib();
+    const f = FX.f, on = UCFilter.isActive(f);
+    writeFilterURL();
+    let lists = [], cr = null;
+    if (on) [lists, cr] = await Promise.all([Promise.all(f.inst.map(id => rowsFor('inst', id))), f.country ? rowsFor('country', f.country) : null, ensureBase()]);
+    if (seq !== FX.seq || !P.n) return;
+    const t0 = performance.now();  // filterApplyMs = mask build + layer update call
+    if (on) { FX.mask = UCFilter.buildMask({n: P.n, flags: FX.flags, citpct: FX.citpct, instRows: lists, countryRows: cr}, f, FX.mask); FX.maskOn = true; }
+    else FX.maskOn = false;
+    FX.ver++; recolour();
+    const ms = Math.round((performance.now() - t0) * 10) / 10; R.filterApplyMs = ms; R.filterApplyHist.push(ms); if (R.filterApplyHist.length > 50) R.filterApplyHist.shift();
+    if (on) { let n = 0; const m = FX.mask; for (let i = 0; i < m.length; i++) n += m[i]; FX.nMatch = n; } else FX.nMatch = null;
+  } catch (e) { if (seq !== FX.seq) return; FX.err = e.message; }
+  renderFilterUI();
+  $('fEmpty').hidden = !(FX.maskOn && FX.nMatch === 0);
+  renderTopics(); if (S.focus && S.view === 'sel') renderInspector();
+  announce(FX.err ? `Filter failed: ${FX.err}` : !FX.maskOn ? 'Filters cleared. Every paper is shown.' : FX.nMatch === 0 ? 'No papers match these filters.' : `${fmt(FX.nMatch)} papers match the filters.`);
+}
+async function openFilterPanel() {
+  renderFilterUI();
+  try { await Promise.all([loadFilterLib(), ensureBase(), ensureCountries(), ST ? ensureInstList() : null]); if (FX.err && !FX.maskOn && !filterCount()) FX.err = ''; }
+  catch (e) { FX.err = e.message; }
+  renderFilterUI();
+}
+function hideInstList() { const ul = $('fInstList'); if (!ul) return; ul.hidden = true; FX.ai = -1; $('fInst').setAttribute('aria-expanded', 'false'); $('fInst').removeAttribute('aria-activedescendant'); }
+function searchInst(v) {  // prefix matches first, then word starts, then substrings; the list is already sorted by paper count
+  const q = v.toLowerCase(), L = FX.insts, lc = FX.lc, out = [], seen = new Set(), skip = new Set(FX.f.inst);
+  const pass = test => { for (let i = 0; i < L.length && out.length < 8; i++) if (!seen.has(i) && !skip.has(L[i][0]) && test(lc[i])) { seen.add(i); out.push(L[i]); } };
+  pass(s => s.startsWith(q)); pass(s => s.includes(' ' + q) || s.includes('(' + q)); pass(s => s.includes(q));
+  return out;
+}
+async function instSuggest() {
+  const t0 = performance.now(), inp = $('fInst'), v = inp.value.trim(), seq = ++FX.qseq, ul = $('fInstList');
+  if (FX.f.inst.length >= 5) { hideInstList(); instMsg(v ? 'Up to 5 institutions.' : ''); return; }
+  if (!v) { instMsg(''); return hideInstList(); }
+  let res;
+  try {
+    if (ST) { await ensureInstList(); if (seq !== FX.qseq) return; res = searchInst(v); }
+    else { res = await api('/institutions?q=' + encodeURIComponent(v)); if (seq !== FX.qseq) return; for (const r of res) FX.instById.set(r[0], r); res = res.filter(r => !FX.f.inst.includes(r[0])).slice(0, 8); }
+  } catch (e) { if (seq === FX.qseq) { hideInstList(); instMsg('The institution list could not load: ' + e.message); } return; }
+  if (!res.length) { hideInstList(); instMsg(`No institution with 30 or more papers matches "${v}".`); return; }
+  instMsg('');
+  ul.innerHTML = res.map((r, i) => `<li role="option" id="fo${i}" data-act="fPick" data-id="${esc(r[0])}" aria-selected="false">${esc(r[1])} <span class="fsub">· ${esc(r[2] || '?')} · ${fmt(r[3])} papers</span></li>`).join('');
+  ul.hidden = false; FX.ai = -1; inp.setAttribute('aria-expanded', 'true'); inp.removeAttribute('aria-activedescendant');
+  R.instSuggestMs = Math.round(performance.now() - t0);
+}
+function instKey(e) {
+  const inp = e.target, ul = $('fInstList'), items = [...ul.querySelectorAll('li[role=option]')], open = !ul.hidden && items.length > 0;
+  if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    e.preventDefault(); if (!open) return instSuggest();
+    FX.ai = Math.max(0, Math.min(items.length - 1, FX.ai + (e.key === 'ArrowDown' ? 1 : -1)));
+    items.forEach((li, i) => li.setAttribute('aria-selected', String(i === FX.ai))); inp.setAttribute('aria-activedescendant', items[FX.ai].id); items[FX.ai].scrollIntoView({block: 'nearest'}); return;
+  }
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    if (FX.f.inst.length >= 5) { instMsg('Up to 5 institutions.'); return; }
+    const li = open ? (items[FX.ai] || items[0]) : null; if (li) pickInst(li.dataset.id); return;
+  }
+  if (e.key === 'Escape') { e.preventDefault(); if (open) return hideInstList(); if (inp.value) { inp.value = ''; instMsg(''); return; } closeViewPanel(); return; }
+  if (e.key === 'Tab') hideInstList();
+}
+function pickInst(id) {
+  if (!id || FX.f.inst.includes(id)) return;
+  if (FX.f.inst.length >= 5) { instMsg('Up to 5 institutions.'); return; }
+  FX.f.inst.push(id);
+  const r = FX.instById.get(id);
+  if (r && !ST) { const c = instNames(); c[id] = [r[1], r[2], r[3]]; lsSet('uc.instNames', JSON.stringify(c)); }  // local mode: names for chips restored from the URL
+  $('fInst').value = ''; hideInstList(); instMsg('');
+  applyFilter();
+}
+function removeFilter(k, v, btn) {
+  const box = btn && btn.parentElement, idx = box ? [...box.querySelectorAll('button')].indexOf(btn) : -1;
+  if (k === 'inst') FX.f.inst = FX.f.inst.filter(x => x !== v); else if (k === 'country') FX.f.country = null; else if (k === 'cit') FX.f.cit = null; else FX.f[k] = false;
+  applyFilter();  // chips re-render synchronously; focus moves to the neighbouring chip
+  if (box) { const now = [...box.querySelectorAll('button')], nx = now[Math.min(idx, now.length - 1)]; if (nx) nx.focus(); else (box.id === 'fChips' ? $('infoBtn') : $('fInst')).focus(); }
+}
+function clearFilters(btn) {
+  FX.f = {inst: [], country: null, venue: false, code: false, cit: null};
+  $('fInst').value = ''; hideInstList(); instMsg('');
+  applyFilter();
+  if (btn && btn.closest('#fEmpty')) $('map').focus({preventScroll: true});
+}
+$('fInstList').addEventListener('mousedown', e => e.preventDefault());  // picking with the mouse keeps focus in the box
+$('fInst').addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== $('fInst')) hideInstList(); }, 0));
+$('fInst').addEventListener('focus', () => { if ($('fInst').value.trim()) instSuggest(); });
+if (FILTER_KEYS.some(k => params.has(k))) {  // a filter in the URL: restore it once the points have drawn (never on the first-draw path)
+  const iv = setInterval(async () => {
+    if (R.firstDrawMs == null || !pointsReady) return;
+    clearInterval(iv);
+    try { await loadFilterLib(); FX.f = UCFilter.fromQuery(location.search); if (ST && FX.f.inst.length) await ensureInstList().catch(() => {}); } catch (e) { FX.err = e.message; renderFilterUI(); return; }
+    applyFilter();
+  }, 100);
+}
 
 boot();
 </script>

@@ -54,17 +54,25 @@ def parse(xml_bytes):
 
 
 def upsert(con, rows):
-    """Replace-by-id upsert; a None comment never overwrites an existing non-null one (works with or without a PK)."""
-    miss = [r[0] for r in rows if r[-1] is None]
-    old = {}
-    if miss:
-        con.execute("create temp table if not exists _ids(id text)"); con.execute("delete from _ids")
-        con.executemany("insert into _ids values (?)", [(i,) for i in miss])
-        old = dict(con.execute("select p.id, p.comment from papers p join _ids using (id) where p.comment is not null").fetchall())
-    rows = [r if r[-1] is not None or r[0] not in old else r[:-1] + (old[r[0]],) for r in rows]
-    con.executemany("delete from papers where id = ?", [(r[0],) for r in rows])  # replace by id, also on tables without a PK (dev copy)
-    con.executemany("insert into papers (id, submitted, created, updated, title, abstract, primary_cat, categories, authors, comment, harvested_at) "
-                    "values (?,?,?,?,?,?,?,?,?,?,now())", rows)
+    """Replace-by-id upsert; a None comment never overwrites an existing non-null one (works with or without a PK).
+    Read, delete and insert run in one transaction: an interruption rolls back instead of losing the deleted rows."""
+    con.execute("create temp table if not exists _ids(id text)")
+    con.execute("begin transaction")
+    try:
+        miss = [r[0] for r in rows if r[-1] is None]
+        old = {}
+        if miss:
+            con.execute("delete from _ids")
+            con.executemany("insert into _ids values (?)", [(i,) for i in miss])
+            old = dict(con.execute("select p.id, p.comment from papers p join _ids using (id) where p.comment is not null").fetchall())
+        rows = [r if r[-1] is not None or r[0] not in old else r[:-1] + (old[r[0]],) for r in rows]
+        con.executemany("delete from papers where id = ?", [(r[0],) for r in rows])  # replace by id, also on tables without a PK (dev copy)
+        con.executemany("insert into papers (id, submitted, created, updated, title, abstract, primary_cat, categories, authors, comment, harvested_at) "
+                        "values (?,?,?,?,?,?,?,?,?,?,now())", rows)
+        con.execute("commit")
+    except BaseException:
+        con.execute("rollback")
+        raise
 
 
 def window(d0, d1, cats=CATS):

@@ -150,7 +150,12 @@ def flush(out, num, rows, done_ids):
     write_atomic(pa.table({"citing_id": pa.array(list(done_ids), pa.string())}), os.path.join(out, f"done_{n}.parquet"))
 
 
-def run(corpus, todo, out, http, chunk=CHUNK, batch=BATCH, log=print):
+def recent_papers(con):
+    """Current submission month and the two preceding months may still await indexing."""
+    return {r[0] for r in con.execute("select id from papers where submitted >= date_trunc('month', current_date) - interval 2 month").fetchall()}
+
+
+def run(corpus, todo, out, http, chunk=CHUNK, batch=BATCH, log=print, recent=()):
     """Fetch `todo` (ordered list) in batches; corpus is the filter set. Returns stats dict."""
     done, edges_total, num = load_state(out)
     todo = [i for i in todo if i not in done]
@@ -193,7 +198,8 @@ def run(corpus, todo, out, http, chunk=CHUNK, batch=BATCH, log=print):
                 e = edges_of(i, p, corpus)
                 rows.extend((i, c) for c in e)
                 stats["edges"] += len(e)
-                chunk_done.append(i)
+                if i not in recent or (p is not None and ((p.get("referenceCount") or 0) > 0 or p.get("references"))):
+                    chunk_done.append(i)
             stats["fetched"] += len(ids)
             if len(chunk_done) >= chunk:
                 write_chunk()
@@ -223,6 +229,7 @@ def main(argv=None):
         return selftest()
     con = duckdb.connect(a.db, read_only=True)
     corpus_list = [r[0] for r in con.execute("select id from papers order by id").fetchall()]
+    recent = recent_papers(con)
     con.close()
     corpus = set(corpus_list)
     todo = corpus_list
@@ -238,12 +245,15 @@ def main(argv=None):
     signal.signal(signal.SIGTERM, _sigterm)
     http = Http()
     try:
-        s = run(corpus, todo, a.out, http, chunk=a.chunk, log=lambda m: print(m, flush=True))
+        s = run(corpus, todo, a.out, http, chunk=a.chunk, log=lambda m: print(m, flush=True), recent=recent)
     except KeyboardInterrupt:
         return 130
     print(f"done: fetched {s['fetched']:,} papers ({s['found']:,} known to S2), {s['edges']:,} edges "
           f"({s['edges'] / max(s['fetched'], 1):.2f}/paper), {http.calls} calls, {s['splits']} splits, "
           f"{s['failed']} failed, {s['elapsed']:.0f} s", flush=True)
+    if s["failed"]:  # successful chunks are already written; failed ids are in failed.txt and retried next run
+        print(f"{s['failed']:,} ids failed after {TRIES} tries this run; exit 3", file=sys.stderr, flush=True)
+        return 3
     return 0
 
 
@@ -336,6 +346,26 @@ def selftest():
         s = run(corpus, ["2401.00001", "2401.00002"], out2, lambda ids: None, chunk=4, batch=2, log=quiet)
         assert s["failed"] == 2 and open(os.path.join(out2, "failed.txt")).read().split() == ["2401.00001", "2401.00002"]
         assert load_state(out2)[0] == set()
+        retry_out = os.path.join(out, "recent")
+        ids = ["old-none", "old-zero", "new-none", "new-zero", "new-refs"]
+        run(set(ids), ids, retry_out, lambda _: [None, paper("old-zero", []), None, paper("new-zero", []), paper("new-refs", ["old-none"])], recent=set(ids[2:]), log=quiet)
+        assert load_state(retry_out)[0] == {"old-none", "old-zero", "new-refs"}
+        # main exits 3 when ids failed this run (weekly.sh `soft` then notifies)
+        global Http
+        dbp = os.path.join(out, "t.duckdb")
+        c = duckdb.connect(dbp); c.execute("create table papers(id text, submitted date)"); c.execute("insert into papers values ('2401.00001', '2024-01-01')"); c.close()
+        real = Http
+        class Dead:
+            calls = 0
+            def __call__(self, ids): return None
+        Http = Dead
+        try:
+            import contextlib, io
+            with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+                rc = main(["--db", dbp, "--out", os.path.join(out, "m")])
+        finally:
+            Http = real
+        assert rc == 3, rc
     print("ok")
     return 0
 

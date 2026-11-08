@@ -147,9 +147,7 @@ def report(meta, counts, secs):
 
 def selftest():
     import shutil
-    scratch = pathlib.Path("/private/tmp/claude-501/-Users-chandu/5ba53b84-cad4-41dd-bad3-762609d50f86/scratchpad")
-    scratch.mkdir(parents=True, exist_ok=True)
-    d = pathlib.Path(tempfile.mkdtemp(prefix="load_extra_", dir=scratch))
+    d = pathlib.Path(tempfile.mkdtemp(prefix="load_extra_"))
     raw = d / "raw"
     for s in ("comments", "openalex", "refs"):
         (raw / s).mkdir(parents=True)

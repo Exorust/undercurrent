@@ -75,7 +75,8 @@ def done_ids(out):
 
 
 def write_chunk(out, rows):
-    n = len(glob.glob(os.path.join(out, "[0-9]*.parquet")))
+    nums = [int(os.path.basename(p).split(".")[0]) for p in glob.glob(os.path.join(out, "[0-9]*.parquet")) if os.path.basename(p).split(".")[0].isdigit()]
+    n = max(nums, default=-1) + 1
     path = os.path.join(out, f"{n:05d}.parquet")
     tmp = path + ".tmp"
     pq.write_table(pa.table({"id": [r[0] for r in rows], "comment": pa.array([r[1] for r in rows], pa.string())}), tmp)
@@ -165,6 +166,10 @@ def selftest():
     t = pq.read_table(glob.glob(d + "/0*.parquet")[0])
     assert t.schema.names == ["id", "comment"]
     assert sorted(done_ids(d)) == ids
+    os.rename(os.path.join(d, "00000.parquet"), os.path.join(d, "00009.parquet"))
+    write_chunk(d, [("new", "comment")])
+    assert os.path.exists(os.path.join(d, "00010.parquet"))
+    assert os.path.exists(os.path.join(d, "00009.parquet"))
     print("ok")
 
 

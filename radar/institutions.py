@@ -10,6 +10,7 @@ OpenAlex). Resumable; stops cleanly when credits fall under 500.
 """
 import argparse, os, re, signal, sys, tempfile, threading, time
 from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from datetime import date, timedelta
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BASE = "https://api.openalex.org"
@@ -21,6 +22,7 @@ COLS = ["id", "author_pos", "inst_id", "ror", "name", "country", "type"]
 STOP = threading.Event()      # SIGTERM / SIGINT
 BUDGET = threading.Event()    # credits low
 STATE = {"remaining": None, "used": 0, "first_remaining": None}
+RUN_FAILED = [0]              # ids that still failed after retries in the last run() (main exits 3 when > 0)
 _lock = threading.Lock()
 
 
@@ -185,16 +187,39 @@ def write_chunk(out, rows, idx):
     return final
 
 
-def done_ids(out):
+def read_notfound(out):
+    entries = {}
+    p = os.path.join(out, "notfound.txt")
+    if os.path.exists(p):
+        with open(p) as f:
+            for line in f:
+                if not line.strip(): continue
+                parts = line.strip().split("\t", 1)
+                entries[parts[0]] = date.fromisoformat(parts[1]) if len(parts) == 2 else date.today()
+    return entries
+
+
+def write_notfound(out, entries):
+    fd, tmp = tempfile.mkstemp(dir=out, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w") as f:
+            for pid, day in sorted(entries.items()):
+                f.write(f"{pid}\t{day.isoformat()}\n")
+        os.replace(tmp, os.path.join(out, "notfound.txt"))
+    finally:
+        if os.path.exists(tmp): os.unlink(tmp)
+
+
+def done_ids(out, retry_notfound=False):
     import pyarrow.parquet as pq
     s = set(); mx = -1
     for fn in sorted(os.listdir(out)):
         if fn.endswith(".parquet") and fn[:-8].isdigit():
             mx = max(mx, int(fn[:-8]))
             s.update(pq.read_table(os.path.join(out, fn), columns=["id"]).column("id").to_pylist())
-    p = os.path.join(out, "notfound.txt")
-    if os.path.exists(p):
-        s.update(x.strip() for x in open(p) if x.strip())
+    if not retry_notfound:
+        s.update(pid for pid, day in read_notfound(out).items()
+                 if (date.today() - day).days < 30)
     return s, mx + 1
 
 
@@ -203,25 +228,35 @@ def append_lines(path, lines):
         with open(path, "a") as f: f.write("\n".join(lines) + "\n")
 
 
-def read_ids(db, since, limit):
+def read_ids(db, since=None, limit=None, done=()):
+    """Candidate ids from `papers` (not point_index, which is the last map and misses papers harvested since),
+    minus ids already looked up (`done`: in a chunk or notfound.txt). load_extra keeps only point_index rows,
+    so extra ids cost credits but never reach the map. `since` is optional and month-safe: papers.submitted
+    is stored as the first of the month, so it is compared against the month start of the given date."""
     import duckdb
     c = duckdb.connect(db, read_only=True)
     if since:
-        q = "select p.id from point_index p join papers a using(id) where a.submitted >= ? order by p.id"
+        q = "select id from papers where submitted >= date_trunc('month', cast(? as date)) order by id"
         r = c.execute(q, [since]).fetchall()
     else:
-        r = c.execute("select id from point_index order by id").fetchall()
-    ids = [x[0] for x in r]
+        r = c.execute("select id from papers order by id").fetchall()
+    c.close()
+    ids = [x[0] for x in r if x[0] not in done]
     return ids[:limit] if limit else ids
 
 
-def run(ids, out, key, chunk=CHUNK):
+def run(ids, out, key, chunk=CHUNK, retry_notfound=False):
     os.makedirs(out, exist_ok=True)
-    done, idx = done_ids(out)
+    done, idx = done_ids(out, retry_notfound)
     todo = [i for i in ids if i not in done]
+    notfound = read_notfound(out)
+    for pid in todo: notfound.pop(pid, None)
+    # Persist legacy dates and remove queued retries, including interrupted/failed lookups.
+    write_notfound(out, notfound)
     total = len(ids)
     print(f"{len(ids)} ids, {len(ids) - len(todo)} already done, {len(todo)} to fetch", flush=True)
     t0 = time.time(); n_done = len(ids) - len(todo); with_inst = 0; seen = 0
+    RUN_FAILED[0] = 0
     ex = ThreadPoolExecutor(WORKERS)
     try:
         for k in range(0, len(todo), chunk):
@@ -230,8 +265,10 @@ def run(ids, out, key, chunk=CHUNK):
             rows, nf, failed, looked = process(group, key, ex)
             if rows or nf:
                 if rows: write_chunk(out, rows, idx); idx += 1
-                append_lines(os.path.join(out, "notfound.txt"), nf)
+                notfound.update((pid, date.today()) for pid in nf)
+                write_notfound(out, notfound)
             append_lines(os.path.join(out, "failed.txt"), failed)
+            RUN_FAILED[0] += len(failed)
             n_done += looked
             inst_papers = len({r[0] for r in rows if r[2]}); with_inst += inst_papers; seen += looked
             el = time.time() - t0
@@ -284,20 +321,59 @@ def selftest():
     assert byid[A][0]["inst_id"] == "I123" and byid[A][0]["author_pos"] == 0 and len(byid[A]) == 1, "location mapping"
     assert len(byid[B]) == 1 and byid[B][0]["inst_id"] is None, "no-institution row"
     assert len(byid[C]) == 2, "fallback single lookup"
-    assert D not in byid and open(os.path.join(out, "notfound.txt")).read().split() == [D], "404 to notfound"
+    assert D not in byid and read_notfound(out) == {D: date.today()}, "404 to notfound"
     assert calls["single"] == 2
     # resume: nothing refetched
     calls["list"] = calls["single"] = 0
     run([A, B, C, D], out, "k")
     assert calls == {"list": 0, "single": 0}, "resume skip"
     assert len([f for f in os.listdir(out) if f.endswith(".parquet")]) == 1
+    # Legacy entries acquire a persistent date; only entries at least 30 days old retry.
+    out_retry = os.path.join(tmp, "retry"); os.makedirs(out_retry)
+    with open(os.path.join(out_retry, "notfound.txt"), "w") as f:
+        f.write(f"{A}\n{C}\t{date.today() - timedelta(days=31)}\n"
+                f"{D}\t{date.today() - timedelta(days=5)}\n")
+    assert read_notfound(out_retry)[A] == date.today(), "undated lines read as today"
+    calls["list"] = calls["single"] = 0
+    run([A, C, D], out_retry, "k")
+    assert calls == {"list": 1, "single": 1}, "only old notfound retried"
+    assert pq.read_table(os.path.join(out_retry, "00000.parquet")).column("id").to_pylist() == [C, C], "old notfound found"
+    assert read_notfound(out_retry) == {A: date.today(), D: date.today() - timedelta(days=5)}, "recent skipped, found removed"
+    assert f"{A}\t{date.today()}" in open(os.path.join(out_retry, "notfound.txt")).read(), "legacy date persisted"
+    # Exercise the actual CLI flag, including main's done filtering.
+    from unittest.mock import patch
+    calls["list"] = calls["single"] = 0
+    with patch.object(sys, "argv", ["institutions", "--out", out_retry, "--retry-notfound"]), \
+         patch(__name__ + ".load_key", return_value="k"), \
+         patch(__name__ + "._session"), patch(__name__ + ".signal.signal"), \
+         patch(__name__ + ".read_ids", side_effect=lambda db, since, limit, done: [i for i in [A, C, D] if i not in done]):
+        assert main() == 0
+    assert calls == {"list": 1, "single": 1}, "flag retries recent and legacy entries"
+    assert read_notfound(out_retry) == {D: date.today()}, "retry 404 re-dated, found removed"
     # budget stop
     out2 = os.path.join(tmp, "o2"); remaining[0] = 400.0; BUDGET.clear()
     ids = [f"2402.{n:05d}" for n in range(300)]
     run(ids, out2, "k", chunk=100)
     assert BUDGET.is_set(), "budget stop"
     assert not os.path.exists(os.path.join(out2, "00001.parquet")), "stopped after first chunk"
-    BUDGET.clear(); shutil.rmtree(tmp)
+    BUDGET.clear()
+    assert RUN_FAILED[0] == 0
+    # failed batches are counted (main exits 3) and are not marked done
+    remaining[0] = 9000.0
+    HTTP = lambda url, params, key: (None, None, {})
+    out3 = os.path.join(tmp, "o3")
+    run(["2403.00001", "2403.00002"], out3, "k")
+    assert RUN_FAILED[0] == 2 and "2403.00001" not in done_ids(out3)[0], "failed ids counted, left for next run"
+    # read_ids: candidates from papers (not point_index), done ids dropped, --since month-safe
+    import duckdb
+    dbp = os.path.join(tmp, "t.duckdb"); c = duckdb.connect(dbp)
+    c.execute("create table papers(id text, submitted date)")
+    c.execute("insert into papers values ('2410.00001','2024-10-01'),('2411.00001','2024-11-01'),('2411.00002','2024-11-01')")
+    c.execute("create table point_index(id text)"); c.execute("insert into point_index values ('2410.00001')"); c.close()
+    assert read_ids(dbp) == ["2410.00001", "2411.00001", "2411.00002"], "all papers, not point_index"
+    assert read_ids(dbp, since="2024-11-20") == ["2411.00001", "2411.00002"], "since compares month start"
+    assert read_ids(dbp, done={"2411.00001"}, limit=2) == ["2410.00001", "2411.00002"], "done dropped before limit"
+    shutil.rmtree(tmp)
     print("ok")
 
 
@@ -308,6 +384,7 @@ def main():
     ap.add_argument("--limit", type=int)
     ap.add_argument("--since")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--retry-notfound", action="store_true", help="retry all cached OpenAlex 404s now")
     a = ap.parse_args()
     if a.selftest:
         return selftest()
@@ -318,11 +395,16 @@ def main():
     _session()
     for s in (signal.SIGTERM, signal.SIGINT):
         signal.signal(s, lambda *_: STOP.set())
-    ids = read_ids(a.db, a.since, a.limit)
+    os.makedirs(a.out, exist_ok=True)
+    ids = read_ids(a.db, a.since, a.limit, done_ids(a.out, a.retry_notfound)[0])
     t0 = time.time()
-    run(ids, a.out, key)
+    run(ids, a.out, key, retry_notfound=a.retry_notfound)
     print(f"credits used this run: {STATE['used']:.0f}, seconds: {time.time() - t0:.0f}")
+    if RUN_FAILED[0] and not BUDGET.is_set():
+        print(f"{RUN_FAILED[0]} ids failed after retries this run (listed in failed.txt); exit 3", file=sys.stderr)
+        return 3
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

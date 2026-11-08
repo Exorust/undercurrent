@@ -73,24 +73,51 @@ def _code(text):
             return u
     return None
 
+# a negated or failed outcome ("not accepted", "rejected from", "desk-rejected", "declined"); the span runs to the
+# next clause break so "Rejected from ICML 2025, accepted at NeurIPS 2025" keeps NeurIPS
+_NEG = re.compile(r"(?:\b(?:not|never)|n't)\s+(?:yet\s+|been\s+|be\s+|being\s+)*(?:accepted|published|presented)\b"
+                  r"|\b(?:desk[- ]?)?rejected\b|\bdeclined\b", re.I)
+_BREAK = re.compile(r"[.;,\n(]|\bbut\b", re.I)
+
+
+def _mask_negated(text):
+    """Blank (same length) every negated clause, so its venue and cue words are ignored. -> (masked, any_negation)"""
+    out, last, neg = [], 0, False
+    for m in _NEG.finditer(text):
+        if m.start() < last:
+            continue
+        b = _BREAK.search(text, m.end())
+        end = b.start() if b else len(text)
+        out.append(text[last:m.start()]); out.append(" " * (end - m.start())); last, neg = end, True
+    out.append(text[last:])
+    return "".join(out), neg
+
+
 def parse_comment(text):
     out = dict(venue=None, kind=None, year=None, code_url=None, pages=None, withdrawn=False)
     if not text:
         return out
-    hits = sorted((m.start(), n, m) for n, p in _PATS for m in [p.search(text)] if m)
-    cue = _ACC.search(text)
+    t, neg = _mask_negated(_URL.sub(lambda m: " " * len(m.group()), text))
+    hits = sorted((m.start(), n, m) for n, p in _PATS for m in [p.search(t)] if m)
+    a, s = _ACC.search(t), _SUB.search(t)
     if hits:
-        pick = next((h for h in hits if cue and h[0] >= cue.start()), hits[0])
-        out["venue"], out["year"] = pick[1], _year(text, pick[2])
-    a, s = _ACC.search(text), _SUB.search(text)
-    if re.search(r"work\s*shop", text, re.I):
-        out["kind"] = "workshop"
-    elif a and (not s or a.start() < s.start()):
-        out["kind"] = "accepted"
+        pick = next((h for h in hits if a and h[0] >= a.start()), hits[0])
+        out["venue"], out["year"] = pick[1], _year(t, pick[2])
+    # status first: submission before (or without) an acceptance cue is a submission, wherever "workshop" appears
+    if a and (not s or a.start() < s.start()):
+        status = "accepted"
     elif s:
-        out["kind"] = "submitted"
+        status = "submitted"
+    elif neg:
+        status = "rejected"      # only a negated outcome: never counted as a venue (kind not accepted/workshop)
     elif out["venue"]:
-        out["kind"] = "accepted"
+        status = "accepted"
+    else:
+        status = None
+    # workshop only for an accepted / presented / published (or cue-less "X Workshop at Y") paper
+    if status in ("accepted", None) and re.search(r"work\s*shop", t, re.I):
+        status = "workshop"
+    out["kind"] = status
     out["code_url"] = _code(text)
     p = _PAGES.search(text)
     out["pages"] = int(p.group(1)) if p else None
@@ -153,6 +180,13 @@ CASES = [  # (comment, venue, kind, year); real strings from data/spikes/s1.json
  ("IEEE Access", None, None, None),
  ("Published by IEEE Xplore", None, "accepted", None),
  ("Preprint", None, None, None),
+ # negation and submission (Codex review 2026-11-07)
+ ("Submitted to the ICML 2026 workshop", "ICML", "submitted", 2026),
+ ("Not accepted at ICML 2025", None, "rejected", None),
+ ("Rejected from ICML 2025, accepted at NeurIPS 2025", "NeurIPS", "accepted", 2025),
+ ("Desk-rejected at ICLR 2026", None, "rejected", None),
+ ("Under review at the NeurIPS 2025 Workshop on Efficient Reasoning", "NeurIPS", "submitted", 2025),
+ ("The paper was not accepted to the CVPR 2024 workshop; submitted to TPAMI", "TPAMI", "submitted", None),
 ]
 EXTRA = [  # (comment, field, expected)
  ("12 pages, 4 figures. Code: https://github.com/x/y.", "pages", 12), ("12 pages, 4 figures. Code: https://github.com/x/y.", "code_url", "https://github.com/x/y"),
@@ -168,6 +202,9 @@ EXTRA = [  # (comment, field, expected)
 ]
 
 def selftest():
+    for text in ("12 pages. Code: https://github.com/foo/neurips-bench", "Code at https://github.com/x/ICLR2025-baselines"):
+        r = parse_comment(text)
+        assert r["venue"] is None and r["kind"] is None and r["code_url"], r
     n = 0
     for text, v, k, y in CASES:
         r = parse_comment(text)

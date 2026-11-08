@@ -163,3 +163,20 @@ Vocabulary: **solved** = walked against the running software, every step matched
 | F44 light style | solved after one contrast fix round (connect view background, growth text palette, selection dimming); colour-blind check on the light scale: min adjacent ΔE 14.5 (tritanopia), 14.7 (deuteranopia), 15.9 (protanopia) | 2026-11-07-light/ |
 | UX review | done; user chose alternative B (QM) over the reviewer's A | 2026-11-07-ux/review.md |
 | Deploy | undercurrent redeployed; charoori.com: /undercurrent/map/ trailing-slash rewrite fixed (commit 34fb4a0), undercurrent listed under projects; production promoted manually because Vercel had stopped auto-assigning production after the earlier manual promote | curl checks |
+
+## Run 2026-11-07 evening — F47–F54 (friend's requests, palette, dialogs, Help, front page)
+
+Builders: Sonnet for 19 small tasks (spikes S1–S4, T1.1–T1.5, T2.1, T2.2, T2.4, T3.1–T3.3, T4.0, T4.2+T4.3, T4.4, F54), Opus for T1.6, T2.3, T4.1, F51/F52, F53 and the review fixes. Reviews: Codex (10 findings, all fixed); Grok failed (account balance exhausted, HTTP 402) so an Opus reviewer ran instead. Walks: by the builders against static exports of the real database (headless Chrome, axe-core, `tools/perf.cjs`), PM spot checks of screenshots.
+
+| item | status | evidence / notes |
+|---|---|---|
+| F47 comments | partial: pipeline built and selftested; harvester stores the comment; display and filter chips built. Data: backfill of 459,249 comments running (arXiv 429s; one client at a time); venue share on the page is ~0.3 % until it finishes | `data/raw/comments/`, scratchpad t42-shots (fixture) |
+| F48 institutions | solved on real data: 85.2 % of papers with ≥1 institution (391,093), 2,493 institutions with ≥30 papers (D4 stays at 30); filter walk F48.2 steps 1–8, 10 pass; step 9 (top institutions) built in T4.2 | scratchpad t41-shots, t42-shots |
+| F49 citations | partial: percentiles (all 459,249 papers) and topic signals live; refresh mode built (not yet run on the full DB); citation links built and tested on fixtures; reference download ~2–3 % done, 15–26 h total | `data/raw/refs/` |
+| F50 performance | solved locally: first draw 1.14–1.25 s (one cold run 2.2 s), slowest frame 17 ms, filterApplyMs 0.7–5.3 ms, flags+citpct 236 KB gzip, institutions.json 48 KB gzip, largest inst file 19 KB gzip, 5,229 files. Live compression check (F50.1 step 3) after deploy | perf-baseline.json, t41 perf.json |
+| F51 palette | solved (F51.1 all steps, axe 0 in 7 states) | scratchpad f52-shots |
+| F52 dialogs | solved; steps 7–9 superseded by F54 | scratchpad f52-shots |
+| F53 front page | solved (12/12 steps, axe 0 at 1440 and 390); stats + landing.json switch added (T4.4) | scratchpad f53-shots, t44-shots |
+| F54 Help popup | solved (13/13; step 8 focus returns to Help's original opener) | scratchpad f54-shots |
+| Deep links | solved (`?topic=`, `?link=`, invalid values ignored) | scratchpad t40-shots |
+| Deploy | NOT DONE: `vercel deploy site --prod` was refused by the permission check; the user must run it | — |

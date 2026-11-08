@@ -2,24 +2,24 @@
 # Weekly job (launchd fires it daily at 04:00; it works only when the last success is 6+ days old).
 #   1. harvest the last 14 days of arXiv CS and embed new papers (every week)
 #   1b. SOFT (a failure is logged and notified, the run continues on the last good data):
-#       institutions --since 14 days ago (OpenAlex affiliations), then load_extra (merge data/raw/* into the DB)
+#       institutions (OpenAlex affiliations for every paper not yet looked up), then load_extra (merge data/raw/* into the DB)
+#       institutions and refs exit 3 when ids failed after retries: `soft` notifies, successful chunks are kept
 #   2. only when a new month has completed since the published snapshot:
 #       SOFT enrich --refresh (citation counts) and refs (Semantic Scholar references), then full pipeline
-#       (run_all.sh, which also runs load_extra and citations), static export with ideas for the top 20 links,
+#       (run_all.sh, which runs load_extra again after map, then links and citations), static export with ideas for the top 20 links,
 #       size checks, deploy to Vercel
 # A failed hard step deploys nothing: the public page keeps the last good snapshot. Failures raise a macOS notification.
 # Env: UC_FORCE=1 ignores the 6-day stamp; UC_NO_DEPLOY=1 stops before `vercel deploy`; UC_ALLOW_BATTERY=1;
 #      UC_DRY=1 prints the steps it would run and exits 0 (no log, no data/ access).
 # OPENALEX_KEY comes from .env in the repo root (launchd has no shell profile).
 cd "$(dirname "$0")/.." || exit 1
-[ -f .env ] && set -a && . ./.env && set +a
 
 # dry run: must stay BEFORE mkdir/exec so it never writes $LOG or touches data/
 if [ -n "$UC_DRY" ]; then
   since=$(date -v-14d +%F)
   echo "step: harvest: timeout 7200 radar.harvest_api --from $since"
   echo "step: embed new papers: timeout 10800 radar.enrich --months 2 (up to 3 attempts)"
-  echo "step: affiliations (soft): timeout 1800 radar.institutions --since $since"
+  echo "step: affiliations (soft): timeout 1800 radar.institutions (papers not yet looked up)"
   echo "step: load_extra (soft): timeout 1800 radar.load_extra"
   echo "step: last-complete-month check vs published snapshot (no new month: stamp and stop)"
   echo "step (new month only): enrich --refresh (soft): timeout 7200 radar.enrich --refresh"
@@ -60,8 +60,8 @@ timeout 7200 $PY -m radar.harvest_api --from "$(date -v-14d +%F)" || fail "harve
 say "embed new papers"
 ok=; for i in 1 2 3; do timeout 10800 $PY -m radar.enrich --months 2 && { ok=1; break; }; say "enrich attempt $i failed; retry in 120 s"; sleep 120; done
 [ -n "$ok" ] || fail "enrich"
-say "affiliations (institutions, last 14 days)"
-soft "institutions" timeout 1800 $PY -m radar.institutions --since "$(date -v-14d +%F)"
+say "affiliations (institutions, papers not yet looked up)"
+soft "institutions" timeout 1800 $PY -m radar.institutions
 say "load_extra"
 soft "load_extra" timeout 1800 $PY -m radar.load_extra
 

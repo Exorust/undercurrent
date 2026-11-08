@@ -115,9 +115,10 @@ nav.top .btn .short { display: none; }
 
 /* stats */
 .statsec { padding: 0 0 80px; border: 0; }
-.stats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); max-width: 1040px; margin: 0 auto; overflow: hidden; }
+.stats { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); max-width: 1040px; margin: 0 auto; overflow: hidden; }
 .stat { padding: 22px 24px; border-left: 1px solid var(--line); }
 .stat:first-child { border-left: 0; }
+.stat[hidden] { display: none; }
 .stat .v { font: 400 32px/1.1 var(--sans); letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
 .stat .label { margin-top: 8px; display: block; letter-spacing: 0; font-size: 13px; }
 
@@ -184,11 +185,11 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   .navright { margin-left: auto; }
 }
 @media (max-width: 860px) {
-  .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stats { grid-auto-flow: row; grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .stat { border-left: 0; border-top: 1px solid var(--line); }
   .stat:nth-child(even) { border-left: 1px solid var(--line); }
   .stat:nth-child(-n+2) { border-top: 0; }
-  .stat:last-child { grid-column: 1 / -1; border-left: 0; }
+  .stat:last-child:nth-child(odd) { grid-column: 1 / -1; border-left: 0; }
   .now, .method, .read, .agent { grid-template-columns: 1fr; }
   .agent { gap: 16px; }
   section { padding: 64px 0; }
@@ -297,6 +298,8 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
       <div class="stat"><div class="v" data-s="subs">373</div><span class="label">Sub-topics</span></div>
       <div class="stat"><div class="v" data-s="months">36</div><span class="label">Months covered</span></div>
       <div class="stat"><div class="v" data-s="arriving">15</div><span class="label">Arriving sub-topics, last 6 months</span></div>
+      <div class="stat"><div class="v" data-s="inst" data-suffix=" %">85 %</div><span class="label">Affiliations known</span></div>
+      <div class="stat" id="codeStat" hidden><div class="v" data-s="code" data-suffix=" %">0 %</div><span class="label">With code</span></div>
     </div>
   </div>
 </section>
@@ -361,6 +364,10 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
         <p>Each paper's title and abstract become a SPECTER2 embedding from Semantic Scholar. A 15-neighbour graph is laid out with UMAP, and HDBSCAN groups the layout into topics and sub-topics.</p>
         <code class="well formula">SPECTER2 → 15-neighbour graph → UMAP → HDBSCAN</code>
       </div>
+      <div class="tile rule fade">
+        <span class="label">Citations</span>
+        <p>Citation percentile compares a paper with others submitted the same month; counts come from Semantic Scholar and are refreshed monthly.</p>
+      </div>
     </div>
     <div class="tile honest fade">
       <span class="label">How much to trust it</span>
@@ -394,12 +401,10 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   </div>
 </section>
 
-<section class="soon" aria-label="Coming later">
+<section class="soon" aria-label="New on the map">
   <div class="wrap">
-    <span class="label">Coming later</span>
-    <span class="chip">Institution and country filters</span>
-    <span class="chip">Venue and code signals from arXiv comments</span>
-    <span class="chip">Citation percentiles</span>
+    <span class="label">New</span>
+    <span>New on the map: filter by institution, country, venue and code, and see citation percentiles. <a href="map/">Open the map</a>.</span>
   </div>
 </section>
 </main>
@@ -454,6 +459,7 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     return t.filter(function (a) { return !t.some(function (b) { return b !== a && b.indexOf(a) >= 0; }); }).slice(0, 3).join(', ');
   }
   function fig(g, n, unit) {
+    if (g == null) return '<span class="fig"><span class="new">new</span>' + fmt(n) + ' ' + unit + '</span>';
     return '<span class="fig"><span class="dot" style="background:' + G[step(g)] + '" aria-hidden="true"></span>×' + g.toFixed(2) + ' · ' + fmt(n) + ' ' + unit + '</span>';
   }
   function list(id, items) {
@@ -475,11 +481,12 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     el.dataset.v = v.replace(/[^0-9]/g, '');
     el.innerHTML = '<span class="sr-only" data-f>' + v + '</span><span aria-hidden="true" data-vis>' + v + '</span>';
   });
+  function sfx(el, n) { return fmt(n) + (el.dataset.suffix || ''); }
   function setStat(k, n) {
     var el = document.querySelector('[data-s="' + k + '"]'); if (!el) return;
     el.dataset.v = String(n);
-    el.querySelector('[data-f]').textContent = fmt(n);
-    if (!el.dataset.running) el.querySelector('[data-vis]').textContent = fmt(n);
+    el.querySelector('[data-f]').textContent = sfx(el, n);
+    if (!el.dataset.running) el.querySelector('[data-vis]').textContent = sfx(el, n);
   }
   function countUp() {
     var t0 = null, D = 900;
@@ -487,9 +494,9 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     function frame(t) {
       if (t0 === null) t0 = t;
       var k = Math.min(1, (t - t0) / D), e = 1 - Math.pow(1 - k, 3);
-      stats.forEach(function (el) { el.querySelector('[data-vis]').textContent = fmt(Math.round(+el.dataset.v * e)); });
+      stats.forEach(function (el) { el.querySelector('[data-vis]').textContent = sfx({dataset: {suffix: el.dataset.suffix}}, Math.round(+el.dataset.v * e)); });
       if (k < 1) requestAnimationFrame(frame);
-      else stats.forEach(function (el) { delete el.dataset.running; el.querySelector('[data-vis]').textContent = fmt(+el.dataset.v); });
+      else stats.forEach(function (el) { delete el.dataset.running; el.querySelector('[data-vis]').textContent = sfx(el, +el.dataset.v); });
     }
     requestAnimationFrame(frame);
   }
@@ -500,42 +507,57 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     so.observe(document.getElementById('stats'));
   }
 
-  Promise.all([get('meta.json'), get('topics-' + LEVEL + '-6m.json'), get('links-' + LEVEL + '-6m.json')]).then(function (r) {
-    var m = r[0], T = r[1], L = r[2];
+  // landing.json holds the five rows of each list; if it fails, build the same rows from the full topics and links files
+  function fromFull() {
+    return Promise.all([get('topics-' + LEVEL + '-6m.json'), get('links-' + LEVEL + '-6m.json')]).then(function (r) {
+      var T = r[0], L = r[1], arr = [], name = {}, per = {}, seen = {};
+      T.topics.forEach(function (t) { name[t.c] = t.label; (t.arriving || []).forEach(function (a) { arr.push({a: a, t: t}); per[t.c] = (per[t.c] || 0) + 1; }); });
+      var rank = function (b) { return b.status === 'new' ? 0 : 1; };
+      return {window: T.window, arriving_total: arr.length,
+        growing: T.topics.filter(function (t) { return t.recent >= 200 && t.growth != null; }).sort(function (a, b) { return b.growth - a.growth; }).slice(0, 5)
+          .map(function (t) { return {c: t.c, label: t.label, growth: t.growth, recent: t.recent, prior: t.prior}; }),
+        arriving: arr.sort(function (a, b) { return (b.a.growth == null) - (a.a.growth == null) || (b.a.growth || 0) - (a.a.growth || 0); })
+          .filter(function (o) { if (seen[o.t.c]) return false; seen[o.t.c] = 1; return true; }).slice(0, 5)
+          .map(function (o) { return {t: {c: o.t.c, label: o.t.label}, a: {label: o.a.label, growth: o.a.growth, recent: o.a.recent}, short: short(o.a.label), n_arriving: per[o.t.c]}; }),
+        links: L.bridge_links.filter(function (b) { return b.status === 'new' || b.growth != null; })
+          .sort(function (a, b) { return rank(a) - rank(b) || (b.growth || 0) - (a.growth || 0) || b.n_bridge - a.n_bridge; }).slice(0, 5)
+          .map(function (b) { return {c1: b.c1, c2: b.c2, status: b.status, growth: b.growth, n_bridge: b.n_bridge, n_bridge_prior: b.n_bridge_prior, name1: name[b.c1], name2: name[b.c2]}; })};
+    });
+  }
+  function pct(x) { return Math.round(x * 100); }
+
+  Promise.all([get('meta.json'), get('landing.json').catch(function (e) { console.warn('undercurrent: landing.json failed, using the full files', e); return fromFull(); })]).then(function (r) {
+    var m = r[0], D = r[1];
     document.getElementById('pill').innerHTML = pill(m.last_complete);
     set('last', ym(m.last_complete)); set('n', fmt(m.n_points)); set('gen', day(m.generated));
     setStat('n', m.n_points); setStat('topics', m.levels['1']); setStat('subs', m.levels['0']); setStat('months', m.months.length);
-    var w = T.window;
+    var x = m.extra, ik = x && x.inst_known_share, cs = x && x.code_share;
+    if (ik != null && ik > 0) setStat('inst', pct(ik)); else document.querySelector('[data-s="inst"]').parentNode.hidden = true;
+    if (cs != null && cs >= 0.01) { setStat('code', pct(cs)); document.getElementById('codeStat').hidden = false; }
+    else document.getElementById('codeStat').hidden = true;
+    var w = D.window || m.windows['6m'];
+    var span = w.from && w.to ? (Number(w.to.slice(0, 4)) - Number(w.from.slice(0, 4))) * 12 + Number(w.to.slice(5, 7)) - Number(w.from.slice(5, 7)) + 1 : Number(String(D.window).replace('m', ''));
+    var win = [3, 6, 12].indexOf(span) >= 0 ? span : 6;
     set('vol', '×' + w.vol_ratio.toFixed(2));
-    var arr = [], name = {};
-    T.topics.forEach(function (t) { name[t.c] = t.label; (t.arriving || []).forEach(function (a) { arr.push({a: a, t: t}); }); });
-    setStat('arriving', arr.length);
-    var topicUrl = function (c) { return 'map/?topic=' + LEVEL + '-' + c; };
+    if (D.arriving_total != null) setStat('arriving', D.arriving_total);
+    var topicUrl = function (c) { return 'map/?topic=' + LEVEL + '-' + c + '&win=' + win; };
 
-    list('l-grow', T.topics.filter(function (t) { return t.recent >= 200 && t.growth != null; })
-      .sort(function (a, b) { return b.growth - a.growth; }).slice(0, 5).map(function (t) {
-        return '<li><a href="' + topicUrl(t.c) + '"><span class="t">' + esc(t.label) + '</span>' + fig(t.growth, t.recent, 'papers') +
-          '<span class="s">' + fmt(t.prior) + ' in the 6 months before</span></a></li>';
-      }));
-    // one per parent topic (the fastest), so five near-identical "agents" sub-topics do not fill the list
-    var per = {}, seen = {};
-    arr.forEach(function (o) { per[o.t.c] = (per[o.t.c] || 0) + 1; });
-    list('l-arr', arr.sort(function (a, b) { return b.a.growth - a.a.growth; })
-      .filter(function (o) { if (seen[o.t.c]) return false; seen[o.t.c] = 1; return true; }).slice(0, 5).map(function (o) {
-        var more = per[o.t.c] > 1 ? ' · ' + per[o.t.c] + ' arriving here' : '';
-        return '<li><a href="' + topicUrl(o.t.c) + '"><span class="t">' + esc(o.t.label) + '</span>' + fig(o.a.growth, o.a.recent, 'papers') +
-          '<span class="s">sub-topic: ' + esc(short(o.a.label)) + more + '</span></a></li>';
-      }));
-    var rank = function (b) { return b.status === 'new' ? 0 : 1; };
-    list('l-links', L.bridge_links.filter(function (b) { return b.status === 'new' || b.growth != null; })
-      .sort(function (a, b) { return rank(a) - rank(b) || (b.growth || 0) - (a.growth || 0) || b.n_bridge - a.n_bridge; })
-      .slice(0, 5).map(function (b) {
-        var f = b.status === 'new'
-          ? '<span class="fig"><span class="new">new</span>' + fmt(b.n_bridge) + ' bridge papers</span>'
-          : fig(b.growth, b.n_bridge, 'bridge papers');
-        return '<li><a href="map/?link=' + LEVEL + '-' + b.c1 + '-' + b.c2 + '"><span class="t">' + esc(name[b.c1]) + ' ↔ ' + esc(name[b.c2]) + '</span>' + f +
-          '<span class="s">' + fmt(b.n_bridge_prior) + (b.n_bridge_prior === 1 ? ' bridge paper' : ' bridge papers') + ' in the 6 months before</span></a></li>';
-      }));
+    list('l-grow', D.growing.map(function (t) {
+      return '<li><a href="' + topicUrl(t.c) + '"><span class="t">' + esc(t.label) + '</span>' + fig(t.growth, t.recent, 'papers') +
+        '<span class="s">' + fmt(t.prior) + ' in the 6 months before</span></a></li>';
+    }));
+    list('l-arr', D.arriving.map(function (o) {
+      var more = o.n_arriving > 1 ? ' · ' + o.n_arriving + ' arriving here' : '';
+      return '<li><a href="' + topicUrl(o.t.c) + '"><span class="t">' + esc(o.t.label) + '</span>' + fig(o.a.growth, o.a.recent, 'papers') +
+        '<span class="s">sub-topic: ' + esc(o.short) + more + '</span></a></li>';
+    }));
+    list('l-links', D.links.map(function (b) {
+      var f = b.status === 'new'
+        ? '<span class="fig"><span class="new">new</span>' + fmt(b.n_bridge) + ' bridge papers</span>'
+        : fig(b.growth, b.n_bridge, 'bridge papers');
+      return '<li><a href="map/?link=' + LEVEL + '-' + b.c1 + '-' + b.c2 + '&win=' + win + '"><span class="t">' + esc(b.name1) + ' ↔ ' + esc(b.name2) + '</span>' + f +
+        '<span class="s">' + fmt(b.n_bridge_prior) + (b.n_bridge_prior === 1 ? ' bridge paper' : ' bridge papers') + ' in the 6 months before</span></a></li>';
+    }));
     document.getElementById('winnote').textContent = 'Window: ' + ym(w.from) + ' to ' + ym(w.to) + ' against the 6 months before, corrected for CS growth (×' + w.vol_ratio.toFixed(2) + '). Switch to 3 or 12 months on the map.';
     if (m.backtest_line) document.getElementById('bt').textContent = 'Backtest: ' + m.backtest_line;
   }).catch(function (e) {

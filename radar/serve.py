@@ -180,14 +180,25 @@ def take_locks():
     return "; ".join(notes) or None
 
 
-def load():
-    from scipy import sparse
-    t0 = time.time()
-    con = duckdb.connect(str(P["db"]), read_only=True, config={"memory_limit": "2GB"})
+def map_metadata(con):
     cols = [r[0] for r in con.execute("describe map_meta").fetchall()]
     if cols[:2] == ["key", "value"]: meta = dict(con.execute("select key, value from map_meta").fetchall())
     else:   # ponytail: map.py writes one row per run (flows F2/F3), arch §2.1 says key/value; read either, latest run wins
         cur = con.execute("select * from map_meta order by created desc limit 1"); meta = dict(zip([d[0] for d in cur.description], cur.fetchone()))
+    return meta
+
+
+def last_complete_month(con, meta=None):
+    meta = map_metadata(con) if meta is None else meta
+    max_sub, max_harv = con.execute("select max(submitted), max(harvested_at) from papers").fetchone()
+    return min(ym_abs(max_sub), ym_abs(max_harv) - 1) - ym_abs(meta.get("month0", "2023-11"))
+
+
+def load():
+    from scipy import sparse
+    t0 = time.time()
+    con = duckdb.connect(str(P["db"]), read_only=True, config={"memory_limit": "2GB"})
+    meta = map_metadata(con)
     S.con, S.meta, S.run_id = con, meta, meta["run_id"]
     S.tables = {r[0] for r in con.execute("select table_name from information_schema.tables").fetchall()}
     S.filterdata, S.countries = None, None
@@ -200,8 +211,7 @@ def load():
     S.L = [np.asarray(pi[f"l{k}"], np.int32) for k in range(3)]
     S.Lx = [np.append(l, -1) for l in S.L]          # index n (from a -1 neighbour) maps to "no cluster"
     S.m0 = ym_abs(meta.get("month0", "2023-11"))
-    max_sub, max_harv = con.execute("select max(submitted), max(harvested_at) from papers").fetchone()
-    S.E = min(ym_abs(max_sub), ym_abs(max_harv) - 1) - S.m0          # last complete month (arch §6.1)
+    S.E = last_complete_month(con, meta)          # last complete month (arch §6.1)
     S.nm = max(int(meta.get("n_months", 0)), int(S.month.max()) + 1, S.E + 1)
     S.vol = np.bincount(S.month, minlength=S.nm)
     kn = con.execute("select row, nbr from knn order by row, rank").fetchnumpy()
@@ -422,15 +432,24 @@ def h_paper(h, q, body, cur):
 
 
 def sigwin(w):
-    """topic_signals window for a request window: its month count when that is 3/6/12, else the nearest of those."""
-    n = w["obj"]["n_months"]; return min(SIG_WINS, key=lambda x: (abs(x - n), x))
+    """topic_signals window for a request window, or None. Cached signals exist only for the standard windows: the
+    latest 3, 6 or 12 complete months ending at the last complete month. Any other period or length gets None
+    (null signals; the inspector hides the lines) rather than numbers from a different window."""
+    n = w["obj"]["n_months"]
+    return n if n in SIG_WINS and w["rt"] == S.E and w["rf"] == S.E - n + 1 else None
+
+
+def topic_sigs(lv, c, w):
+    """signals for the request window (rule in sigwin) and signals_all (whole snapshot, always)."""
+    win = sigwin(w)
+    return {"signals": S.sig.get((lv, c, win)) if win else None, "signals_all": S.sig.get((lv, c, 0))}
 
 
 def h_topic(h, q, body, cur):
     lv, w = qint(q, "level", 0, 3, 1), window(q); c = qint(q, "c", 0, S.k[lv])
     r, p = S.TM[lv][c, w["rf"]:w["rt"] + 1].sum(), S.TM[lv][c, w["pf"]:w["pt"] + 1].sum()
     return {"window": w["obj"], "level": lv, "c": c, "label": S.lab[lv][c], "n_total": S.tinfo.get((lv, c), (0, 0))[1], **gstats(r, p, w),
-            "signals": S.sig.get((lv, c, sigwin(w))), "signals_all": S.sig.get((lv, c, 0))}
+            **topic_sigs(lv, c, w)}
 
 
 def h_topics(h, q, body, cur):
@@ -456,7 +475,7 @@ def h_topics(h, q, body, cur):
     r, p = rec(lv); win = sigwin(w)
     return {"window": w["obj"], "level": lv, "topics": [
         {"c": c, "label": S.lab[lv][c], "n_total": S.tinfo.get((lv, c), (0, 0))[1], **gstats(r[c], p[c], w),
-         **{k: (S.sig.get((lv, c, win)) or {}).get(k) for k in ("venue_share", "code_share", "cit_median_pct")},
+         **{k: ((S.sig.get((lv, c, win)) if win else None) or {}).get(k) for k in ("venue_share", "code_share", "cit_median_pct")},
          "arriving": sorted(arriving.get(c, []), key=lambda a: a["window_share"], reverse=True)} for c in range(S.k[lv])]}
 
 
@@ -488,6 +507,17 @@ def link_level(q):
     return lv
 
 
+def cite_pairs(cur, lv, rf, rt):
+    out = {}
+    if "topic_citelinks" not in S.tables: return out
+    for a, b, n, x, y in cur.execute("select c1, c2, sum(n_cites), sum(n_1to2), sum(n_2to1) from topic_citelinks where level = ? and month between ? and ? group by 1, 2", [lv, rf, rt]).fetchall():
+        if a == b: continue
+        if a > b: a, b, x, y = b, a, y, x
+        old = out.get((a, b), (0, 0, 0))
+        out[(a, b)] = tuple(o + int(v or 0) for o, v in zip(old, (n, x, y)))
+    return out
+
+
 def h_links(h, q, body, cur):
     lv, w = link_level(q), window(q)
     rf, rt, pf, pt = w["rf"], w["rt"], w["pf"], w["pt"]
@@ -495,11 +525,7 @@ def h_links(h, q, body, cur):
     rows = cur.execute("""select c1, c2, coalesce(sum(n_bridge) filter (where month between ? and ?), 0),
                                  coalesce(sum(n_bridge) filter (where month between ? and ?), 0)
                           from topic_links where level = ? and month between ? and ? group by 1, 2""", [rf, rt, pf, pt, lv, pf, rt]).fetchall()
-    cl = {}
-    if "topic_citelinks" in S.tables:
-        cl = {(a, b): (int(x), int(y), int(z)) for a, b, x, y, z in cur.execute(
-            """select c1, c2, sum(n_cites), sum(n_1to2), sum(n_2to1) from topic_citelinks where level = ? and month between ? and ?
-               group by 1, 2""", [lv, rf, rt]).fetchall()}
+    cl = cite_pairs(cur, lv, rf, rt)
     out = []
     for c1, c2, br, bp in rows:
         if br == 0: continue
@@ -529,12 +555,11 @@ def h_link(h, q, body, cur):
     top = by_cites(np.array(sorted(kk), np.int64), 30)
     cites = {"n_cites": 0, "n_1to2": 0, "n_2to1": 0, "top": []}
     if "topic_citelinks" in S.tables:
-        t = cur.execute("""select coalesce(sum(n_cites), 0), coalesce(sum(n_1to2), 0), coalesce(sum(n_2to1), 0) from topic_citelinks
-                           where level = ? and c1 = ? and c2 = ? and month between ? and ?""", [lv, c1, c2, w["rf"], w["rt"]]).fetchone()
+        t = cite_pairs(cur, lv, w["rf"], w["rt"]).get((c1, c2), (0, 0, 0))
         cites.update(n_cites=int(t[0]), n_1to2=int(t[1]), n_2to1=int(t[2]))
     if "citelink_evidence" in S.tables:
-        ev = cur.execute("select cited_row, n from citelink_evidence where level = ? and c1 = ? and c2 = ? and cited_row >= 0 and cited_row < ? "
-                         "order by n desc, cited_row limit 20", [lv, c1, c2, S.n]).fetchall()
+        ev = cur.execute("select cited_row, sum(n) from citelink_evidence where level = ? and ((c1 = ? and c2 = ?) or (c1 = ? and c2 = ?)) and cited_row >= 0 and cited_row < ? "
+                         "group by cited_row order by sum(n) desc, cited_row limit 30", [lv, c1, c2, c2, c1, S.n]).fetchall()
         cites["top"] = [{**p, "n": int(n)} for p, (_, n) in zip(papers(cur, [r for r, _ in ev]), ev)]
     return {"window": w["obj"], "level": lv, "c1": c1, "c2": c2, "n_bridge": len(b), "cites": cites,
             "bridges": [{**p, "k1": kk[p["row"]][0], "k2": kk[p["row"]][1]} for p in papers(cur, top)],
@@ -591,6 +616,10 @@ def h_select(h, q, body, cur):
     if sel["saved"]:
         out.update(name=sel.get("name"), polygon=sel["spec"].get("polygon"), saved_window=sel["spec"].get("window"), run_id=sel.get("run_id"),
                    polygon_valid=bool(sel["spec"].get("polygon")) and sel.get("run_id") == S.run_id)
+    sp = sel.get("spec") or {}
+    # local-mode inspector reads signals from /select; a saved topic from another map run has other cluster ids
+    if sel["kind"] == "topic" and "level" in sp and "c" in sp and (not sel["saved"] or sel.get("run_id") == S.run_id):
+        out.update(topic_sigs(int(sp["level"]), int(sp["c"]), w))
     return {**out, **(sel.get("unembedded_stats") or stats(cur, sel["rows"], w))}
 
 
@@ -823,8 +852,8 @@ def h_countries(h, q, body, cur):
     with EXTRA_LOCK:
         if S.countries is None:
             S.countries = [] if not {"institutions", "paper_institutions"} <= S.tables else [[cc, int(n)] for cc, n in cur.execute(
-                """select i.country, count(distinct a.id) n from paper_institutions a join institutions i using(inst_id)
-                   join point_index p on p.id = a.id where i.country is not null group by 1 order by n desc, 1""").fetchall()]
+                """select upper(i.country), count(distinct a.id) n from paper_institutions a join institutions i using(inst_id)
+                   join point_index p on p.id = a.id where regexp_full_match(i.country, '[A-Za-z]{2}') group by 1 having count(distinct a.id) >= 30 order by n desc, 1""").fetchall()]
     return S.countries
 
 
@@ -1183,7 +1212,7 @@ def selftest():
     st, ins = req("/institutions"); ok([r[0] for r in ins] == ["I4", "I1", "I2"] and ins[0] == ["I4", "Technion", "IL", 50], "/institutions empty q: top by n, n >= 30 only")
     ok([r[0] for r in req("/institutions?q=TECH")[1]] == ["I4", "I1"], "/institutions prefix match before substring, case-insensitive")
     ok(req("/institutions?q=tiny")[1] == [] and req("/institutions?q=zzz")[1] == [], "/institutions n < 30 and no match excluded")
-    st, cs = req("/countries"); ok(cs == [["US", 47], ["CN", 30], ["IL", 9]], "/countries")
+    st, cs = req("/countries"); ok(cs == [["US", 47], ["CN", 30]], "/countries")
     ids = np.array(S.ids)
     def rows_of(pred): return [r for r in range(90) if pred(r)]
     st, hd, rb = raw("/rows?inst=I1,I2&country=US")
@@ -1191,7 +1220,7 @@ def selftest():
     lens = [int(x) for x in hd["X-Lens"].split(",")]
     got = list(struct.unpack(f"<{len(rb) // 4}I", rb)); parts = [got[:lens[0]], got[lens[0]:lens[0] + lens[1]], got[lens[0] + lens[1]:]]
     ok(st == 200 and lens == [len(e1), len(e2), len(e3)] and parts == [e1, e2, e3] and hd["Content-Type"] == "application/octet-stream", "/rows blocks sorted uint32 with X-Lens")
-    st, tj = req("/topic?level=0&c=0")
+    st, tj = req("/topic?level=0&c=0"); tj0 = tj
     ok(tj["signals"] == {"win": 6, "n": 20, "venue_share": 0.4, "code_share": 0.25, "cit_median_pct": 50, "top10_share": 0.1,
                          "top_insts": [["I1", "MIT", 9]], "top_venues": [["NeurIPS", 5]]} and tj["signals_all"]["n"] == 32 and tj["signals_all"]["top_insts"] == [], "/topic signals and signals_all")
     st, tj = req("/topic?level=0&c=0&from=2026-08&to=2026-10"); ok(tj["signals"] is None and tj["signals_all"]["win"] == 0, "/topic window 3 with no signals row is null")
@@ -1199,13 +1228,29 @@ def selftest():
     st, pj = req("/paper?row=8"); ok(pj["venue"] is None and pj["code_url"] == "https://code/8" and pj["cit_pct"] == 8, "/paper venue, code_url, cit_pct")
     st, pj = req("/paper?row=0"); ok(pj["venue"] == "NeurIPS" and pj["cit_pct"] == 0, "/paper venue from paper_comments")
     st, d = req(f"/distance?a={a['sel_id']}&b={b['sel_id']}"); ok(all({"venue", "code_url", "cit_pct"} <= set(p) for p in d["bridges"]), "bridge paper objects carry the new fields")
+    ok(req("/topic?level=0&c=0&from=2026-06&to=2026-10")[1]["signals"] is None, "/topic custom 5-month window: signals null, not the 6-month row")
+    ok(req("/topic?level=0&c=0&from=2026-04&to=2026-09")[1]["signals"] is None, "/topic 6 months ending before E: signals null")
+    ok(req("/topic?level=0&c=0&from=2026-05&to=2026-10")[1]["signals"]["win"] == 6, "/topic explicit latest 6 months: cached signals")
+    ok(req("/topics?level=0&from=2026-06&to=2026-10")[1]["topics"][0]["venue_share"] is None, "/topics custom window: signal fields null")
     st, s3 = req("/select", {"topic": {"level": 0, "c": 0}}); ok(all({"venue", "code_url", "cit_pct"} <= set(p) for p in s3["top_cited"] + s3["newest"]), "top_cited and newest carry the new fields")
+    ok(s3["signals"] == tj0["signals"] and s3["signals_all"]["n"] == 32, "/select topic carries signals and signals_all (local mode)")
+    ok(req("/select", {"topic": {"level": 0, "c": 0}, "from": "2026-06", "to": "2026-10"})[1]["signals"] is None, "/select topic custom window: signals null")
+    ok("signals" not in req("/select", {"rows": [1, 2, 3]})[1], "/select rows has no signals")
     st, L = req("/links?level=0"); br = {(x["c1"], x["c2"]): x for x in L["bridge_links"]}
     ok((0, 1) in br and br[(0, 1)]["n_cites"] == 12 and [(x["c1"], x["c2"], x["n_cites"], x["n_1to2"], x["n_2to1"]) for x in L["cite_links"]] == [(0, 2, 13, 6, 7)],
        "/links n_cites for the window, cite_links excludes bridge pairs and n_cites < 10")
     st, lk = req("/link?level=0&c1=0&c2=2")
     ok(lk["cites"]["n_cites"] == 13 and (lk["cites"]["n_1to2"], lk["cites"]["n_2to1"]) == (6, 7) and [(p["row"], p["n"]) for p in lk["cites"]["top"]] == [(1, 4), (9, 4), (5, 3)]
        and "venue" in lk["cites"]["top"][0], "/link cites with top evidence papers")
+    # Reverse orientations contribute to the same pair; evidence is summed before the top-30 cut.
+    S.con.close()
+    c = duckdb.connect(str(P["db"]))
+    c.execute("insert into topic_citelinks values (0, 2, 0, 35, 5, 2, 3)")
+    c.execute("insert into citelink_evidence select 0, 2, 0, range, 10 from range(35)")
+    c.close(); load()
+    st, lk = req("/link?level=0&c1=0&c2=2")
+    ok(lk["cites"]["n_cites"] == 18 and (lk["cites"]["n_1to2"], lk["cites"]["n_2to1"]) == (9, 9)
+       and len(lk["cites"]["top"]) == 30 and lk["cites"]["top"][0]["n"] == 14, "both citation orientations summed, top 30")
     srv.shutdown(); srv.server_close(); S.wb.close(); S.con.close()
     import shutil; shutil.rmtree(tmp, ignore_errors=True)
     print(f"ok ({time.time() - t0:.1f} s)")
