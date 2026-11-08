@@ -458,6 +458,9 @@ def export(out, n_ideas):
     nf, nb = sum(g[0] for g in w.groups.values()), sum(g[1] for g in w.groups.values())
     w.put(f"{D}manifest.json", dumps({"files": nf + 1, "bytes": nb, "generated": gen, "run_id": S.run_id}))
     cur.close(); S.con.close()
+    # keep site/ linked to the Vercel project "undercurrent"; without this `vercel deploy site` creates a new project
+    (tmp / ".vercel").mkdir(exist_ok=True)
+    shutil.copy(pathlib.Path(__file__).resolve().parent.parent / "tools" / "vercel-project.json", tmp / ".vercel" / "project.json")
     swap(tmp, out); shutil.rmtree(scratch, ignore_errors=True)
 
     for g, (cnt, b) in sorted(w.groups.items()):
