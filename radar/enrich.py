@@ -53,7 +53,10 @@ def refresh(con, older_days, limit):
     refreshed = changed = with_venue = 0
     for i in range(0, len(todo), 500):
         batch = todo[i:i + 500]
-        res = post(batch, url=url)
+        try:
+            res = post(batch, url=url)
+        except RuntimeError:  # S2 free pool kept refusing: leave these rows stale, the next run retries them
+            print(f"{i + len(batch)}/{len(todo)} batch failed, skipped", file=sys.stderr, flush=True); time.sleep(60); continue
         rows = [(pid, p.get("citationCount"), p.get("influentialCitationCount"), venue_of(p), p.get("paperId")) for pid, p in zip(batch, res) if p]  # unknown to S2: leave row, retry next time
         if rows:
             rt = pa.table({"id": [r[0] for r in rows], "citations": pa.array([r[1] for r in rows], pa.int32()),
