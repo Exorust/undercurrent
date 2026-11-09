@@ -82,7 +82,12 @@ nav.top .btn .short { display: none; }
   background: var(--paper); color: var(--accent); font: 500 13px/1.4 var(--sans); }
 .pill span { white-space: nowrap; }
 .pill { flex-wrap: wrap; justify-content: center; column-gap: 5px; }
-.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); flex: none; }
+/* EyebrowPill + StatusDot from performativeUI (MIT, vorpus/performativeUI v0.7.0): glass pill, glowing dot that pulses */
+.pill { -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--accent); color: var(--accent); box-shadow: 0 0 10px currentColor; flex: none;
+  animation: pill-pulse-dot 1.6s ease-in-out infinite; }
+@keyframes pill-pulse-dot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: .6; } }
+@media (prefers-reduced-motion: reduce) { .pill::before { animation: none; } }
 .hero h1 { font: 400 clamp(36px, 6.4vw, 80px)/1.04 var(--serif); letter-spacing: -.035em; margin: 24px 0 24px; }
 .hero h1 span { display: block; }
 .hero h1 .soft { color: var(--graphite); padding-bottom: .06em; }
