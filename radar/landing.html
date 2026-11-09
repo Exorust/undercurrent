@@ -88,8 +88,7 @@ nav.top .btn .short { display: none; }
   animation: pill-pulse-dot 1.6s ease-in-out infinite; }
 @keyframes pill-pulse-dot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: .6; } }
 @media (prefers-reduced-motion: reduce) { .pill::before { animation: none; } }
-.hero h1 { font: 400 clamp(36px, 6.4vw, 80px)/1.04 var(--serif); letter-spacing: -.035em; margin: 24px 0 24px; }
-.hero h1 span { display: block; }
+.hero h1 { white-space: nowrap; font: 400 min(80px, max(6.4vw, min(10vw, 36px)))/1.04 var(--serif); letter-spacing: -.035em; margin: 24px 0 24px; }
 .hero h1 .soft { color: var(--graphite); padding-bottom: .06em; }
 .hero p.one { font-size: 19px; color: var(--graphite); max-width: 720px; margin: 0 auto 36px; }
 .cta { display: flex; gap: 20px; justify-content: center; align-items: center; flex-wrap: wrap; }
@@ -245,7 +244,7 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
 <header class="hero" id="top">
   <div class="wrap">
     <div class="pill" id="pill">Updated weekly from arXiv</div>
-    <h1><span>What's upcoming</span><span class="soft">in AI/ML</span></h1>
+    <h1>What's upcoming <span class="soft">in AI/ML</span></h1>
     <p class="one">Every arXiv AI/ML and computer science paper since November 2023, cataloged by growth and connected to each other.</p>
     <div class="cta">
       <a class="btn btn-p" href="map/">Open the map →</a>
