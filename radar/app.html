@@ -346,9 +346,9 @@ button.chipbtn[aria-pressed=true]{background:var(--color-orange-tint);color:var(
 #handle{height:8px;z-index:3}
 thead,th{background:var(--color-surface)}
 /* popovers */
-#viewPanel h3,.section-label{margin:12px 0 6px}
-#viewPanel #layersBox>summary{display:none}
-#viewPanel #largeLine{margin-top:8px}
+#viewPopover h3,.section-label{margin:12px 0 6px}
+#viewPopover #layersBox>summary{display:none}
+#viewPopover #largeLine{margin-top:8px}
 #scrim{display:none}
 /* rail: verbs as icons with tooltips, selections as coloured dots */
 body.rail #side{padding:12px 8px 10px}
@@ -583,24 +583,22 @@ body.rail #sideGrip,body.side-over #sideGrip{display:none}
 body.resizing,body.resizing *{user-select:none!important;-webkit-user-select:none!important}
 body.resizing.col,body.resizing.col *{cursor:col-resize!important}
 body.resizing.row,body.resizing.row *{cursor:row-resize!important}
-/* ---------- view rows in the sidebar, their controls as an inspector panel ---------- */
-#viewRows{display:flex;flex-direction:column;gap:2px;padding:0 0 10px;border-bottom:1px solid var(--color-hair);flex:none}
-#viewRows h2.sech{margin:12px 10px 4px}
-#side button.verb .vv{flex:none;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--color-muted)}
-#side button.verb[aria-expanded=true]{background:var(--color-selected)}
-body.rail .vv{display:none!important}
-#insp.vp>#inspTop,#insp.vp>#abBlock,#insp.vp>#inspBody{display:none!important}
-#viewPanel{padding:12px 14px 20px}
-#viewPanel .vpback{display:inline-block;min-height:24px;padding:2px 0}
-#viewPanel #vpTitle{margin:6px 0 4px;font:400 22px/1.2 "Inter",system-ui,sans-serif;letter-spacing:-.01em}
-#viewPanel #vpTitle:focus{outline:none}
-#viewPanel #vpTitle:focus-visible{outline:2px solid var(--color-accent)}
-#viewPanel h2.sech{display:none}
-#viewPanel .vexp{margin:6px 0;font-size:12px;line-height:1.45;color:var(--color-muted)}
-#viewPanel #levelBox .seg{margin-top:6px}
-#viewPanel #colourBox .opts{margin-top:6px}
-#viewPanel #lightRow{margin-top:12px}
-#viewPanel #layersBox>div>.small{margin-top:6px}
+/* View settings float over the map without changing its layout. */
+#viewBtn{position:absolute;left:10px;bottom:var(--view-bottom,100px);z-index:10;display:inline-flex;align-items:center;gap:6px;height:36px;padding:0 10px;background:var(--color-surface);color:var(--color-text);border:1px solid var(--color-hair);border-radius:8px}
+#viewBtn:hover,#viewBtn[aria-expanded=true]{background:var(--color-hover)}
+#viewPopover{position:absolute;left:10px;bottom:calc(var(--view-bottom,100px) + 44px);z-index:11;box-sizing:border-box;width:min(340px,calc(100% - 20px));max-height:min(60%,calc(100% - var(--view-bottom,100px) - 52px));display:flex;flex-direction:column;overflow:hidden;background:var(--color-surface);color:var(--color-text);border:1px solid var(--color-hair);border-radius:10px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
+#viewHead{display:flex;align-items:center;gap:4px;padding:8px;border-bottom:1px solid var(--color-hair);flex:none}
+#viewSections{flex:1;display:flex;min-width:0}
+#viewSections button{flex:1;padding:4px;font-size:12px;min-width:0;color:var(--color-text)}
+#viewContent{padding:4px 14px 16px;overflow:auto;overscroll-behavior:contain;min-height:0}
+#viewPopover h2.sech{display:none}
+#viewPopover .vexp{margin:6px 0;font-size:12px;line-height:1.45;color:var(--color-muted)}
+#viewPopover #levelBox .seg,#viewPopover #colourBox .opts{margin-top:6px}
+#viewPopover #lightRow{margin-top:12px}
+#viewPopover #layersBox>div>.small{margin-top:6px}
+@media(max-width:700px){
+  #viewPopover{position:fixed;left:0;right:0;bottom:0;width:100%;max-height:70vh;max-height:70dvh;border-radius:16px 16px 0 0;z-index:50;padding-bottom:env(safe-area-inset-bottom)}
+}
 /* ---------- F46 settings ---------- */
 #side #setBtn{flex:1;min-width:0;display:flex;align-items:center;gap:11px;height:36px;padding:0 10px;border:1px solid transparent!important;background:transparent;color:var(--color-text);text-align:left;font-size:14px!important;border-radius:8px!important}
 #side #setBtn i{color:var(--color-secondary)}
@@ -630,7 +628,7 @@ body.rail #side #setBtn{flex:none;width:34px;padding:0;justify-content:center}
 #setConfirm button[data-act=setClearSavedYes]{background:var(--color-text);color:#ffffff;border-color:var(--color-text)!important}
 @media (max-width:520px){:is(#settings,.dlg) .srow{flex-direction:column;align-items:flex-start;gap:4px} :is(#settings,.dlg) .seg{justify-content:flex-start}}
 /* ---------- F55 Light QM: neutral selections and one search focus ring. ---------- */
-:is(#inspBody,#abBlock,#viewPanel,.dlg,#hint) a:not(#ideaActions a){text-decoration:underline;text-decoration-thickness:1px}
+:is(#inspBody,#abBlock,#viewPopover,.dlg,#hint) a:not(#ideaActions a){text-decoration:underline;text-decoration-thickness:1px}
 .seg button[aria-pressed=true],.seg button[aria-checked=true],#modeRow label:has(input:checked),#colourBox label:has(input:checked){background:var(--color-selected);color:var(--color-text)}
 :focus-visible,tr.hl:focus-visible,#map:focus-visible,#colourBox label:has(input:focus-visible),#modeRow label:has(input:focus-visible){outline:2px solid var(--color-accent)!important;outline-offset:2px}
 #searchBox:focus-within{outline:2px solid var(--color-accent);outline-offset:2px}
@@ -658,9 +656,8 @@ dialog.dlg::backdrop{background:rgba(28,28,28,.35)}
 #sideFoot{flex-wrap:wrap;row-gap:2px}
 body.rail #side #agentBtn{flex:none;width:34px;padding:0;justify-content:center}
 #abBlock #ideaDlgRow{margin-top:10px}
-/* ---------- F48 filter: sidebar row, panel in #viewPanel, ink title-bar chips, empty-map message ---------- */
+/* ---------- F48 filter: map popover, title-bar chips, empty-map message ---------- */
 [data-i=filter]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 3H2l8 9.46V19l4 2v-8.54z'/%3E%3C/svg%3E")}
-#side button.verb .vv:empty{display:none}
 #fChips{display:flex;align-items:center;gap:4px;min-width:0;flex:1 1 auto;overflow:hidden;position:relative;min-height:28px}
 #fChips:empty{display:none}
 button.fchip,button.fsel{flex:none;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 9px!important;border-radius:999px!important;border:1px solid var(--color-accent)!important;background:var(--color-accent);color:#ffffff;font-size:12px!important;line-height:26px}
@@ -742,13 +739,6 @@ button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:va
     <button class="verb nu" id="vConnect" aria-label="Connections" data-act="connections" aria-pressed="false" title="Connections (2)"><i data-i="merge"></i><span class="vl">Connections</span><kbd>2</kbd></button>
     <button class="verb nu" id="tourBtn" aria-label="Tour" data-act="tour" title="Tour"><i data-i="help"></i><span class="vl">Tour</span><kbd></kbd></button>
   </div>
-  <div id="viewRows" role="group" aria-labelledby="viewHead">
-    <h2 class="sech" id="viewHead">View</h2>
-    <button class="verb nu" id="vLevel" data-act="viewPanel" data-v="level" aria-expanded="false" aria-controls="viewPanel" title="Level"><i data-i="layers"></i><span class="vl">Level</span><span class="vv" id="vLevelVal">topics</span></button>
-    <button class="verb nu" id="vColour" data-act="viewPanel" data-v="colour" aria-expanded="false" aria-controls="viewPanel" title="Colour by"><i data-i="palette"></i><span class="vl">Colour by</span><span class="vv" id="vColourVal">growth</span></button>
-    <button class="verb nu" id="vLayers" data-act="viewPanel" data-v="layers" aria-expanded="false" aria-controls="viewPanel" title="Map layers"><i data-i="merge"></i><span class="vl">Map layers</span><span class="vv" id="vLayersVal">0 on</span></button>
-    <button class="verb nu" id="vFilter" data-act="viewPanel" data-v="filter" aria-expanded="false" aria-controls="viewPanel" title="Filter"><i data-i="filter"></i><span class="vl" id="vFilterLbl">Filter</span><span class="vv" id="vFilterVal">none</span></button>
-  </div>
   <div id="selSec">
     <h2 class="sech">Selections</h2>
     <div id="compareBox">
@@ -815,40 +805,12 @@ button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:va
   <div id="caption"></div>
   <div id="fEmpty" hidden><span>No papers match these filters.</span><button data-act="fClear">Clear filters</button></div>
   <div id="tip" role="tooltip"></div>
-  <div id="composer">
-    <div id="searchBox">
-      <ul id="sugg" role="listbox" hidden></ul>
-      <i data-i="search" aria-hidden="true"></i>
-      <input type="search" id="q" placeholder="Search a phrase, topic or title…" autocomplete="off" aria-label="Search a phrase, topic or title" role="combobox" aria-expanded="false" aria-controls="sugg">
-      <div id="cchips">
-        <span id="modeRow" role="radiogroup" aria-label="Search mode"><label title="Phrase: title and abstract"><input type="radio" name="smode" value="phrase" checked>Phrase</label><label title="Title only"><input type="radio" name="smode" value="title">Title</label></span>
-        <button id="winChip" class="chipbtn nu" data-act="winChip" title="Window">6 mo ▾</button>
-        <button id="lassoChip" class="chipbtn nu" data-act="lasso" aria-pressed="false" title="Lasso (L)"><i data-i="lasso"></i>Lasso</button>
-      </div>
-    </div>
-  </div>
-  <section id="tabs" role="region" aria-label="Tables" inert>
-    <div id="handle" role="separator" aria-orientation="horizontal" aria-label="Resize table" aria-valuemin="25" aria-valuemax="85" aria-valuenow="50" tabindex="0" title="Drag to resize; double-click or Enter resets"></div>
-    <div id="sheetHead">
-      <div id="tabbar" role="tablist" aria-label="Tables">
-        <button role="tab" data-act="tab" data-t="topics" aria-selected="true">Topics</button><button role="tab" data-act="tab" data-t="links" aria-selected="false">Links</button><button role="tab" data-act="tab" data-t="phrases" aria-selected="false">Phrases</button><button role="tab" data-act="tab" data-t="ideas" aria-selected="false">Ideas</button>
-      </div>
-      <button id="sheetClose" class="ib nu" data-act="sheetClose" aria-label="Close table" title="Close (Esc)"><i data-i="x"></i></button>
-    </div>
-    <div id="tabbody" role="tabpanel"><div class="prog" id="tabProg"></div>
-      <div id="pTopics"></div><div id="pLinks" hidden><div style="padding:4px 10px"><input type="search" id="lkFilter" placeholder="filter by topic" aria-label="Filter links by topic" style="width:220px"></div><div id="lkTable"></div></div>
-      <div id="pPhrases" hidden><div class="tabhead" id="btLine"></div><div style="padding:4px 10px"><input type="search" id="phFilter" placeholder="filter phrases" aria-label="Filter phrases" style="width:220px"></div><div id="phTable"></div></div>
-      <div id="pIdeas" hidden></div>
-    </div>
-  </section>
-</main>
-
-<aside id="insp" aria-label="Details">
-  <button id="drawerClose" class="ib nu" data-act="drawerClose" aria-label="Close inspector" title="Close (Esc)"><i data-i="x"></i></button>
-  <div id="inspTop"></div><div id="abBlock"></div><div id="inspBody"></div>
-  <section id="viewPanel" aria-labelledby="vpTitle" hidden>
-    <a href="#" data-act="vpBack" class="small vpback">← Back</a>
-    <h2 id="vpTitle" tabindex="-1">Level</h2>
+  <button id="viewBtn" data-act="viewToggle" aria-label="View settings" aria-haspopup="dialog" aria-expanded="false" aria-controls="viewPopover"><i data-i="layers" aria-hidden="true"></i>View</button>
+  <section id="viewPopover" role="dialog" aria-label="View settings" hidden>
+    <div id="viewHead"><div id="viewSections" class="seg" role="group" aria-label="View section">
+      <button data-act="viewPanel" data-v="level" aria-pressed="true">Level</button><button data-act="viewPanel" data-v="colour" aria-pressed="false">Colour</button><button data-act="viewPanel" data-v="layers" aria-pressed="false">Layers</button><button data-act="viewPanel" data-v="filter" aria-pressed="false">Filter</button>
+    </div><button class="ib nu" data-act="viewClose" aria-label="Close view settings" title="Close (Esc)"><i data-i="x" aria-hidden="true"></i></button></div>
+    <div id="viewContent">
     <div id="levelBox" data-vp="level"><h2 class="sech" data-i="layers">Level</h2>
       <span class="seg" role="radiogroup" aria-label="Level">
         <button role="radio" data-act="level" data-l="2" aria-checked="false">areas <span style="display:block">(20)</span></button><button role="radio" data-act="level" data-l="1" aria-checked="true">topics <span style="display:block">(116)</span></button><button role="radio" data-act="level" data-l="0" aria-checked="false">sub-topics <span style="display:block">(368)</span></button>
@@ -899,7 +861,39 @@ button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:va
       <div class="fact"><button data-act="fClear" id="fClearBtn">Clear filters</button><span class="vexp" id="fCount" aria-live="polite"></span></div>
     </div>
     <div id="largeLine" class="tiny muted" hidden></div>
+    </div>
   </section>
+  <div id="composer">
+    <div id="searchBox">
+      <ul id="sugg" role="listbox" hidden></ul>
+      <i data-i="search" aria-hidden="true"></i>
+      <input type="search" id="q" placeholder="Search a phrase, topic or title…" autocomplete="off" aria-label="Search a phrase, topic or title" role="combobox" aria-expanded="false" aria-controls="sugg">
+      <div id="cchips">
+        <span id="modeRow" role="radiogroup" aria-label="Search mode"><label title="Phrase: title and abstract"><input type="radio" name="smode" value="phrase" checked>Phrase</label><label title="Title only"><input type="radio" name="smode" value="title">Title</label></span>
+        <button id="winChip" class="chipbtn nu" data-act="winChip" title="Window">6 mo ▾</button>
+        <button id="lassoChip" class="chipbtn nu" data-act="lasso" aria-pressed="false" title="Lasso (L)"><i data-i="lasso"></i>Lasso</button>
+      </div>
+    </div>
+  </div>
+  <section id="tabs" role="region" aria-label="Tables" inert>
+    <div id="handle" role="separator" aria-orientation="horizontal" aria-label="Resize table" aria-valuemin="25" aria-valuemax="85" aria-valuenow="50" tabindex="0" title="Drag to resize; double-click or Enter resets"></div>
+    <div id="sheetHead">
+      <div id="tabbar" role="tablist" aria-label="Tables">
+        <button role="tab" data-act="tab" data-t="topics" aria-selected="true">Topics</button><button role="tab" data-act="tab" data-t="links" aria-selected="false">Links</button><button role="tab" data-act="tab" data-t="phrases" aria-selected="false">Phrases</button><button role="tab" data-act="tab" data-t="ideas" aria-selected="false">Ideas</button>
+      </div>
+      <button id="sheetClose" class="ib nu" data-act="sheetClose" aria-label="Close table" title="Close (Esc)"><i data-i="x"></i></button>
+    </div>
+    <div id="tabbody" role="tabpanel"><div class="prog" id="tabProg"></div>
+      <div id="pTopics"></div><div id="pLinks" hidden><div style="padding:4px 10px"><input type="search" id="lkFilter" placeholder="filter by topic" aria-label="Filter links by topic" style="width:220px"></div><div id="lkTable"></div></div>
+      <div id="pPhrases" hidden><div class="tabhead" id="btLine"></div><div style="padding:4px 10px"><input type="search" id="phFilter" placeholder="filter phrases" aria-label="Filter phrases" style="width:220px"></div><div id="phTable"></div></div>
+      <div id="pIdeas" hidden></div>
+    </div>
+  </section>
+</main>
+
+<aside id="insp" aria-label="Details">
+  <button id="drawerClose" class="ib nu" data-act="drawerClose" aria-label="Close inspector" title="Close (Esc)"><i data-i="x"></i></button>
+  <div id="inspTop"></div><div id="abBlock"></div><div id="inspBody"></div>
 </aside>
 <div role="region" aria-label="Panel resize handles" style="display:contents">
 <div id="sideGrip" class="grip" role="separator" aria-orientation="vertical" aria-label="Resize sidebar" aria-valuemin="200" aria-valuemax="400" aria-valuenow="248" tabindex="0" title="Drag to resize; double-click or Enter resets"></div>
@@ -1540,7 +1534,11 @@ function computeLabels() {
   // the floating composer covers the map's lower centre: no label is placed under it (F43.1 step 9)
   let cb = null, Hb = H;
   if (!S.sheet) { const cr = $('composer').getBoundingClientRect(), mr = $('map').getBoundingClientRect(); if (cr.height) { cb = [cr.left - mr.left - 4, cr.top - mr.top - 6, cr.right - mr.left + 4, cr.bottom - mr.top]; if (atFit) Hb = Math.min(H, cb[1]); } }
-  const underComposer = b => cb && b[0] < cb[2] && b[2] > cb[0] && b[3] > cb[1];
+  const mr = $('map').getBoundingClientRect();
+  const viewRects = [$('viewBtn'), $('viewPopover')].filter(el => !el.hidden).map(el => {
+    const r = el.getBoundingClientRect(); return [r.left - mr.left - 4, r.top - mr.top - 4, r.right - mr.left + 4, r.bottom - mr.top + 4];
+  });
+  const underComposer = b => (cb && b[0] < cb[2] && b[2] > cb[0] && b[3] > cb[1]) || viewRects.some(r => b[0] < r[2] && b[2] > r[0] && b[1] < r[3] && b[3] > r[1]);
   for (const c of cand) {
     const [px, py] = vp.project(c.pos), lines = c.text.split('\n');
     // Match TextLayer's atlas: individual glyph advances at 64px, scaled to getSize.
@@ -1671,7 +1669,7 @@ function makeSel(spec, sel, opts = {}) {
     else if (!S.firstNoted) { S.firstNoted = true; note('Selected. It is also A, ready to compare.'); }
   }
   else S.cur = sel;
-  S.focus = sel; S.view = 'sel'; S.ev = null; closeViewPanel(false);
+  S.focus = sel; S.view = 'sel'; S.ev = null; closeViewPopover(false);
   if (NARROW.matches) document.body.classList.add('drawer');
   if (sideOpen) { sideOpen = false; layout(); }
   if (S.colour === 'dist' && sel === S.A) loadDist();
@@ -1719,7 +1717,7 @@ function selTo(who, to) {
 function overview() {
   announce('Overview. Selections cleared.');
   S.cmp = null; if (S.mode === 'lasso') setLasso(false);
-  S.ev = null; S.cur = S.B = S.A = null; S.dist = null; S.focus = null; S.view = 'summary'; S.ideasUI = null; closeViewPanel(false);
+  S.ev = null; S.cur = S.B = S.A = null; S.dist = null; S.focus = null; S.view = 'summary'; S.ideasUI = null; closeViewPopover(false);
   if (S.colour === 'dist') S.colour = 'growth';
   document.body.classList.remove('drawer');
   applyPreset(1); closeSheet();
@@ -1943,7 +1941,7 @@ function syncPreset() {
   if (!m(2)) $('tbLinks').classList.remove('invite');
   $('vOverview').classList.toggle('on', m(1) && !S.A && !S.B && !S.cur);
   const E = drawnEdges(); $('edgeCount').textContent = `${E.edges.length} of ${E.avail} pairs`;
-  syncViewRows();
+  syncViewControls();
 }
 function setTab(t) {
   S.tab = t; document.querySelectorAll('[data-act=tab]').forEach(b => { b.setAttribute('aria-selected', String(b.dataset.t === t)); b.tabIndex = b.dataset.t === t ? 0 : -1; });
@@ -2385,7 +2383,7 @@ function nearestPhrases(q) {
 // ---------- evidence ----------
 async function openEvidence(e) {
   if (S.view !== 'evidence') S.prevView = {view: S.view, focus: S.focus};
-  closeViewPanel(false); S.ev = {c1: e.c1, c2: e.c2, level: S.level, link: e, data: null, page: 0}; S.view = 'evidence'; $('insp').scrollTop = 0;
+  closeViewPopover(false); S.ev = {c1: e.c1, c2: e.c2, level: S.level, link: e, data: null, page: 0}; S.view = 'evidence'; $('insp').scrollTop = 0;
   if (NARROW.matches) document.body.classList.add('drawer');
   renderInspector(); renderLinks(); render();
   try { const d = await api(`/link?level=${S.level}&c1=${e.c1}&c2=${e.c2}&${winQS()}`); if (S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2) { S.ev.data = d; renderInspector(); } } catch (err) { if (ST && S.ev && S.ev.c1 === e.c1 && S.ev.c2 === e.c2) { S.ev.err = err.message; renderInspector(); } }
@@ -2490,60 +2488,63 @@ function toggleSide() {
   layout();
 }
 for (const mq of [COMPACT, NARROW, PHONE]) mq.addEventListener('change', () => { sideOpen = false; document.body.classList.remove('drawer'); layout(); });
-// ---------- view rows (sidebar) -> controls as an inspector panel ----------
+// ---------- view settings in the map ----------
 const VIEW_TITLE = {level: 'Level', colour: 'Colour by', layers: 'Map layers', filter: 'Filter'};
-let VP = null, vpDrawerBefore = false;
-function syncViewRows() {
-  const col = S.grey ? 'grey (links view)' : S.colour === 'dist' ? 'distance to A' : S.colour, on = [S.nodes, S.bridges, S.phrases].filter(Boolean).length;
-  const vals = {level: LEVEL_NAME[S.level], colour: col + (S.lightness && S.colour === 'growth' && !S.grey ? ', lightness' : ''), layers: on + ' on'};
-  for (const [k, id] of [['level', 'vLevel'], ['colour', 'vColour'], ['layers', 'vLayers']]) {
-    const b = $(id); if (!b) continue; const v = vals[k];
-    if ($(id + 'Val').textContent !== v) $(id + 'Val').textContent = v;
-    b.setAttribute('aria-label', `${VIEW_TITLE[k]}: ${v}`); b.title = `${VIEW_TITLE[k]}: ${v}`;
-    b.setAttribute('aria-expanded', String(VP === k)); b.classList.toggle('on', VP === k);
-  }
-  const fb = $('vFilter'), n = filterCount(), lbl = n ? `Filter · ${n}` : 'Filter';
-  if ($('vFilterLbl').textContent !== lbl) $('vFilterLbl').textContent = lbl;
-  $('vFilterVal').textContent = n ? '' : 'none';
-  fb.setAttribute('aria-label', n ? `${lbl} active` : 'Filter: none'); fb.title = n ? `${lbl} active: ${filterLabels().join(', ')}` : 'Filter: none';
-  fb.setAttribute('aria-expanded', String(VP === 'filter')); fb.classList.toggle('on', VP === 'filter');
+let VP = null, lastViewSection = 'level';
+function syncViewControls() {
+  $('viewBtn').setAttribute('aria-expanded', String(!!VP));
+  $('viewSections').querySelectorAll('button').forEach(b => {
+    b.setAttribute('aria-pressed', String(b.dataset.v === (VP || lastViewSection)));
+    if (b.dataset.v === 'filter') b.setAttribute('aria-label', 'Filter: ' + filterCount() + ' active');
+  });
 }
-function openViewPanel(k, focus = true) {
-  if (VP === k) return closeViewPanel();
-  if (!VP) vpDrawerBefore = document.body.classList.contains('drawer');
-  VP = k; const p = $('viewPanel');
+function positionViewControls() {
+  const map = $('mapwrap'), composer = $('composer');
+  const bottom = composer.offsetHeight ? map.getBoundingClientRect().bottom - composer.getBoundingClientRect().top + 8 : 24;
+  map.style.setProperty('--view-bottom', bottom + 'px');
+  if (DK) queueLabels();
+}
+const viewPositionObserver = new ResizeObserver(positionViewControls);
+viewPositionObserver.observe($('composer')); viewPositionObserver.observe($('mapwrap'));
+function openViewPopover(k, focus = true) {
+  if (!Object.hasOwn(VIEW_TITLE, k)) return;
+  VP = lastViewSection = k; const p = $('viewPopover');
+  hideInstList(); hideSugg();
   p.querySelectorAll('[data-vp]').forEach(el => { el.hidden = el.dataset.vp !== k; });
-  $('vpTitle').textContent = VIEW_TITLE[k]; p.hidden = false; $('insp').classList.add('vp'); $('insp').scrollTop = 0;
-  if (NARROW.matches) document.body.classList.add('drawer');
+  p.hidden = false; $('viewContent').scrollTop = 0;
   if (sideOpen) { sideOpen = false; layout(); }
-  syncViewRows(); if (focus) $('vpTitle').focus({preventScroll: true});
+  positionViewControls(); syncViewControls();
+  if (focus) p.querySelector('[data-v="' + k + '"]').focus({preventScroll: true});
   if (k === 'filter') openFilterPanel();
 }
-function closeViewPanel(focusRow = true) {
-  if (!VP) return; const k = VP; VP = null;
-  $('viewPanel').hidden = true; $('insp').classList.remove('vp');
-  if (NARROW.matches && !vpDrawerBefore) document.body.classList.remove('drawer');
-  syncViewRows();
-  hideInstList();
-  if (focusRow) { const b = $({level: 'vLevel', colour: 'vColour', layers: 'vLayers', filter: 'vFilter'}[k]); if (b && onScreen(b)) b.focus({preventScroll: true}); }
+function closeViewPopover(focusButton = true) {
+  if (!VP) return; VP = null;
+  $('viewPopover').hidden = true; syncViewControls(); hideInstList();
+  if (focusButton) $('viewBtn').focus({preventScroll: true});
+  if (DK) queueLabels();
 }
+// Preserve the existing diagnostic API and action name for external callers.
 R.viewPanel = () => VP;
+document.addEventListener('pointerdown', e => {
+  if (VP && !e.target.closest('#viewPopover,#viewBtn')) closeViewPopover(false);
+}, true);
 
 // ---------- events ----------
 document.addEventListener('click', e => {
   const t = e.target.closest('[data-act]');
+  if (VP && !e.target.closest('#viewPopover,#viewBtn')) closeViewPopover(false);
   if (!$('sugg').hidden && !e.target.closest('#searchBox')) hideSugg();
   if (!t) {
     const tr = e.target.closest('tr[data-c]'); if (tr && tr.closest('#pTopics') && !e.target.closest('button')) return selectTopic(S.level, +tr.dataset.c);
     const lr = e.target.closest('tr[data-li]'); if (lr) return openEvidence(S.linkRows[+lr.dataset.li]);
     const sg = e.target.closest('#sugg li[role=option]'); if (sg) return pickSugg(sg);
     const pr = e.target.closest('tr[data-ph]'); if (pr) { $('q').value = pr.dataset.ph; return runSearch(pr.dataset.ph, 'phrase'); }
-    const ir = e.target.closest('tr[data-ig]'); if (ir) { const g = ideaGroups().find(x => x.key === ir.dataset.ig); if (g) { closeViewPanel(false); S.view = 'ideas'; $('inspBody').innerHTML = `<h2 style="margin-top:0" data-i="bulb">Ideas: ${esc(g.a || 'A')} ↔ ${esc(g.b || 'B')}</h2>` + ideasHTML({ideas: g.ideas, created: g.created, window: g.window, shown: []}); if (NARROW.matches) document.body.classList.add('drawer'); } }
+    const ir = e.target.closest('tr[data-ig]'); if (ir) { const g = ideaGroups().find(x => x.key === ir.dataset.ig); if (g) { closeViewPopover(false); S.view = 'ideas'; $('inspBody').innerHTML = `<h2 style="margin-top:0" data-i="bulb">Ideas: ${esc(g.a || 'A')} ↔ ${esc(g.b || 'B')}</h2>` + ideasHTML({ideas: g.ideas, created: g.created, window: g.window, shown: []}); if (NARROW.matches) document.body.classList.add('drawer'); } }
     return;
   }
   const a = t.dataset.act, d = t.dataset;
   if (t.tagName === 'A') e.preventDefault();
-  if (sideOpen && t.closest('#verbs,#viewRows')) { sideOpen = false; layout(); }  // rail overlay / phone sheet closes after a verb
+  if (sideOpen && t.closest('#verbs')) { sideOpen = false; layout(); }  // rail overlay / phone sheet closes after a verb
   switch (a) {
     case 'ideaFacet': IDEA_FACETS[d.side] = d.facet; t.closest('.seg').querySelectorAll('button').forEach(b => b.setAttribute('aria-pressed', String(b === t))); updateIdeaLinks(); break;
     case 'copyIdea': copyAgentText(ideaPrompt(), t, 'Idea prompt copied'); break;
@@ -2558,14 +2559,15 @@ document.addEventListener('click', e => {
     case 'compare': startCompare(); break;
     case 'connections': applyPreset($('q2').getAttribute('aria-pressed') === 'true' ? 1 : 2); break;
     case 'tour': document.dispatchEvent(new CustomEvent('uc:tour', {detail: {tour: 'first'}})); break;  // F42 adds the cue cards
-    case 'viewPanel': openViewPanel(d.v); break;
-    case 'vpBack': closeViewPanel(); break;
+    case 'viewPanel': openViewPopover(d.v); break;
+    case 'viewToggle': if (VP) closeViewPopover(); else openViewPopover(lastViewSection); break;
+    case 'viewClose': closeViewPopover(); break;
     case 'sheet': toggleSheet(d.t); break;
     case 'sheetClose': closeSheet(); break;
-    case 'drawerClose': closeViewPanel(false); document.body.classList.remove('drawer'); break;
+    case 'drawerClose': closeViewPopover(false); document.body.classList.remove('drawer'); break;
     case 'winChip': { const w = $('winDD'); w.open = !w.open; if (w.open) w.querySelector('summary').focus(); break; }
     case 'selTo': selTo(d.who, d.to); break;
-    case 'selFocus': { const s2 = d.who === 'cur' ? S.cur : S[d.who]; if (s2) { closeViewPanel(false); S.focus = s2; announceSelection(s2); S.view = 'sel'; S.ev = null; $('insp').scrollTop = 0; if (NARROW.matches) document.body.classList.add('drawer'); renderInspector(); } break; }
+    case 'selFocus': { const s2 = d.who === 'cur' ? S.cur : S[d.who]; if (s2) { closeViewPopover(false); S.focus = s2; announceSelection(s2); S.view = 'sel'; S.ev = null; $('insp').scrollTop = 0; if (NARROW.matches) document.body.classList.add('drawer'); renderInspector(); } break; }
     case 'recent': runRecent(+d.i, d.slot); break;
     case 'recentX': RECENT.splice(+d.i, 1); lsSet('uc.recent', JSON.stringify(RECENT)); renderRecent(); break;
     case 'win': if (d.n === 'custom') { $('customBox').hidden = false; } else { $('winDD').open = false; setWindow({n: +d.n}); } break;
@@ -2606,14 +2608,14 @@ document.addEventListener('click', e => {
     case 'fToggle': FX.f[d.k] = !FX.f[d.k]; applyFilter(); break;
     case 'fCit': FX.f.cit = d.v ? +d.v : null; applyFilter(); break;
     case 'fClear': clearFilters(t); break;
-    case 'fMore': if (VP !== 'filter') openViewPanel('filter'); break;
+    case 'fMore': openViewPopover('filter'); break;
     case 'fChipX': removeFilter(d.k, d.v, t); break;
   }
 });
 document.addEventListener('change', e => {
   const t = e.target;
   if (t.name === 'colour') setColour(t.value);
-  else if (t.id === 'lightness') { S.lightness = t.checked; renderLegend(); recolour(); renderTopics(); render(); syncViewRows(); }
+  else if (t.id === 'lightness') { S.lightness = t.checked; renderLegend(); recolour(); renderTopics(); render(); syncViewControls(); }
   else if (t.id === 'tNodes') { S.nodes = t.checked; render(); syncPreset(); }
   else if (t.id === 'tBridges') { S.bridges = t.checked; render(); syncPreset(); }
   else if (t.id === 'tPhrases') { S.phrases = t.checked; render(); syncPreset(); }
@@ -2646,7 +2648,7 @@ function escLayer() {  // innermost first; F43.5: sheet -> lasso/compare -> curr
   const dd = document.querySelector('details.dd[open]'); if (dd) { dd.open = false; return; }
   if (!$('sugg').hidden) return hideSugg();
   if (sideOpen) { sideOpen = false; return layout(); }
-  if (VP) return closeViewPanel();
+  if (VP) return closeViewPopover();
   if (S.sheet) return closeSheet();
   if (S.mode === 'lasso') return setLasso(false);
   if (S.cmp) { S.cmp = null; return renderHint(); }
@@ -2669,6 +2671,7 @@ document.addEventListener('keydown', e => {
     if (e.key === 'Escape') { e.preventDefault(); if (!ul.hidden) return hideSugg(); t.value = ''; hideSugg(); t.blur(); return; }
     return;
   }
+  if (e.key === 'Escape' && VP && t.closest('#viewPopover')) { e.preventDefault(); closeViewPopover(); return; }
   if (t.id === 'fInst') return instKey(e);
   if (t.matches && t.matches('button.fchip[data-act=fChipX],button.fsel') && (e.key === 'Backspace' || e.key === 'Delete')) { e.preventDefault(); t.click(); return; }
   if (inText) { if (e.key === 'Escape') t.blur(); return; }
@@ -2702,7 +2705,7 @@ document.addEventListener('keydown', e => {
   else if (k === '0') flyTo(fitView(), 300);
   else if (k.startsWith('Arrow')) { e.preventDefault(); const [x, y] = VS.target; flyTo({target: [x + (k === 'ArrowLeft' ? -dx : k === 'ArrowRight' ? dx : 0), y + (k === 'ArrowUp' ? dx : k === 'ArrowDown' ? -dx : 0), 0]}, 0); }
 });
-$('mapwrap').addEventListener('pointerdown', () => { S.down = true; });
+$('mapwrap').addEventListener('pointerdown', e => { if (!e.target.closest('#viewPopover,#viewBtn')) S.down = true; });
 addEventListener('pointerup', () => { S.down = false; });
 $('mapwrap').addEventListener('pointerleave', () => { $('tip').style.display = 'none'; });
 if (params.get('bench')) { const b = document.createElement('div'); b.id = 'bench'; $('mapwrap').append(b); setInterval(render, 1000); }
@@ -2786,7 +2789,7 @@ function tourStart(id) {
   if (TOUR.active) tourEnd(false);
   tourDom(); lsSet('uc.toured', '1');
   if (params.has('tour')) { params.delete('tour'); const qs = params.toString(); try { history.replaceState(history.state, '', location.pathname + (qs ? '?' + qs : '') + location.hash); } catch (e) {} }
-  closeDlg(); hideSugg(); closeViewPanel(false); const dd = document.querySelector('details.dd[open]'); if (dd) dd.open = false;
+  closeDlg(); hideSugg(); closeViewPopover(false); const dd = document.querySelector('details.dd[open]'); if (dd) dd.open = false;
   if (S.mode === 'lasso') setLasso(false);
   Object.assign(TOUR, {active: true, id, steps: TOURS[id], step: 0, prevFocus: document.activeElement, sheetBefore: !!S.sheet, pick: null});
   for (const k of ['tourBlock', 'tourSpot', 'tourCard']) $(k).hidden = false;
@@ -3300,7 +3303,7 @@ function renderFilterUI() {
   put($('fChips'), items.map(([k, v, label]) => `<button class="fchip nu" data-act="fChipX" data-k="${k}" data-v="${esc(v)}" title="Remove filter: ${esc(label)}"><span class="fchip-label">${esc(label)}</span><span aria-hidden="true">×</span><span class="sr-only">, remove filter</span></button>`).join('') + (items.length ? `<button class="fchip fchip-more nu" data-act="fMore" hidden tabindex="-1"></button>` : ''));
   fitFilterChips();
   scheduleFilterFit();
-  syncViewRows();
+  syncViewControls();
   put($('fSelList'), f.inst.map(id => `<button class="fsel nu" data-act="fChipX" data-k="inst" data-v="${esc(id)}" title="Remove ${esc(instName(id))}">${esc(instName(id))} <span aria-hidden="true">×</span><span class="sr-only">, remove institution</span></button>`).join(''));
   $('fVenue').setAttribute('aria-pressed', String(!!f.venue)); $('fCode').setAttribute('aria-pressed', String(!!f.code));
   document.querySelectorAll('#fCit [data-act=fCit]').forEach(b => b.setAttribute('aria-checked', String(String(f.cit ?? '') === b.dataset.v)));
@@ -3372,7 +3375,7 @@ function instKey(e) {
     if (FX.f.inst.length >= 5) { instMsg('Up to 5 institutions.'); return; }
     const li = open ? (items[FX.ai] || items[0]) : null; if (li) pickInst(li.dataset.id); return;
   }
-  if (e.key === 'Escape') { e.preventDefault(); if (open) return hideInstList(); if (inp.value) { inp.value = ''; instMsg(''); return; } closeViewPanel(); return; }
+  if (e.key === 'Escape') { e.preventDefault(); if (open) return hideInstList(); if (inp.value) { inp.value = ''; instMsg(''); return; } closeViewPopover(); return; }
   if (e.key === 'Tab') hideInstList();
 }
 function pickInst(id) {
