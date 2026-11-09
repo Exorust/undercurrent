@@ -556,6 +556,12 @@ body.rail .slot .sn .sk{display:none}
 :where(:root[data-motion=on]) .prog{background:var(--color-orange)}
 /* F45: agent controls use the existing light inspector palette. */
 #agentIdeas p{margin:6px 0}
+.ideas-gate{padding:12px;max-width:440px;box-sizing:border-box}
+.ideas-gate h2{margin:0;font-size:15px;font-weight:600}
+.ideas-gate label{display:block;margin:12px 0 4px}
+.ideas-gate input{display:block;width:100%;min-width:0;box-sizing:border-box;padding:8px;background:var(--color-well);border-color:var(--color-hair)}
+.ideas-gate button{margin-top:10px}
+.ideas-gate [role=alert]{color:var(--color-text)}
 .idea-facet{margin:8px 0}
 .idea-facet>span{display:block;margin-bottom:4px}
 .idea-facet .seg{max-width:100%;flex-wrap:wrap}
@@ -1002,6 +1008,46 @@ const DEEP = (() => {
 })();
 // static mode: radar.export injects window.UC_STATIC = {base: "data/"}; every data URL is then relative (hosted under a sub-path)
 const ST = window.UC_STATIC || null, BASE = ST ? ST.base : '', LOCAL_ONLY = 'available in the local version';
+const ideasGate = {locked: !!ST, count: null, token: '', error: '', seq: 0};
+function keepIdeasToken(token) {
+  ideasGate.token = token;
+  try { localStorage.setItem('uc_ideas_token', token); } catch (e) {}
+}
+if (ST) {
+  try { ideasGate.token = localStorage.getItem('uc_ideas_token') || ''; } catch (e) {}
+  const url = new URL(location.href);
+  if (url.searchParams.has('invite')) {
+    keepIdeasToken(url.searchParams.get('invite'));
+    url.searchParams.delete('invite');
+    history.replaceState(history.state, '', url);
+  }
+}
+function ideasGateHTML(place) {
+  return `<form class="ideas-gate" data-ideas-gate novalidate><h2 tabindex="-1">Get the ideas</h2><p>Enter your email to read the ideas and generate your own for any two topics.</p><label for="ideasEmail-${place}">Email</label><input id="ideasEmail-${place}" name="email" type="email" autocomplete="email" maxlength="254" required><button type="submit" class="pri">Get access</button><p role="alert">${esc(ideasGate.error)}</p><p class="small">We keep your email to give you access and to write to you about undercurrent. Message @charoori_ai to have it deleted.</p></form>`;
+}
+document.addEventListener('submit', async e => {
+  const form = e.target.closest('[data-ideas-gate]');
+  if (!ST || !form) return;
+  e.preventDefault();
+  const button = form.querySelector('button'), alert = form.querySelector('[role=alert]');
+  if (button.disabled) return;
+  button.disabled = true; alert.textContent = ''; ideasGate.error = '';
+  try {
+    const response = await fetch('../api/ideas', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: form.elements.email.value}), signal: AbortSignal.timeout(15000)});
+    if (!response.ok) throw new Error(response.status === 400 ? 'Enter a valid email.' : response.status === 429 ? 'Too many tries. Wait a few minutes.' : 'Could not save that. Try again.');
+    const result = await response.json();
+    if (typeof result.token !== 'string') throw new Error('Could not save that. Try again.');
+    keepIdeasToken(result.token);
+    await loadIdeas();
+    if (ideasGate.locked) throw new Error('Could not save that. Try again.');
+    renderAB();
+    if ($('ideaDlg').open) $('ideaDlgTitle').focus();
+    else $('pIdeas').querySelector('[tabindex]')?.focus();
+  } catch (e) {
+    ideasGate.error = ['Enter a valid email.', 'Too many tries. Wait a few minutes.'].includes(e.message) ? e.message : 'Could not save that. Try again.';
+    document.querySelectorAll('[data-ideas-gate] [role=alert]').forEach(el => { el.textContent = ideasGate.error; });
+  } finally { button.disabled = false; }
+});
 
 // ---------- state ----------
 const S = {
@@ -1193,8 +1239,22 @@ async function sColourDist(a, lv) {
   for (let c = 0; c < k; c++) { const [s, nm, nv] = sDot(M, c * d, v, 0, d); dist.push(Math.min(2, Math.max(0, 1 - s / (Math.max(nm, 1e-12) * Math.max(nv, 1e-12))))); }
   return {level: lv, dist};
 }
-async function sIdeas() {  // ideas.json groups -> the flat rows the Ideas tab groups again
-  try { SX.ideas = await sget('ideas.json'); } catch (e) { SX.ideas = []; }
+async function sIdeas() {  // Authorized packs -> the flat rows the Ideas tab groups again.
+  const seq = ++ideasGate.seq;
+  try {
+    const response = await fetch('../api/ideas', {headers: ideasGate.token ? {Authorization: 'Bearer ' + ideasGate.token} : {}, cache: 'no-store', signal: AbortSignal.timeout(15000)});
+    const data = await response.json();
+    if (seq !== ideasGate.seq) return S.ideas;
+    if (response.status === 401) {
+      ideasGate.locked = true; ideasGate.count = data.count; ideasGate.error = ''; SX.ideas = [];
+    } else {
+      if (!response.ok || !Array.isArray(data)) throw new Error('ideas unavailable');
+      SX.ideas = data; ideasGate.locked = false; ideasGate.count = data.length; ideasGate.error = '';
+    }
+  } catch (e) {
+    if (seq !== ideasGate.seq) return S.ideas;
+    SX.ideas = []; ideasGate.locked = true; ideasGate.error = 'Could not save that. Try again.';
+  }
   return SX.ideas.flatMap(g => { const sides = {}; for (const p of g.shown || []) sides[p.id] = p.side;
     return g.ideas.map(i => ({...i, a_sel: `${g.level}-${g.c1}`, b_sel: `${g.level}-${g.c2}`, a_name: g.a_name, b_name: g.b_name, created: g.created, window: SX.meta.windows[g.window] || null, shown_sides: sides})); });
 }
@@ -1967,7 +2027,7 @@ function updateCounts() {
   $('cTopics').textContent = T ? T.topics.length : '–';
   $('cLinks').textContent = L ? L.bridge_links.filter(e => e.status !== 'low').length : '–';
   $('cPhrases').textContent = S.phraseList ? S.phraseList.length : '–';
-  $('cIdeas').textContent = ideaGroups().length;
+  $('cIdeas').textContent = ST && ideasGate.locked ? (ideasGate.count ?? '–') : ideaGroups().length;
 }
 function fillCustom() {
   const opts = S.MS.slice(0, S.E + 1).map((m, i) => `<option value="${i}">${mLabel(i)}</option>`).join('');  // pickers stop at the last complete month
@@ -2054,11 +2114,16 @@ function ideaGroups() {
   return [...g.values()].sort((a, b) => String(b.created).localeCompare(String(a.created)));
 }
 function renderIdeasTab() {
+  if (ST && ideasGate.locked) { $('pIdeas').innerHTML = ideasGateHTML('tab'); updateCounts(); return; }
   const gs = ideaGroups();
   $('pIdeas').innerHTML = gs.length ? `<table><thead><tr><th>date</th><th>A</th><th>B</th><th class="n">ideas</th></tr></thead><tbody>` + gs.map((g, i) => `<tr tabindex="${i ? -1 : 0}" data-ig="${esc(g.key)}"><td class="mono">${esc(String(g.created).replace('T', ' ').slice(0, 16))}</td><td>${esc(g.a || 'A')}</td><td>${esc(g.b || 'B')}</td><td class="n">${g.ideas.length}</td></tr>`).join('') + '</tbody></table>' : ST ? `<div class="tabhead">No precomputed ideas in this snapshot. Set A and B, then copy an idea prompt for your own AI.</div>` : '<div class="tabhead">No ideas yet. Set A and B, then press "Ideas between A and B".</div>';
   updateCounts();
 }
-async function loadIdeas() { try { S.ideas = await api('/ideas'); } catch (e) {} renderIdeasTab(); }
+async function loadIdeas() {
+  try { S.ideas = await api('/ideas'); } catch (e) { if (ST) ideasGate.error = 'Could not save that. Try again.'; }
+  renderIdeasTab();
+  if (ST && $('ideaDlg').open) { $('ideaDlgBody').innerHTML = agentIdeasHTML(); updateIdeaLinks(); }
+}
 async function loadSaved() { try { S.saved = await api('/selections'); } catch (e) {} renderSaved(); renderSlots(); }
 function renderSaved() {
   $('savedCount').textContent = S.saved.length;
@@ -2312,6 +2377,7 @@ From undercurrent (${IDEA_MAP}), snapshot ${S.meta?.last_complete || 'unknown'}.
 `;
 }
 function agentIdeasHTML() {
+  if (ST && ideasGate.locked) return ideasGateHTML('dialog');
   const facet = side => `<div class="idea-facet"><span id="facet${side}Label">From ${side} take</span><div class="seg" role="group" aria-labelledby="facet${side}Label">${['Purpose', 'Mechanism', 'Evaluation'].map(f => `<button data-act="ideaFacet" data-side="${side}" data-facet="${f}" aria-pressed="${IDEA_FACETS[side] === f}">${f}</button>`).join('')}</div></div>`;
   return `<div id="agentIdeas"><p><b>A</b> ${esc(S.A.label)}<br><b>B</b> ${esc(S.B.label)}</p><p>Generate ideas with your own AI. Pick what to borrow from each side.</p>${facet('A')}${facet('B')}
     <p class="muted">Purpose = the problem it solves; mechanism = how it works; evaluation = how it is tested.</p>
@@ -2320,6 +2386,7 @@ function agentIdeasHTML() {
     <p><a href="#" data-act="agentDlg" aria-haspopup="dialog">Set up your agent</a>: connect it through MCP so it can compare topics, read abstracts and check novelty itself.</p></div>`;
 }
 function updateIdeaLinks() {
+  if (ST && ideasGate.locked) return;
   const q = encodeURIComponent(ideaPrompt(true));
   document.querySelectorAll('[data-idea-link]').forEach(a => { a.href = a.dataset.ideaLink + q; });
 }
@@ -2661,7 +2728,7 @@ function escLayer() {  // innermost first; F43.5: sheet -> lasso/compare -> curr
   const p = S.presetBefore || 1; if ($(p === 2 ? 'q2' : 'q1').getAttribute('aria-pressed') !== 'true') applyPreset(p, {sheet: false});
 }
 document.addEventListener('keydown', e => {
-  const t = e.target, inText = t.matches && t.matches('input[type=text],input[type=search],textarea,select');
+  const t = e.target, inText = t.matches && t.matches('input[type=text],input[type=search],input[type=email],textarea,select');
   if ((e.metaKey || e.ctrlKey) && e.key === 's') { e.preventDefault(); if (!ST && S.focus && S.view === 'sel') { S.focus.saveOpen = true; S.focus.saveFocused = false; renderInspector(); } return; }
   if (t.id === 'saveName') { if (e.key === 'Enter') doSave(t.value); else if (e.key === 'Escape') { S.focus.saveOpen = false; S.focus.saveFocused = false; renderInspector(); } e.stopPropagation(); return; }
   if (t.id === 'q') {

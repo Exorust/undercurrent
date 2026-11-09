@@ -210,7 +210,6 @@ with position row % 10000 in each shard.
 centroids-0.bin: little-endian Float32 matrix of level-0 means, n x 768.
 counts-0.json: {n, parent1, parent2}, parallel arrays of counts and majority parents;
 parent centroid means use counts as weights.
-ideas.json: array of saved idea packs with topic pair, model, shown papers and ideas.
 Newer files (present only when the source tables exist; every paper shard row has three
 trailing fields [..., venue_idx|null, code_url|null, cit_pct|null]):
 flags.bin: one byte per map row; bit0 accepted, bit1 workshop, bit2 submitted,
@@ -344,6 +343,28 @@ def win_q(n): return {"from": serve.ym(S.E - n + 1), "to": serve.ym(S.E)}
 def win_q_idx(n): return S.E - n + 1, S.E   # the same window as month indexes (rf, rt)
 
 
+def previous_ideas(out):
+    """Carry packs forward without evaluating JavaScript; migrate the old public JSON."""
+    out = pathlib.Path(out)
+    module = out / "api/_ideas-data.mjs"
+    legacy = out / "data/ideas.json"
+    if module.exists():
+        text = module.read_text().strip()
+        if not text.startswith("export default ") or not text.endswith(";"):
+            raise ValueError("Invalid saved ideas module")
+        packs = json.loads(text[len("export default "):-1])
+    elif legacy.exists():
+        packs = json.loads(legacy.read_text())
+    else:
+        packs = []
+    if not isinstance(packs, list): raise ValueError("Saved ideas must be a list")
+    return packs
+
+
+def idea_assets(w, ideas):
+    w.put("api/_ideas-data.mjs", "export default " + dumps(ideas) + ";\n")
+
+
 def export(out, n_ideas):
     t0 = time.time()
     scratch = pathlib.Path(tempfile.mkdtemp(prefix="radar-export-"))
@@ -439,7 +460,7 @@ def export(out, n_ideas):
     w.put(f"{D}counts-0.json", dumps({"n": n0.tolist(), "parent1": majority(S.L[0], S.L[1], S.k[0]).tolist(),
                                       "parent2": majority(S.L[0], S.L[2], S.k[0]).tolist()}))
 
-    ideas = []
+    ideas = previous_ideas(out) if n_ideas == 0 else []
     if n_ideas > 0:
         serve.open_wb(); q = win_q(6)
         for c1, c2 in link_keys.get((1, "6m"), [])[:n_ideas]:
@@ -454,9 +475,9 @@ def export(out, n_ideas):
                           "ideas": [{k: x[k] for k in ("title", "text", "cited", "status")} for x in r["ideas"]]})
             print(f"  ideas {c1}-{c2}: {len(r['ideas'])} kept, {r['dropped']} dropped", flush=True)
         S.wb.close()
-    w.put(f"{D}ideas.json", dumps(ideas))
     if landing_in: w.put(f"{D}landing.json", dumps(landing_rows(landing_in["T"], landing_in["L"])))
     agent_assets(w)
+    idea_assets(w, ideas)
     nf, nb = sum(g[0] for g in w.groups.values()), sum(g[1] for g in w.groups.values())
     w.put(f"{D}manifest.json", dumps({"files": nf + 1, "bytes": nb, "generated": gen, "run_id": S.run_id}))
     cur.close(); S.con.close()
@@ -503,8 +524,19 @@ def selftest():
     d = pathlib.Path(tempfile.mkdtemp(prefix="radar-export-selftest-")); out = d / "site"
     out.mkdir(); (out / "old.txt").write_text("old")
     tmp = d / "site.tmp"; tmp.mkdir(); (tmp / "new.txt").write_text("new")
+    assert previous_ideas(out) == []
+    (out / "data").mkdir()
+    packs = [{"ideas": [{"text": "private fixture"}]}]
+    (out / "data/ideas.json").write_text(json.dumps(packs))
+    assert previous_ideas(out) == packs
+    idea_assets(Writer(out), [])
+    assert previous_ideas(out) == []  # private module takes precedence
+    idea_assets(Writer(out), packs)
     agent_assets(Writer(tmp))
+    idea_assets(Writer(tmp), previous_ideas(out))
     swap(tmp, out)
+    assert previous_ideas(out) == packs and (out / "api/ideas.js").is_file()
+    assert not (out / "data/ideas.json").exists() and "ideas.json" not in (out / "llms.txt").read_text()
     assert (out / "api/mcp.js").is_file() and (out / "llms.txt").is_file()
     assert (out / "package.json").is_file() and not (out / "node_modules").exists()
     assert (out / "new.txt").read_text() == "new" and not (out / "old.txt").exists() and not tmp.exists() and not (d / "site.old").exists()
