@@ -5,8 +5,7 @@
 #       enrich --refresh (citation counts + venue for rows older than 6 days, every week),
 #       institutions (OpenAlex affiliations for every paper not yet looked up), then load_extra (merge data/raw/* into the DB)
 #       institutions and refs exit 3 when ids failed after retries: `soft` notifies, successful chunks are kept
-#   2. only when a new month has completed since the published snapshot:
-#       SOFT refs (Semantic Scholar references), then full pipeline
+#   2. every week: SOFT refs (only when a new month has completed since the published snapshot) (Semantic Scholar references), then full pipeline
 #       (run_all.sh, which runs load_extra again after map, then links and citations), static export with ideas for the top 20 links,
 #       size checks, deploy to Vercel
 # A failed hard step deploys nothing: the public page keeps the last good snapshot. Failures raise a macOS notification.
@@ -23,12 +22,12 @@ if [ -n "$UC_DRY" ]; then
   echo "step: affiliations (soft): timeout 1800 radar.institutions (papers not yet looked up)"
   echo "step: load_extra (soft): timeout 1800 radar.load_extra"
   echo "step: citation refresh (soft): timeout 10800 radar.enrich --refresh --older-days 6"
-  echo "step: last-complete-month check vs published snapshot (no new month: stamp and stop)"
+  echo "step: last-complete-month check vs published snapshot (decides refs only)"
   echo "step (new month only): refs (soft): timeout 28800 radar.refs"
-  echo "step (new month only): full pipeline: timeout 10800 ./run_all.sh (includes load_extra and citations)"
-  echo "step (new month only): export: timeout 3600 radar.export --out site --ideas 20"
-  echo "step (new month only): preview, snapshot checks"
-  echo "step (new month only): deploy: timeout 1800 vercel deploy site --prod --yes --archive=tgz (skipped when UC_NO_DEPLOY is set)"
+  echo "step: full pipeline: timeout 10800 ./run_all.sh (includes load_extra and citations)"
+  echo "step: export: timeout 3600 radar.export --out site --ideas 20"
+  echo "step: preview, snapshot checks"
+  echo "step: deploy: timeout 1800 vercel deploy site --prod --yes --archive=tgz (skipped when UC_NO_DEPLOY is set)"
   exit 0
 fi
 
@@ -80,11 +79,10 @@ EOF
 ) || fail "last-month check"
 pub=$($PY -c "import json;print(json.load(open('site/data/meta.json'))['windows']['6m']['to'])" 2>/dev/null || echo none)
 say "last complete month $now; published snapshot ends $pub"
-if [ "$now" = "$pub" ]; then say "no new complete month; snapshot unchanged"; touch "$STAMP"; exit 0; fi
+# the site is rebuilt and deployed every week (new papers, citation counts); the slow references download runs only in a new month
 
-say "new month: references"
-soft "refs" timeout 28800 $PY -m radar.refs
-say "new month: full pipeline"
+if [ "$now" != "$pub" ]; then say "new month: references"; soft "refs" timeout 28800 $PY -m radar.refs; fi
+say "full pipeline"
 timeout 10800 ./run_all.sh || fail "run_all.sh"
 say "export"
 timeout 3600 $PY -m radar.export --out site --ideas 20 || fail "export"
