@@ -5,11 +5,11 @@
 <link rel="icon" href="data:,">
 <style>
 /* Critical defaults: the skeleton does not wait for Tailwind or web fonts. */
-:root{color-scheme:light;--color-page:#faf8f5;--color-surface:#fdfbfa;--color-side:#faf8f5;--color-hover:#f1eee8;--color-selected:#f1eee8;--color-hair:#d1d1cd;--color-text:#27251e;--color-secondary:#72706b;--color-muted:#72706b;--color-a:#1c1c1c;--color-b:#1c1c1c;--color-g1:#2c5f9e;--color-g2:#6c93c3;--color-g3:#a9bcd4;--color-g4:#a6a6a6;--color-g5:#e5b183;--color-g6:#df8743;--color-g7:#c4501b;--color-nodata:#d9d9d6;--color-bg:#faf8f5;--color-tile:#fdfbfa;--color-well:#faf8f5;--color-solid:#fdfbfa;--color-pop:#fdfbfa;--color-map:#fdfbfa;--color-border:#d1d1cd;--color-btn:#fdfbfa;--color-sel:#f1eee8;--color-green:#016a71;--color-green-dk:#72706b;--color-orange:#016a71;--color-orange-tint:#f1eee8;--color-a-map:#1c1c1c;--color-panel:#fdfbfa;--color-divider:#d1d1cd;--color-tint:#f1eee8;--color-error:#fff1f0;--color-accent:#016a71;--color-ash:#92918b;}
+:root{color-scheme:light;--color-page:#ffffff;--color-surface:#ffffff;--color-side:#f7f7f5;--color-hover:#efefed;--color-selected:#e9e9e6;--color-hair:#e6e5e1;--color-text:#1c1c1c;--color-secondary:#5f5f5f;--color-muted:#636363;--color-a:#1c1c1c;--color-b:#1c1c1c;--color-g1:#2c5f9e;--color-g2:#6c93c3;--color-g3:#a9bcd4;--color-g4:#a6a6a6;--color-g5:#e5b183;--color-g6:#df8743;--color-g7:#c4501b;--color-nodata:#d9d9d6;--color-bg:#ffffff;--color-tile:#ffffff;--color-well:#f3f3f1;--color-solid:#ffffff;--color-pop:#ffffff;--color-map:#ffffff;--color-border:#e6e5e1;--color-btn:#ffffff;--color-sel:#e9e9e6;--color-green:#1c1c1c;--color-green-dk:#5f5f5f;--color-orange:#1c1c1c;--color-orange-tint:#e9e9e6;--color-a-map:#1c1c1c;--color-panel:#ffffff;--color-divider:#efefed;--color-tint:#f3f3f1;--color-error:#fff1f0;--color-accent:#1c1c1c;--color-ash:#636363;}
 html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text)}
 [hidden]{display:none!important}
 #app{display:grid;height:100vh;margin:0;padding:0;gap:0;border:0;border-radius:0;background:var(--color-surface);box-shadow:none;overflow:hidden;grid-template-columns:248px minmax(0,1fr) 376px;grid-template-rows:44px 24px minmax(0,1fr)}
-#side{grid-row:1/4;grid-column:1} #titleControls{grid-row:1;grid-column:2} #mapwrap{grid-row:3;grid-column:2;position:relative;background:#fdfbfa} #insp{grid-row:1/4;grid-column:3}
+#side{grid-row:1/4;grid-column:1} #titleControls{grid-row:1;grid-column:2} #mapwrap{grid-row:3;grid-column:2;position:relative;background:#ffffff} #insp{grid-row:1/4;grid-column:3}
 #tabs{visibility:hidden}
 #loading{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);color:var(--color-muted)}
 </style>
@@ -20,15 +20,15 @@ html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text
 <script defer src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4.3.5"></script>
 <style type="text/tailwindcss">
 @theme static {
-  --color-page: #faf8f5;
-  --color-surface: #fdfbfa;
-  --color-side: #faf8f5;
-  --color-hover: #f1eee8;
-  --color-selected: #f1eee8;
-  --color-hair: #d1d1cd;
-  --color-text: #27251e;
-  --color-secondary: #72706b;
-  --color-muted: #72706b;
+  --color-page: #ffffff;
+  --color-surface: #ffffff;
+  --color-side: #f7f7f5;
+  --color-hover: #efefed;
+  --color-selected: #e9e9e6;
+  --color-hair: #e6e5e1;
+  --color-text: #1c1c1c;
+  --color-secondary: #5f5f5f;
+  --color-muted: #636363;
   --color-a: #1c1c1c;
   --color-b: #1c1c1c;
   --color-g1: #2c5f9e;
@@ -39,26 +39,26 @@ html,body{margin:0;height:100%;background:var(--color-bg);color:var(--color-text
   --color-g6: #df8743;
   --color-g7: #c4501b;
   --color-nodata: #d9d9d6;
-  --color-bg: #faf8f5;
-  --color-tile: #fdfbfa;
-  --color-well: #faf8f5;
-  --color-solid: #fdfbfa;
-  --color-pop: #fdfbfa;
-  --color-map: #fdfbfa;
-  --color-border: #d1d1cd;
-  --color-btn: #fdfbfa;
-  --color-sel: #f1eee8;
-  --color-green: #016a71;
-  --color-green-dk: #72706b;
-  --color-orange: #016a71;
-  --color-orange-tint: #f1eee8;
+  --color-bg: #ffffff;
+  --color-tile: #ffffff;
+  --color-well: #f3f3f1;
+  --color-solid: #ffffff;
+  --color-pop: #ffffff;
+  --color-map: #ffffff;
+  --color-border: #e6e5e1;
+  --color-btn: #ffffff;
+  --color-sel: #e9e9e6;
+  --color-green: #1c1c1c;
+  --color-green-dk: #5f5f5f;
+  --color-orange: #1c1c1c;
+  --color-orange-tint: #e9e9e6;
   --color-a-map: #1c1c1c;
-  --color-panel: #fdfbfa;
-  --color-divider: #d1d1cd;
-  --color-tint: #f1eee8;
+  --color-panel: #ffffff;
+  --color-divider: #efefed;
+  --color-tint: #f3f3f1;
   --color-error: #fff1f0;
-  --color-accent: #016a71;
-  --color-ash: #92918b;
+  --color-accent: #1c1c1c;
+  --color-ash: #636363;
   --font-sans: "Inter", system-ui, sans-serif; --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 </style>
@@ -627,38 +627,12 @@ body.rail #side #setBtn{flex:none;width:34px;padding:0;justify-content:center}
 #setConfirm{margin:6px 0;padding:8px 10px;border-radius:10px;background:#fff4ec;font-size:13px}
 #setConfirm button[data-act=setClearSavedYes]{background:var(--color-text);color:#ffffff;border-color:var(--color-text)!important}
 @media (max-width:520px){:is(#settings,.dlg) .srow{flex-direction:column;align-items:flex-start;gap:4px} :is(#settings,.dlg) .seg{justify-content:flex-start}}
-/* ---------- F51 warm palette: parchment canvas, soft-paper cards, one accent (deep teal) for selection, active controls, focus and links. Map data colours are unchanged. ---------- */
-html,body{background:var(--color-page)}
-#mapwrap{background:var(--color-map)}
-a{color:var(--color-accent)} a:hover{text-decoration-color:currentColor}
-#ideaActions a{color:var(--color-text);background:var(--color-surface)}
+/* ---------- F55 Light QM: neutral selections and one search focus ring. ---------- */
 :is(#inspBody,#abBlock,#viewPanel,.dlg,#hint) a:not(#ideaActions a){text-decoration:underline;text-decoration-thickness:1px}
-button.on,button[aria-pressed=true],button[aria-checked=true],
-button.on:hover:not(:disabled),button[aria-pressed=true]:hover:not(:disabled),button[aria-checked=true]:hover:not(:disabled){background:var(--color-accent);color:#ffffff;border-color:var(--color-accent)!important}
-.seg{background:var(--color-well);box-shadow:inset 0 0 0 1px var(--color-hair)}
-.seg button[aria-pressed=true],.seg button[aria-checked=true],.seg button[aria-pressed=true]:hover:not(:disabled),.seg button[aria-checked=true]:hover:not(:disabled){background:var(--color-accent);color:#ffffff;box-shadow:none}
-#side button.verb[aria-pressed=true],#side button.verb.on,#side button.verb[aria-expanded=true],#side button.verb[aria-pressed=true]:hover:not(:disabled),#side button.verb[aria-expanded=true]:hover:not(:disabled){background:var(--color-accent);color:#ffffff}
-#side button.verb[aria-pressed=true] :is(i,kbd,.vv),#side button.verb.on :is(i,kbd,.vv),#side button.verb[aria-expanded=true] :is(i,kbd,.vv){color:#ffffff}
-.slot.selected{background:var(--color-accent);color:#ffffff}
-.slot.selected :is(.sn,.sc,.sk,button.sx),#side .slot.selected button.sn{color:#ffffff}
-.slot.selected b.cur{box-shadow:0 0 0 2px #ffffff}
-.slot.selected .sbtns button{border-color:#ffffff!important}
-.slot.selected:hover,.slot.selected:focus-within{background:var(--color-accent)}
-#side .slot.selected button.sx:hover{color:#ffffff;background:rgba(255,255,255,.18)}
-#titleControls button.tb[aria-pressed=true],#titleControls button.tb[aria-pressed=true]:hover:not(:disabled){background:var(--color-accent);color:#ffffff}
-#titleControls button.tb[aria-pressed=true] :is(i,.tc){color:#ffffff;background:transparent}
-button.chipbtn[aria-pressed=true]{background:var(--color-accent);color:#ffffff;border-color:var(--color-accent)!important}
-#modeRow,#colourBox .opts{background:var(--color-well);box-shadow:inset 0 0 0 1px var(--color-hair)}
-#modeRow label:has(input:checked),#colourBox label:has(input:checked){background:var(--color-accent);color:#ffffff;box-shadow:none}
-input[type=radio]:checked,input[type=checkbox]:checked{background:var(--color-accent);border-color:var(--color-accent)}
-input[role=switch]:checked{background:radial-gradient(circle at 17px 50%,#ffffff 3.5px,transparent 4.5px),var(--color-accent);border-color:var(--color-accent)}
-.chip,.pill,.new,.gr{background:var(--color-well)}
-.chip,.pill{border-color:var(--color-hair)!important}
-#inspBody b.gr.num{background:var(--color-well)}
-:focus-visible,tr.hl:focus-visible,#map:focus-visible,#searchBox input#q:focus-visible,#colourBox label:has(input:focus-visible),#modeRow label:has(input:focus-visible){outline:2px solid var(--color-accent)!important;outline-offset:2px}
-#searchBox:focus-within{outline:2px solid var(--color-accent)}
-#searchBox input#q:focus-visible{outline:none!important}  /* the box ring above is the focus indicator; two rings looked doubled */
-#mapwrap:has(#map:focus-visible)::after{border-color:var(--color-accent)}
+.seg button[aria-pressed=true],.seg button[aria-checked=true],#modeRow label:has(input:checked),#colourBox label:has(input:checked){background:var(--color-selected);color:var(--color-text)}
+:focus-visible,tr.hl:focus-visible,#map:focus-visible,#colourBox label:has(input:focus-visible),#modeRow label:has(input:focus-visible){outline:2px solid var(--color-accent)!important;outline-offset:2px}
+#searchBox:focus-within{outline:2px solid var(--color-accent);outline-offset:2px}
+#searchBox input#q:focus-visible{outline:none!important}  /* the box supplies the single focus ring */
 /* ---------- F52 dialogs: native <dialog> in the Settings frame ---------- */
 [data-i=plug]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 22v-5'/%3E%3Cpath d='M9 8V2'/%3E%3Cpath d='M15 8V2'/%3E%3Cpath d='M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z'/%3E%3C/svg%3E")}
 dialog.dlg{width:min(600px,calc(100vw - 32px));max-width:calc(100vw - 32px);max-height:calc(100dvh - 32px);margin:auto;overflow:auto;overscroll-behavior:contain;background:var(--color-surface);color:var(--color-text);border:0;border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.14);padding:0 20px 18px;font-size:14px}
@@ -682,7 +656,7 @@ dialog.dlg::backdrop{background:rgba(28,28,28,.35)}
 #sideFoot{flex-wrap:wrap;row-gap:2px}
 body.rail #side #agentBtn{flex:none;width:34px;padding:0;justify-content:center}
 #abBlock #ideaDlgRow{margin-top:10px}
-/* ---------- F48 filter: sidebar row, panel in #viewPanel, teal title-bar chips, empty-map message ---------- */
+/* ---------- F48 filter: sidebar row, panel in #viewPanel, ink title-bar chips, empty-map message ---------- */
 [data-i=filter]{--ic:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M22 3H2l8 9.46V19l4 2v-8.54z'/%3E%3C/svg%3E")}
 #side button.verb .vv:empty{display:none}
 #fChips{display:flex;align-items:center;gap:4px;min-width:0;flex:1 1 auto;overflow:hidden;position:relative;min-height:28px}
@@ -694,12 +668,12 @@ button.fchip-more{width:44px;justify-content:center}
 #fChips .fchip-measuring{position:absolute;visibility:hidden;pointer-events:none}
 #fChips [data-act=fChipX]{min-width:90px}
 #fChips [data-act=fChipX] > [aria-hidden]{flex:none}
-button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:#01555b;color:#ffffff}
+button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:var(--color-accent);color:#ffffff}
 #filterBox .flab{display:block;margin:14px 0 4px;font-size:12px;color:var(--color-muted)}
 #filterBox .fcombo{position:relative}
 #fInstList{position:absolute;z-index:30;left:0;right:0;top:100%;margin:2px 0 0;padding:4px;list-style:none;background:var(--color-surface);border:1px solid var(--color-border);border-radius:10px;max-height:300px;overflow:auto;box-shadow:0 8px 24px rgba(0,0,0,.08)}
 #fInstList li{padding:4px 6px;font-size:13px;border-radius:6px;cursor:pointer;color:var(--color-text)}
-#fInstList li .fsub{font-size:12px;color:#5c5a55}
+#fInstList li .fsub{font-size:12px;color:var(--color-secondary)}
 #fInstList li[aria-selected=true],#fInstList li:hover{background:var(--color-hover)}
 #fSelList{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
 #fSelList:empty{display:none}
