@@ -1033,7 +1033,7 @@ document.addEventListener('submit', async e => {
   if (button.disabled) return;
   button.disabled = true; alert.textContent = ''; ideasGate.error = '';
   try {
-    const response = await fetch('../api/ideas', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: form.elements.email.value}), signal: AbortSignal.timeout(15000)});
+    const response = await fetch('../api/ideas/', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({email: form.elements.email.value}), signal: AbortSignal.timeout(15000)});
     if (!response.ok) throw new Error(response.status === 400 ? 'Enter a valid email.' : response.status === 429 ? 'Too many tries. Wait a few minutes.' : 'Could not save that. Try again.');
     const result = await response.json();
     if (typeof result.token !== 'string') throw new Error('Could not save that. Try again.');
@@ -1242,7 +1242,7 @@ async function sColourDist(a, lv) {
 async function sIdeas() {  // Authorized packs -> the flat rows the Ideas tab groups again.
   const seq = ++ideasGate.seq;
   try {
-    const response = await fetch('../api/ideas', {headers: ideasGate.token ? {Authorization: 'Bearer ' + ideasGate.token} : {}, cache: 'no-store', signal: AbortSignal.timeout(15000)});
+    const response = await fetch('../api/ideas/', {headers: ideasGate.token ? {Authorization: 'Bearer ' + ideasGate.token} : {}, cache: 'no-store', signal: AbortSignal.timeout(15000)});
     const data = await response.json();
     if (seq !== ideasGate.seq) return S.ideas;
     if (response.status === 401) {
