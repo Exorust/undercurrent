@@ -25,7 +25,7 @@
   --paper: #fdfbfa;     /* soft paper: cards */
   --line: #d1d1cd;      /* warm mist: hairlines, input borders */
   --ink: #27251e;       /* primary text */
-  --graphite: #72706b;  /* secondary text, labels */
+  --graphite: #6c6a65;  /* secondary text, labels */
   --ash: #92918b;       /* only >= 18px text or decoration */
   --hover: #f1eee8;
   --teal: #016a71;      /* accent: primary button, eyebrow pill, logo, link hover/focus, "new" */
@@ -41,8 +41,7 @@ a { color: inherit; }
 a:hover { color: var(--teal); }
 a:focus-visible, button:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
 .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
-.mono { font-family: var(--mono); }
-.label { font: 500 12px/1.4 var(--mono); letter-spacing: .04em; color: var(--graphite); }
+.label { font: 500 12px/1.4 var(--sans); letter-spacing: .04em; color: var(--graphite); }
 .tile { background: var(--paper); border: 1px solid var(--line); border-radius: var(--r); }
 .well { background: var(--hover); border-radius: 10px; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
@@ -55,7 +54,7 @@ a:focus-visible, button:focus-visible { outline: 2px solid var(--teal); outline-
 section { padding: 80px 0; border-top: 1px solid var(--line); }
 h2 { font: 400 clamp(32px, 3.2vw, 42px)/1.15 var(--serif); letter-spacing: -.02em; margin: 12px 0 16px; }
 h3 { font: 500 18px/1.3 var(--sans); margin: 0 0 8px; }
-.kicker { font: 400 13px/1.4 var(--mono); color: var(--graphite); }
+.kicker { font: 400 13px/1.4 var(--sans); color: var(--graphite); }
 .lead { color: var(--graphite); max-width: 640px; }
 .ico { width: 22px; height: 22px; flex: none; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 
@@ -92,26 +91,30 @@ nav.top .btn .short { display: none; }
 .cta .tl { font-size: 15px; color: var(--ink); text-underline-offset: 3px; }
 .cta .tl:hover { color: var(--teal); }
 .mnote { display: none; margin: 14px auto 0; font-size: 14px; color: var(--graphite); max-width: 320px; }
-.note { margin-top: 20px; font: 400 13px/1.4 var(--mono); color: var(--graphite); }
+.note { margin-top: 20px; font: 400 13px/1.4 var(--sans); color: var(--graphite); }
 
 /* snapshot */
 .now-head { margin-bottom: 32px; }
 .now { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-.now .tile { padding: 20px 22px; }
-.now .th { flex-wrap: wrap; display: flex; align-items: center; gap: 10px; padding-bottom: 14px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
+.now .tile { padding: 20px 16px; }
+.now .th { flex-wrap: nowrap; white-space: nowrap; display: flex; align-items: center; gap: 6px; padding-bottom: 14px; margin-bottom: 6px; border-bottom: 1px solid var(--line); }
 .now .th .ico { width: 18px; height: 18px; color: var(--graphite); }
-.now .th .win { margin-left: auto; font: 400 12px/1 var(--mono); color: var(--graphite); }
+.now .th .label { letter-spacing: 0; color: var(--ink); }
+.now .th .win { flex: none; white-space: nowrap; padding: 5px 7px; border: 1px solid var(--line); border-radius: 999px; background: var(--hover); margin-left: auto; font: 400 12px/1 var(--sans); color: var(--graphite); }
 .now ol { list-style: none; margin: 0; padding: 0; }
-.now li a { display: block; padding: 12px 0; text-decoration: none; border-bottom: 1px solid var(--line); }
+.now li a { position: relative; display: block; padding: 12px 24px 12px 6px; border-radius: 4px; text-decoration: none; border-bottom: 1px solid var(--line); }
 .now li:last-child a { border-bottom: 0; }
-.now li a:hover .t { color: var(--teal); text-decoration: underline; }
-.now .t { display: block; overflow-wrap: anywhere; font-size: 15px; line-height: 1.35; }
-.now .s { display: block; font: 400 12px/1.5 var(--mono); color: var(--graphite); margin-top: 4px; overflow-wrap: anywhere; }
-.fig { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font: 500 13px/1.3 var(--mono); color: var(--ink); font-variant-numeric: tabular-nums; }
+.now li a:hover, .now li a:focus-visible { background: var(--hover); }
+.now li a:focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+.now li a .arrow { position: absolute; right: 4px; top: 12px; color: var(--graphite); }
+.now li a:hover .t, .now li a:focus-visible .t { color: var(--teal); text-decoration: underline; }
+.now .t { display: block; overflow-wrap: anywhere; font: 500 15px/1.35 var(--sans); color: var(--ink); }
+.now .s { display: block; font: 400 12px/1.5 var(--sans); color: var(--graphite); margin-top: 4px; overflow-wrap: anywhere; }
+.fig { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font: 400 13px/1.3 var(--sans); color: var(--graphite); font-variant-numeric: tabular-nums; }
 .fig .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
-.new { display: inline-block; font: 600 11px/1 var(--mono); letter-spacing: .04em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; color: var(--teal); background: var(--teal-tint); }
-.foot-note { margin-top: 20px; font: 400 12px/1.6 var(--mono); color: var(--graphite); }
-.empty { color: var(--graphite); font: 400 13px/1.4 var(--mono); padding: 12px 0; }
+.new { display: inline-block; font: 600 11px/1 var(--sans); letter-spacing: .04em; text-transform: uppercase; padding: 4px 7px; border-radius: 999px; color: var(--teal); background: var(--teal-tint); }
+.foot-note { margin-top: 20px; font: 400 12px/1.6 var(--sans); color: var(--graphite); }
+.empty { color: var(--graphite); font: 400 13px/1.4 var(--sans); padding: 12px 0; }
 
 /* map preview */
 .frame { display: block; margin-top: 48px; overflow: hidden; border-radius: 16px; box-shadow: 0 8px 40px rgba(0,0,0,.08); }
@@ -128,8 +131,8 @@ nav.top .btn .short { display: none; }
 .read strong { color: var(--ink); font-weight: 500; }
 .scale { display: flex; gap: 4px; margin: 4px 0 14px; }
 .scale span { flex: 1; height: 10px; border-radius: 3px; }
-.scale-k { display: flex; justify-content: space-between; font: 400 12px/1.4 var(--mono); color: var(--graphite); margin: -8px 0 12px; }
-kbd { font: 500 12px/1 var(--mono); padding: 3px 6px; border-radius: 6px; background: var(--hover); border: 1px solid var(--line); color: var(--ink); }
+.scale-k { display: flex; justify-content: space-between; font: 400 12px/1.4 var(--sans); color: var(--graphite); margin: -8px 0 12px; }
+kbd { font: 500 12px/1 var(--sans); padding: 3px 6px; border-radius: 6px; background: var(--hover); border: 1px solid var(--line); color: var(--ink); }
 .swatch { display: inline-block; width: 9px; height: 9px; border-radius: 50%; vertical-align: 1px; margin: 0 3px 0 0; }
 .tours { list-style: none; margin: 0; padding: 0; }
 .tours li { margin: 0 0 10px; }
@@ -140,11 +143,11 @@ kbd { font: 500 12px/1 var(--mono); padding: 3px 6px; border-radius: 6px; backgr
 .rule { padding: 24px 26px; }
 .rule .label { display: block; margin-bottom: 10px; }
 .rule p { margin: 0; color: var(--graphite); font-size: 15px; }
-.formula { display: block; margin: 12px 0 0; padding: 12px 14px; font: 400 13px/1.6 var(--mono); color: var(--ink); overflow-wrap: anywhere; }
+.formula { display: block; margin: 12px 0 0; padding: 12px 14px; font: 400 13px/1.6 var(--sans); color: var(--ink); overflow-wrap: anywhere; }
 .honest { margin-top: 16px; padding: 24px 26px; }
 .honest p { margin: 8px 0 0; color: var(--graphite); }
 .honest p strong { color: var(--ink); font-weight: 500; }
-.honest .q { font: 400 13px/1.6 var(--mono); color: var(--ink); }
+.honest .q { font: 400 13px/1.6 var(--sans); color: var(--ink); }
 
 /* agent row */
 .agent { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: 32px; align-items: center; padding: 24px 26px; }
@@ -157,12 +160,6 @@ kbd { font: 500 12px/1 var(--mono); padding: 3px 6px; border-radius: 6px; backgr
 .alinks a { text-underline-offset: 3px; }
 #agentCopyStatus { color: var(--graphite); font-size: 13px; min-height: 20px; margin-top: 4px; }
 
-/* coming soon */
-.soon { padding: 32px 0; }
-.soon .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.soon .label { margin-right: 6px; }
-.chip { font-size: 13px; color: var(--graphite); padding: 5px 12px; border: 1px dashed var(--line); border-radius: 999px; background: var(--paper); }
-
 footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
 .fcols { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; padding: 28px 30px; }
 .fcols .label { display: block; margin: 0 0 14px; }
@@ -170,7 +167,7 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
 .fcols li { margin: 0 0 8px; }
 .fcols a { color: var(--ink); text-decoration: none; font-size: 14px; }
 .fcols a:hover { color: var(--teal); text-decoration: underline; }
-.fline { margin: 20px 0 0; font: 400 12px/1.6 var(--mono); color: var(--graphite); }
+.fline { margin: 20px 0 0; font: 400 12px/1.6 var(--sans); color: var(--graphite); }
 
 .fade { opacity: 1; }
 @media (prefers-reduced-motion: no-preference) {
@@ -226,8 +223,8 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
       </a>
     </div>
     <div class="navlinks">
-      <a href="#now">Snapshot</a>
-      <a href="#agents">Agents</a>
+      <a href="#now">Emerging areas</a>
+      <a href="#agents">Your agent</a>
     </div>
     <div class="navright">
       <a class="wide" href="https://charoori.com/blog/">Writing</a>
@@ -243,14 +240,14 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
 <header class="hero" id="top">
   <div class="wrap">
     <div class="pill" id="pill">Updated monthly from arXiv</div>
-    <h1><span>What is arriving in</span><span class="soft">computer science research</span></h1>
-    <p class="one">Every arXiv CS paper since November 2023, <span data-k="n">459,249</span> of them, on one map. Growth is measured against all of CS, which grew <span data-k="vol">×1.36</span> in the last six months, so a topic only lights up when it outpaces the field.</p>
+    <h1><span>What's upcoming</span><span class="soft">in AI/ML</span></h1>
+    <p class="one">Every arXiv AI/ML and computer science paper since November 2023, cataloged by growth and connected to each other.</p>
     <div class="cta">
       <a class="btn btn-p" href="map/">Open the map →</a>
       <a class="tl" href="#now">See this month's results ↓</a>
     </div>
     <p class="mnote">The map downloads about 6 MB and works best on a laptop.</p>
-    <div class="note">Free · No signup · Built by Chandrahas Aroori</div>
+    <div class="note"><a href="https://x.com/charoori_ai" target="_blank" rel="noopener">Contact the creator</a></div>
     <a class="tile frame fade" href="map/" aria-label="Open the map">
       <img src="preview.png" width="1600" height="1000" alt="The undercurrent map: about 459,000 papers drawn as points and grouped into topics, coloured from blue (shrinking) to orange (growing)" onerror="this.parentNode.hidden=true">
     </a>
@@ -261,7 +258,7 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   <div class="wrap">
     <div class="now-head fade">
       <div class="kicker">Right now</div>
-      <h2>What the latest snapshot shows</h2>
+      <h2>Emerging growth areas this month</h2>
       <p class="lead" style="margin:0">Read from the same data files the map uses. Click any item to explore it on the map.</p>
     </div>
     <div class="now fade">
@@ -287,8 +284,8 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   <div class="wrap">
     <div class="tile agent fade">
       <div>
-        <h2>Use it from your agent</h2>
-        <p>A free, read-only MCP server lets your agent compare topics, read abstracts and check whether an idea already exists.</p>
+        <h2>Bring your own agent</h2>
+        <p>Your agent can call this free, read-only MCP server to compare topics, read abstracts and check whether an idea already exists. You can also <a href="https://github.com/Exorust/undercurrent#readme" target="_blank" rel="noopener">run the code locally</a>.</p>
       </div>
       <div>
         <div class="cmd">
@@ -306,12 +303,7 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   </div>
 </section>
 
-<section class="soon" aria-label="New on the map">
-  <div class="wrap">
-    <span class="label">New</span>
-    <span>New on the map: filter by institution, country, venue and code, and see citation percentiles. <a href="map/">Open the map</a>.</span>
-  </div>
-</section>
+
 </main>
 
 <footer>
@@ -319,7 +311,7 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
     <div class="tile fcols">
       <div>
         <span class="label">Undercurrent</span>
-        <ul><li><a href="map/">Open the map</a></li><li><a href="#now">Latest snapshot</a></li></ul>
+        <ul><li><a href="map/">Open the map</a></li><li><a href="#now">Emerging areas</a></li></ul>
       </div>
       <div>
         <span class="label">By Chandrahas Aroori</span>
@@ -399,28 +391,27 @@ footer { border-top: 1px solid var(--line); padding: 56px 0 48px; }
   Promise.all([get('meta.json'), get('landing.json').catch(function (e) { console.warn('undercurrent: landing.json failed, using the full files', e); return fromFull(); })]).then(function (r) {
     var m = r[0], D = r[1];
     document.getElementById('pill').innerHTML = pill(m.last_complete);
-    set('last', ym(m.last_complete)); set('n', fmt(m.n_points)); set('gen', day(m.generated));
+    set('last', ym(m.last_complete)); set('gen', day(m.generated));
     var w = D.window || m.windows['6m'];
     var span = w.from && w.to ? (Number(w.to.slice(0, 4)) - Number(w.from.slice(0, 4))) * 12 + Number(w.to.slice(5, 7)) - Number(w.from.slice(5, 7)) + 1 : Number(String(D.window).replace('m', ''));
     var win = [3, 6, 12].indexOf(span) >= 0 ? span : 6;
-    set('vol', '×' + w.vol_ratio.toFixed(2));
     var topicUrl = function (c) { return 'map/?topic=' + LEVEL + '-' + c + '&win=' + win; };
 
     list('l-grow', D.growing.map(function (t) {
       return '<li><a href="' + topicUrl(t.c) + '"><span class="t">' + esc(t.label) + '</span>' + fig(t.growth, t.recent, 'papers') +
-        '<span class="s">' + fmt(t.prior) + ' in the 6 months before</span></a></li>';
+        '<span class="s">' + fmt(t.prior) + ' in the 6 months before</span><span class="arrow" aria-hidden="true">→</span></a></li>';
     }));
     list('l-arr', D.arriving.map(function (o) {
       var more = o.n_arriving > 1 ? ' · ' + o.n_arriving + ' arriving here' : '';
       return '<li><a href="' + topicUrl(o.t.c) + '"><span class="t">' + esc(o.t.label) + '</span>' + fig(o.a.growth, o.a.recent, 'papers') +
-        '<span class="s">sub-topic: ' + esc(o.short) + more + '</span></a></li>';
+        '<span class="s">sub-topic: ' + esc(o.short) + more + '</span><span class="arrow" aria-hidden="true">→</span></a></li>';
     }));
     list('l-links', D.links.map(function (b) {
       var f = b.status === 'new'
         ? '<span class="fig"><span class="new">new</span>' + fmt(b.n_bridge) + ' bridge papers</span>'
         : fig(b.growth, b.n_bridge, 'bridge papers');
       return '<li><a href="map/?link=' + LEVEL + '-' + b.c1 + '-' + b.c2 + '&win=' + win + '"><span class="t">' + esc(b.name1) + ' ↔ ' + esc(b.name2) + '</span>' + f +
-        '<span class="s">' + fmt(b.n_bridge_prior) + (b.n_bridge_prior === 1 ? ' bridge paper' : ' bridge papers') + ' in the 6 months before</span></a></li>';
+        '<span class="s">' + fmt(b.n_bridge_prior) + (b.n_bridge_prior === 1 ? ' bridge paper' : ' bridge papers') + ' in the 6 months before</span><span class="arrow" aria-hidden="true">→</span></a></li>';
     }));
     document.getElementById('winnote').textContent = 'Window: ' + ym(w.from) + ' to ' + ym(w.to) + ' against the 6 months before, corrected for CS growth (×' + w.vol_ratio.toFixed(2) + '). Switch to 3 or 12 months on the map.';
   }).catch(function (e) {

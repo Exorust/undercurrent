@@ -709,6 +709,46 @@ button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:#0
 #fEmpty{position:absolute;left:50%;top:42%;transform:translate(-50%,-50%);z-index:7;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);background:var(--color-surface);border:1px solid var(--color-hair);border-radius:12px;padding:10px 14px;font-size:13px;box-shadow:0 4px 24px rgba(0,0,0,.08)}
 @media (max-width:700px){#fChips{order:4;flex:1 1 100%}}
 @media (max-width:600px){#fChips{flex-wrap:wrap}#fChips .fchip-more{display:none}}
+/* Map controls: final overrides after the theme passes. */
+#winDD [data-act=win],#winDD [data-act=win]:is(:hover,:focus,:focus-visible){color:var(--color-text);background:var(--color-surface)}
+#winDD [data-act=win]:is(:hover,:focus,:focus-visible){background:var(--color-hover)}
+#winDD [data-act=win][aria-checked=true],#winDD [data-act=win][aria-checked=true]:is(:hover,:focus,:focus-visible){color:var(--color-text);background:var(--color-selected);border-color:var(--color-accent)!important;box-shadow:inset 0 0 0 1px var(--color-accent)}
+#titleControls button:is(.tb,#q1,#q2,#infoBtn,#menuBtn),#selBar button,#sideBtn,#winSum{box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;height:30px;min-height:30px;padding:0 7px;border-radius:8px!important;font-size:12px!important;line-height:18px;white-space:nowrap}
+#titleControls :is(#infoBtn,#menuBtn),#sideBtn{width:30px;min-width:30px}
+#winDD>summary{display:flex;align-items:center}
+#selBar{box-sizing:border-box;height:44px;min-height:44px;align-items:center;flex-wrap:nowrap;gap:6px;padding:6px 10px;overflow-x:auto}
+#selBar>span{display:flex;flex:none}
+#selBar button{flex:none}
+#inspTop{box-sizing:border-box;height:44px}
+@media (min-width:701px){
+  #titleControls{height:44px;box-sizing:border-box}
+  #side,body.rail #side{padding-top:0}
+  #logoRow{height:44px;margin-bottom:10px}
+}
+@media (min-width:701px) and (max-width:1199px){
+  #selBar{padding-right:48px}
+  #drawerClose{top:7px;margin:7px 8px -37px auto}
+}
+#legendBox{box-sizing:border-box;width:min(360px,calc(100% - 56px));max-width:360px;padding:8px 10px;color:var(--color-text);font:12px/1.4 "Inter",system-ui,sans-serif;cursor:pointer}
+#legendBox:hover{box-shadow:inset 0 0 0 1px var(--color-accent)}
+#legendHead{display:block;margin:0 0 6px;font:inherit;color:var(--color-text)}
+#legendBox .rows{display:block;min-height:0}
+#legendBox .gscale{padding:0;gap:0}
+#legendBox .gbar{height:12px;border-radius:3px}
+#legendBox .gbar span{min-width:0}
+#legendBox .gticks{position:relative;height:22px;line-height:18px;color:var(--color-text)}
+#legendBox .gticks span{position:absolute;top:4px;transform:translateX(-50%)}
+#legendBox .gticks span::before{content:"";position:absolute;top:-4px;left:50%;height:4px;border-left:1px solid var(--color-text)}
+#legendBox .gk{font:inherit;color:var(--color-text)}
+#legendBox .gnotes{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:6px}
+#legendBox .row{justify-content:flex-start;gap:5px;line-height:20px}
+#legendBox .row span.t{display:inline}
+#legendBox .txt{white-space:normal;color:var(--color-text)}
+#legendBox em,#legendBox.lightness .row em{display:inline;font:inherit;color:var(--color-text)}
+#helpLegend{scroll-margin-top:80px}
+#caption{top:var(--legend-bottom,160px)}
+#hintWrap{left:380px}
+@media (max-width:900px){#hintWrap{left:10px;right:46px;top:var(--legend-bottom,160px)}}
 </style>
 </head>
 <body>
@@ -760,7 +800,7 @@ button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:#0
       <button id="q1" data-act="preset" data-p="1" aria-pressed="true">What is arriving</button><button id="q2" data-act="preset" data-p="2" aria-pressed="false">How topics connect</button>
     </span>
     <details id="winDD" class="dd">
-      <summary role="button" aria-haspopup="menu"><span id="winSum" style="border:1px solid var(--color-border);border-radius:6px;padding:3px 8px;font-size:12px;display:inline-block">last 6 months ▾</span></summary>
+      <summary role="button" aria-haspopup="menu"><span id="winSum">last 6 months ▾</span></summary>
       <div role="menu" style="left:0;right:auto">
         <button role="menuitemradio" data-act="win" data-n="3">last 3 months</button>
         <button role="menuitemradio" data-act="win" data-n="6">last 6 months</button>
@@ -793,7 +833,7 @@ button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:#0
   <canvas id="map" tabindex="0" role="img" aria-label="Map of papers" aria-describedby="mapSummary"></canvas>
   <svg id="lassoSvg"><path id="lassoPath" fill="none" stroke="#1c1c1c" stroke-width="1.5"/></svg>
   <div id="loading">Loading map points: <span id="loadN">0.0</span> of <span id="loadT">7.8</span> MB<div class="bar"><i id="loadBar"></i></div></div>
-  <div id="legendBox"><h3 id="legendHead" data-i="trend">Growth vs CS, topics</h3><div class="rows" id="legendRows"></div></div>
+  <div id="legendBox" role="button" tabindex="0" data-act="helpDlg" data-sec="legend" aria-haspopup="dialog" aria-label="Colour legend. Open Help at the colour key"><div id="legendHead" data-i="trend">Growth vs CS, topics</div><div class="rows" id="legendRows"></div></div>
   <div id="hintWrap"><div id="hint" role="status" aria-live="polite" hidden></div></div>
   <div id="zoomBtns"><button tabindex="-1" data-act="zin" aria-label="Zoom in">+</button><button tabindex="-1" data-act="zout" aria-label="Zoom out">−</button><button tabindex="-1" data-act="fit" aria-label="Fit map">⤢</button></div>
   <div id="caption"></div>
@@ -965,7 +1005,7 @@ button.fchip:hover:not(:disabled),button.fsel:hover:not(:disabled){background:#0
 const G = ['#2c5f9e','#6c93c3','#a9bcd4','#a6a6a6','#e5b183','#df8743','#c4501b'], ND = '#d9d9d6';
 const GT = ['#2c5f9e','#3b669d','#4e6683','#666666','#825832','#964e1e','#a44017'];
 const LG = ['#e8e7e3','#c8c8c5','#a8a8a6','#888888','#686868','#484848','#1c1c1c'];
-const STEP_TXT = ['shrinking fast (under ×0.5)','shrinking','slightly shrinking','flat (×0.9 to ×1.1)','slightly growing','growing','growing fast (×2 or more)'];
+const STEP_TXT = ['shrinking fast (under ×0.5)','shrinking','slightly shrinking','flat (×0.9 to under ×1.11)','slightly growing','growing','growing fast (×2 or more)'];
 const CUTS = [0.5, 0.71, 0.9, 1.11, 1.41, 2.0];
 const mapTokenRGB = name => getComputedStyle(document.documentElement).getPropertyValue(name).trim().match(/[0-9a-f]{2}/gi).map(v => parseInt(v, 16));
 const A_RGB = mapTokenRGB('--color-a-map'), B_RGB = mapTokenRGB('--color-b'), W_RGB = [28,28,28];
@@ -1828,7 +1868,7 @@ function updateWinLabel() {
   $('winSum').textContent = (S.win.n ? `last ${S.win.n} months` : 'custom') + ' ▾';
   $('winLabel').title = $('winLabel').textContent; $('winChip').textContent = (S.win.n ? `${S.win.n} mo` : 'custom') + ' ▾';
   document.querySelectorAll('[data-act=win]').forEach(b => b.setAttribute('aria-checked', String(S.win.n ? +b.dataset.n === S.win.n : b.dataset.n === 'custom')));
-  render();
+  renderLegend(); render();
 }
 function setWindow(w) {
   S.win = w; S.topics = {}; updateWinLabel(); loadWindowData(); loadPhrases(); resendAll();
@@ -1872,23 +1912,29 @@ async function boot() {
 }
 
 // ---------- legend, controls ----------
+new ResizeObserver(() => {
+  $('mapwrap').style.setProperty('--legend-bottom', ($('legendBox').offsetHeight + 20) + 'px');
+}).observe($('legendBox'));
 function renderLegend() {
   const rows = $('legendRows'), T = S.topics[S.level];
   $('legendBox').classList.toggle('lightness', S.lightness);
-  if (S.grey) { $('legendHead').textContent = 'Connections: bridge papers (edges), papers in window (nodes)'; rows.innerHTML = '<div class="txt small">Lines: bridge papers · circles: papers in window</div>'; return; }
-  else $('legendHead').textContent = S.colour === 'growth' ? `Growth vs CS, ${LEVEL_NAME[S.level]}` : S.colour === 'topic' ? 'Topic' : S.colour === 'date' ? 'Date' : 'Distance to A';
+  if (S.grey) { $('legendHead').textContent = 'Connections'; rows.innerHTML = '<div class="txt small">Lines: bridge papers · circles: papers in window</div>'; return; }
+  else $('legendHead').textContent = S.colour === 'growth' ? `Colour: growth of each paper's topic vs all of CS, ${S.MS.length ? winText() : 'last ' + (S.win.n || 'selected') + ' months'}` : S.colour === 'topic' ? 'Topic' : S.colour === 'date' ? 'Date' : 'Distance to A';
   if (S.colour === 'topic' && !S.grey) { rows.innerHTML = '<div class="txt small">one colour per area; hover a point for its area</div>'; return; }
   if (S.colour === 'date' && !S.grey) { rows.innerHTML = `<div class="row"><s style="background:linear-gradient(90deg,#e8e7e3,#1c1c1c);width:120px"></s><span class="t">${mLabel(0)} → ${mLabel(S.E)}</span></div>`; return; }
   if (S.colour === 'dist' && !S.grey) { rows.innerHTML = `<div class="row"><s style="background:linear-gradient(90deg,#e8e8e8,#5f5f5f);width:120px"></s><span class="t">nearest 5% → farthest 50%</span></div>`; return; }
   const cnt = {nd: 0, new: 0}; for (let i = 0; i < 7; i++) cnt[i] = 0;
   if (T) for (const t of T.topics) cnt[clusterInfo(t).step]++;
-  // growth as one gradient bar, slower (left) to faster (right); per-step topic counts in each segment's tooltip
+  // Equal-width steps match clusterInfo/stepOf; boundary labels are not a continuous scale.
   const sw = S.lightness ? LG : G, n = i => T ? cnt[i] : '–';
-  let h = `<div class="gscale"><div class="gbar" style="background:linear-gradient(90deg,${sw.join(',')})">`;
-  for (let i = 0; i < 7; i++) h += `<span title="${STEP_TXT[i]}: ${n(i)} topics"></span>`;
-  h += `</div><div class="gk"><span>slower than CS</span><span>same</span><span>faster</span></div></div>`;
-  h += `<div class="row" title="new in this window: ${T ? cnt.new : '–'} topics"><span class="new">new</span></div>`;
-  h += `<div class="row" title="too few papers to rate: ${T ? cnt.nd : '–'} topics"><s style="background:${ND}"></s><em>few papers</em></div>`;
+  let h = '<div class="gscale"><div class="gbar">';
+  for (let i = 0; i < 7; i++) {
+    const range = i === 0 ? 'under ×' + CUTS[0] : i === 6 ? '×' + CUTS[5] + ' or more' : '×' + CUTS[i - 1] + ' to under ×' + CUTS[i];
+    h += `<span style="background:${sw[i]}" title="${range}: ${n(i)} topics"></span>`;
+  }
+  h += '</div><div class="gticks"><span style="left:calc(100% / 7)">×0.5</span><span style="left:50%">×1</span><span style="left:calc(600% / 7)">×2</span></div><div class="gk"><span>shrinking</span><span>growing</span></div></div>';
+  h += `<div class="gnotes"><div class="row" title="Topic did not exist in the earlier window: ${n('new')} topics"><span class="new">new</span><span>new topic</span></div>`;
+  h += `<div class="row" title="Too few papers to rate: ${n('nd')} topics"><s style="background:${ND}"></s><span>too few papers</span></div></div>`;
   rows.innerHTML = h;
 }
 function setColour(v) {
@@ -2650,7 +2696,7 @@ document.addEventListener('keydown', e => {
   if (t.id === 'fInst') return instKey(e);
   if (t.matches && t.matches('button.fchip[data-act=fChipX],button.fsel') && (e.key === 'Backspace' || e.key === 'Delete')) { e.preventDefault(); t.click(); return; }
   if (inText) { if (e.key === 'Escape') t.blur(); return; }
-  if (t.matches('[data-act=selFocus]') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); t.click(); return; }
+  if (t.matches('[data-act=selFocus],#legendBox') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); t.click(); return; }
   // table row navigation
   const tr = t.closest && t.closest('tbody tr[tabindex]'), th = t.closest && t.closest('thead');
   if ((tr || th) && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
