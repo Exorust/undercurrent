@@ -359,6 +359,8 @@ def export(out, n_ideas):
     html = P["app"].read_text()
     assert "<head>" in html, "radar/app.html has no <head>"
     w.put("index.html", LANDING.read_bytes())
+    for f in ("favicon.svg", "favicon-32.png", "apple-touch-icon.png"):   # real files: data-URI icons do not reach bookmarks or history
+        w.put(f, LANDING.with_name(f).read_bytes())
     w.put("map/index.html", static_app(html))
     if (pathlib.Path(out) / "preview.png").exists():   # written by the weekly job; keep it until the next one
         w.put("preview.png", (pathlib.Path(out) / "preview.png").read_bytes())
